@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import os
+import yaml
 
 import VideoLoader.VideoLoader as vl
 import SensorLoader.SensorLoader as sl
@@ -28,4 +29,7 @@ class DataTransformer(object):
             result_dict[key] = {'Video': video_data[key], 'Sensor': sensor_data[key]}
         return result_dict
 
-
+if __name__ == "__main__":
+    with open("config.yaml", "r") as configfile:
+        config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
+    print(config_dict)
