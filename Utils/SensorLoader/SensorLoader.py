@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 
 class SensorTransformer(object):
@@ -35,7 +36,7 @@ class SensorTransformer(object):
             "Activity Manager": ['Activity Type', 'Number of Steps', 'Distance', 'Floors Ascended', 'Floors Descended',
                                  'Current Pace', 'Current Cadence', 'Average Active Pace']}
 
-    def getSensorDataForCSV(self, filename):
+    def transform(self, filename):
         df = pd.read_csv(filename)
         df.fillna(method='bfill', inplace=True)  # backfill the data to account for missing values
         df.dropna(axis=1, how='all', inplace=True)  # drop a metric if it has no sensor information
@@ -85,5 +86,15 @@ class SensorTransformer(object):
             # result_dict[sensor] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[columns_to_retrieve].to_dict()
         return result_dict
 
+
+    def scrape_all_data(self, path):
+        sensor_files = [f for f in os.listdir(path) if f.endswith('.json')]
+        result_dict = {}
+        for sensor_file in sensor_files:
+            output = self.transform(path + '/' + sensor_file)
+            result_dict[sensor_file] = output
+        return result_dict
+
+
 sensorTransformer = SensorTransformer()
-sensor_data_dict = sensorTransformer.getSensorDataForCSV("2022-02-17T20_32_33.869Z.csv")
+sensor_data_dict = sensorTransformer.transform("2022-02-17T20_32_33.869Z.csv")
