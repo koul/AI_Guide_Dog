@@ -18,15 +18,24 @@ class VideoTransformer(object):
     #     resized = cv2.resize(image, (1560, 1170), interpolation = cv2.INTER_AREA)
     #     return resized
 
-    def _getFrames(self, videoCapture, fps):
+    def _getFrames(self, videoCapture, fps, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
+        
         count = 1
+        if ref_time == -1:
+            end_time = 10000000
+            start_time = 0
+        else:
+            start_time = (ref_time - secs_in_past) * 1000
+            end_time = (ref_time + secs_in_future) * 1000
+        
+        
         success = True
         interval = 1000.0/fps
 
         frames = []
         
-        while success:
-            videoCapture.set(cv2.CAP_PROP_POS_MSEC,(count*interval))
+        while success and start_time + count<end_time:
+            videoCapture.set(cv2.CAP_PROP_POS_MSEC,(start_time + count*interval))
             count = count + 1
             success,image = videoCapture.read()
             
@@ -46,9 +55,9 @@ class VideoTransformer(object):
     def _convertToNumpy(self, frames):
         return np.array(frames)
 
-    def transform(self, filename):
+    def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
         video = self._getVideo(filename)
-        frames = self._getFrames(video, self.fps)
+        frames = self._getFrames(video, self.fps, ref_time, secs_in_past, secs_in_future)
         numpyFrames = self._convertToNumpy(frames)
         return numpyFrames
 
@@ -61,4 +70,5 @@ class VideoTransformer(object):
         return result_dict
 
 videoTransformer = VideoTransformer()
-files_frames_dict = videoTransformer.scrape_all_data('../../data')
+frames = videoTransformer.transform('../../data/sample/sample.mp4', ref_time=2, secs_in_past=1, secs_in_future=1)
+files_frames_dict = videoTransformer.scrape_all_data('../../data/sample')
