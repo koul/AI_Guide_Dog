@@ -73,5 +73,4 @@ class VideoTransformer(object):
                 result_dict[name] = output
         return result_dict
 
-#videoTransformer = VideoTransformer()
-
+videoTransformer = VideoTransformer()

@@ -36,7 +36,7 @@ class SensorTransformer(object):
             "Activity Manager": ['Activity Type', 'Number of Steps', 'Distance', 'Floors Ascended', 'Floors Descended',
                                  'Current Pace', 'Current Cadence', 'Average Active Pace']}
 
-    def transform(self, filename):
+    def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
         df = pd.read_csv(filename)
         df.fillna(method='bfill', inplace=True)  # backfill the data to account for missing values
         df.dropna(axis=1, how='all', inplace=True)  # drop a metric if it has no sensor information
@@ -98,6 +98,3 @@ class SensorTransformer(object):
                 name = sensor_file.split('.')[0]
                 result_dict[name] = output
         return result_dict
-
-#sensorTransformer = SensorTransformer()
-#sensor_data_dict = sensorTransformer.transform("2022-02-17T20_32_33.869Z.csv")
