@@ -29,7 +29,18 @@ class DataTransformer(object):
             result_dict[key] = {'Video': video_data[key], 'Sensor': sensor_data[key]}
         return result_dict
 
+
+def save_data(data, filename):
+    np.save(filename, data)
+
+def load_data(filename):
+    return np.load(filename, allow_pickle=True)
+
 if __name__ == "__main__":
-    with open("config.yaml", "r") as configfile:
+    with open("../config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
-    print(config_dict)
+    dataTransformer = DataTransformer(config_dict[0]['Transformer']['fps'])
+    result = dataTransformer.scrape_all_data(config_dict[0]['Transformer']['path'])
+    save_data(result, 'temp.npy')
+    loaded = load_data('temp.npy')
+    print(loaded)
