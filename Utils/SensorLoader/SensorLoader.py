@@ -91,14 +91,13 @@ class SensorTransformer(object):
         directories = [f for f in os.listdir(path)]
         for directory in directories:
             dir_path = os.path.join(path, directory)
-            sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.json')]
+            sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
             result_dict = {}
             for sensor_file in sensor_files:
                 output = self.transform(dir_path + '/' + sensor_file)
                 name = sensor_file.split('.')[0]
                 result_dict[name] = output
         return result_dict
-
 
 sensorTransformer = SensorTransformer()
 sensor_data_dict = sensorTransformer.transform("2022-02-17T20_32_33.869Z.csv")
