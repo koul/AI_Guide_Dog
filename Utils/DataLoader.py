@@ -21,8 +21,11 @@ class DataTransformer(object):
 
 
     def scrape_all_data(self, path):
-        pass
+        video_data = self.videoTransformer.scrape_all_data(path)
+        sensor_data = self.sensorTransformer.scrape_all_data(path)
+        result_dict = {}
+        for key in video_data.keys():
+            result_dict[key] = {'Video': video_data[key], 'Sensor': sensor_data[key]}
+        return result_dict
 
-dataTransformer = DataTransformer()
-dataTransformer.transform("../data/sample")
 

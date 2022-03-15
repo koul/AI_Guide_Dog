@@ -36,7 +36,7 @@ class SensorTransformer(object):
             "Activity Manager": ['Activity Type', 'Number of Steps', 'Distance', 'Floors Ascended', 'Floors Descended',
                                  'Current Pace', 'Current Cadence', 'Average Active Pace']}
 
-    def transform(self, filename, ref_time, secs_in_past, secs_in_future):
+    def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
         df = pd.read_csv(filename)
         df.fillna(method='bfill', inplace=True)  # backfill the data to account for missing values
         df.dropna(axis=1, how='all', inplace=True)  # drop a metric if it has no sensor information
@@ -91,7 +91,7 @@ class SensorTransformer(object):
         directories = [f for f in os.listdir(path)]
         for directory in directories:
             dir_path = os.path.join(path, directory)
-            sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.json')]
+            sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
             result_dict = {}
             for sensor_file in sensor_files:
                 output = self.transform(dir_path + '/' + sensor_file)
