@@ -73,4 +73,10 @@ class VideoTransformer(object):
                 result_dict[name] = output
         return result_dict
 
+<<<<<<< HEAD
 videoTransformer = VideoTransformer()
+=======
+videoTransformer = VideoTransformer()
+#frames = videoTransformer.transform('../../data/sample/sample.mp4', ref_time=2, secs_in_past=1, secs_in_future=1)
+#files_frames_dict = videoTransformer.scrape_all_data('../../data')
+>>>>>>> afc1f47 (Random message)
