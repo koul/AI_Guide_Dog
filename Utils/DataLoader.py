@@ -7,6 +7,7 @@ import SensorLoader.SensorLoader as sl
 
 class VideoTransformer(object):
     def __init__(self, fps=10):
+        self.fps = fps
         self.videoTransformer = vl.VideoTransformer(fps)
         self.sensorTransformer = sl.SensorTransformer(fps)
     

@@ -62,13 +62,18 @@ class VideoTransformer(object):
         return numpyFrames
 
     def scrape_all_data(self, path):
-        video_files = [f for f in os.listdir(path) if f.endswith('.mp4')]
-        result_dict = {}
-        for video_file in video_files:
-            output = self.transform(path + '/' + video_file)
-            result_dict[video_file] = output
+        directories = [f for f in os.listdir(path)]
+        for directory in directories:
+            dir_path = os.path.join(path, directory)
+            video_files = [f for f in os.listdir(dir_path) if f.endswith('.mp4')]
+            result_dict = {}
+            for video_file in video_files:
+                output = self.transform(dir_path + '/' + video_file)
+                name = video_file.split('.')[0]
+                result_dict[name] = output
         return result_dict
 
 videoTransformer = VideoTransformer()
 #frames = videoTransformer.transform('../../data/sample/sample.mp4', ref_time=2, secs_in_past=1, secs_in_future=1)
-#files_frames_dict = videoTransformer.scrape_all_data('../../data/sample')
+files_frames_dict = videoTransformer.scrape_all_data('../../data')
+print(files_frames_dict)
