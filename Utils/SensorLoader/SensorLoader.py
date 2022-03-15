@@ -88,11 +88,15 @@ class SensorTransformer(object):
 
 
     def scrape_all_data(self, path):
-        sensor_files = [f for f in os.listdir(path) if f.endswith('.json')]
-        result_dict = {}
-        for sensor_file in sensor_files:
-            output = self.transform(path + '/' + sensor_file)
-            result_dict[sensor_file] = output
+        directories = [f for f in os.listdir(path)]
+        for directory in directories:
+            dir_path = os.path.join(path, directory)
+            sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.json')]
+            result_dict = {}
+            for sensor_file in sensor_files:
+                output = self.transform(dir_path + '/' + sensor_file)
+                name = sensor_file.split('.')[0]
+                result_dict[name] = output
         return result_dict
 
 
