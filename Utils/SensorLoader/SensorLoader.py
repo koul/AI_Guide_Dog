@@ -99,5 +99,5 @@ class SensorTransformer(object):
                 result_dict[name] = output
         return result_dict
 
-sensorTransformer = SensorTransformer()
-sensor_data_dict = sensorTransformer.transform("2022-02-17T20_32_33.869Z.csv")
+#sensorTransformer = SensorTransformer()
+#sensor_data_dict = sensorTransformer.transform("2022-02-17T20_32_33.869Z.csv")

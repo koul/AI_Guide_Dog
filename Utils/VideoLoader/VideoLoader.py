@@ -73,6 +73,5 @@ class VideoTransformer(object):
                 result_dict[name] = output
         return result_dict
 
-videoTransformer = VideoTransformer()
-#frames = videoTransformer.transform('../../data/sample/sample.mp4', ref_time=2, secs_in_past=1, secs_in_future=1)
-#files_frames_dict = videoTransformer.scrape_all_data('../../data')
+#videoTransformer = VideoTransformer()
+
