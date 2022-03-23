@@ -1,14 +1,17 @@
 import numpy as np
 import cv2
 import os
+from multiprocessing import Pool
 
 class VideoTransformer(object):
-    def __init__(self, fps = 10, resolution = '1080p'):
+    def __init__(self, fps = 10, resolution = [512,512]):
         self.fps = fps
         self.resolution = resolution
 
     def _getVideo(self, filename):
         cap = cv2.VideoCapture(filename)
+        cap.set(3, self.resolution[0])
+        cap.set(4, self.resolution[1])
         fps = int(cap.get(5))
         if fps < self.fps:
             print(f"Video captured at lower frame rate than the requested fps. Video FPS - {fps}. Requested FPS - {self.fps}")
@@ -38,10 +41,16 @@ class VideoTransformer(object):
             videoCapture.set(cv2.CAP_PROP_POS_MSEC,(start_time + count*interval))
             count = count + 1
             success,image = videoCapture.read()
+            if success:
+                image = cv2.resize(
+                    image,
+                    (self.resolution[0], self.resolution[1]),
+                    interpolation = cv2.INTER_CUBIC
+                )
             
             imageInNumpy = np.array(image)
             
-            if imageInNumpy.shape != (1560, 1170, 3):
+            if imageInNumpy.shape != (self.resolution[0], self.resolution[0], 3):
                 continue
             
             frames.append(imageInNumpy)
@@ -63,14 +72,23 @@ class VideoTransformer(object):
 
     def scrape_all_data(self, path):
         directories = [f for f in os.listdir(path)]
+        file_list = []
         for directory in directories:
             dir_path = os.path.join(path, directory)
             video_files = [f for f in os.listdir(dir_path) if f.endswith('.mp4')]
             result_dict = {}
-            for video_file in video_files:
-                output = self.transform(dir_path + '/' + video_file)
-                name = video_file.split('.')[0]
-                result_dict[name] = output
+            video_file = video_files[0]
+            file_list.append(dir_path + '/' + video_file)
+        
+        pool = Pool(os.cpu_count())
+        results = pool.map(self.transform, file_list)
+        
+        result_dict = {}
+        for idx, file in enumerate(file_list):
+            output = results[idx]
+            name = file_list[idx].split('/')[-1].split('.')[0]
+            result_dict[name] = output
+
         return result_dict
 
 videoTransformer = VideoTransformer()

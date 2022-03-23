@@ -7,9 +7,9 @@ import VideoLoader.VideoLoader as vl
 import SensorLoader.SensorLoader as sl
 
 class DataTransformer(object):
-    def __init__(self, fps=10):
+    def __init__(self, fps=10, resolution=[512, 512]):
         self.fps = fps
-        self.videoTransformer = vl.VideoTransformer(fps)
+        self.videoTransformer = vl.VideoTransformer(fps, resolution)
         self.sensorTransformer = sl.SensorTransformer(fps)
     
     def transform(self, dir_path, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
@@ -39,8 +39,9 @@ def load_data(filename):
 if __name__ == "__main__":
     with open("../config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
+    # print(config_dict[0]['Transformer']['resolution'][0])
     dataTransformer = DataTransformer(config_dict[0]['Transformer']['fps'])
     result = dataTransformer.scrape_all_data(config_dict[0]['Transformer']['path'])
-    save_data(result, 'temp.npy')
-    loaded = load_data('temp.npy')
-    print(loaded)
+    # save_data(result, 'temp.npy')
+    # loaded = load_data('temp.npy')
+    # print(loaded)
