@@ -1,2 +1,7 @@
 *.pyc
 *.DS*
+DS_Store
+*.venv/
+venv/*
+.idea/*
+Utils/.DS_Store
