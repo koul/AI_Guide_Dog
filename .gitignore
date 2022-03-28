@@ -5,3 +5,4 @@ DS_Store
 venv/*
 .idea/*
 Utils/.DS_Store
+**.ipynb_checkpoints
