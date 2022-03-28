@@ -12,7 +12,7 @@ DELTA_ANGLE: delta = (end- start) % 360
 DIRECTION: minimum of either CW or CCW 
 
 '''
-class LabelDF(object):
+class Labeler(object):
     def __init__(self, input_data, lookback=90, lookforward=120, window_size=10, cutoffs_hard=[70, 100], cutoffs_slight=None):
         self.df = pd.read_csv(input_data)
         self.lookback = lookback
@@ -31,8 +31,7 @@ class LabelDF(object):
             return -1
         
         return 0
-        
-        
+
     '''
     INPUT: List of fields to process
     OUTPUT: Processed DataFrame with Direction for hard turns and also slight turns
@@ -56,6 +55,3 @@ class LabelDF(object):
         print(np.argmax(x==-1))
         
         #return self.df
-
-x = LabelDF("../data/TCSSimpleWalk/shortWalkTwoTurns.csv", 150)
-x.add_direction()
