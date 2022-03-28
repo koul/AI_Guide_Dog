@@ -24,12 +24,10 @@ class Labeler(object):
 
         
     def check_direction(self, angle):
-        
         if angle < self.hard_right_cutoffs[1] and angle > self.hard_right_cutoffs[0]:
             return 1
         elif angle < self.hard_left_cutoffs[1] and angle > self.hard_left_cutoffs[0]:
             return -1
-        
         return 0
 
     '''
@@ -51,7 +49,7 @@ class Labeler(object):
         
         # TODO: Vectorize this quick
         x = heading_delta.apply(lambda angle: self.check_direction(angle))
-        print(np.argmax(x==1))
-        print(np.argmax(x==-1))
-        
-        #return self.df
+        self.df["direction"] = x
+        self.df["back_avg"] = backwards_vals
+        self.df["forward_avg"] = forwards_vals
+        return self.df[["Timestamp (ms)", "direction", "back_avg", "forward_avg"]]
