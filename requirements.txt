@@ -1,2 +1,4 @@
 pyyaml
-opencv
+pandas
+numpy
+opencv-python==4.5.5.64

@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 import os
 
+'''
+To work:
+- When all sensor values are -1, provide default values to get for the entire duration
+- Handle the case where fps > frames available in dtaframe
+'''
 
 class SensorTransformer(object):
     def __init__(self, fps=10):
