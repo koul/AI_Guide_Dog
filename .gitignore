@@ -1,12 +1,9 @@
 *.pyc
 *.DS*
-<<<<<<< HEAD
 *.npy
-=======
 DS_Store
 *.venv/
 venv/*
 .idea/*
 Utils/.DS_Store
 **.ipynb_checkpoints
->>>>>>> 41fb5c401904db5655a4821f67a086ee30d572c2
