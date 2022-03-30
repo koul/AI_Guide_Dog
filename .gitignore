@@ -1,3 +1,9 @@
 *.pyc
 *.DS*
 *.npy
+DS_Store
+*.venv/
+venv/*
+.idea/*
+Utils/.DS_Store
+**.ipynb_checkpoints
