@@ -37,7 +37,7 @@ def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
 if __name__ == "__main__":
-    with open("../config.yaml", "r") as configfile:
+    with open("config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     dataTransformer = DataTransformer(config_dict[0]['Transformer']['fps'])
     result = dataTransformer.scrape_all_data(config_dict[0]['Transformer']['path'])
