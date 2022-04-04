@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import labeler.Labeler as L
 
 '''
 To work:
@@ -41,12 +42,15 @@ class SensorTransformer(object):
             "Activity Manager": ['Activity Type', 'Number of Steps', 'Distance', 'Floors Ascended', 'Floors Descended',
                                  'Current Pace', 'Current Cadence', 'Average Active Pace']}
 
+        self.labeler = L.Labeler()
+
     def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
-        df = pd.read_csv(filename)
+        df = self.labeler.add_direction(filename)
         df.fillna(method='bfill', inplace=True)  # backfill the data to account for missing values
         df.dropna(axis=1, how='all', inplace=True)  # drop a metric if it has no sensor information
         return self.get_sensor_data(df, ref_time=2, secs_in_past=1, secs_in_future=1, sampling_rate=4,
                                sensor_list=self.sensor_types)
+
 
     def add_missing_timestamp_to_df(self, df, ref_time, secs_in_past, secs_in_future, fps):
 
