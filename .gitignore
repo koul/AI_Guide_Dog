@@ -8,5 +8,8 @@ venv/*
 Utils/.DS_Store
 **.ipynb_checkpoints
 **.mp4
+<<<<<<< Updated upstream
 
 
+=======
+>>>>>>> Stashed changes

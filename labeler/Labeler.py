@@ -13,8 +13,7 @@ DIRECTION: minimum of either CW or CCW
 
 '''
 class Labeler(object):
-    def __init__(self, input_data, lookback=90, lookforward=120, window_size=10, cutoffs_hard=[70, 100], cutoffs_slight=None):
-        self.df = pd.read_csv(input_data)
+    def __init__(self, lookback=90, lookforward=120, window_size=10, cutoffs_hard=[70, 100], cutoffs_slight=None):
         self.lookback = lookback
         self.window_size = window_size
         self.lookforward = lookforward
@@ -34,8 +33,9 @@ class Labeler(object):
     INPUT: List of fields to process
     OUTPUT: Processed DataFrame with Direction for hard turns and also slight turns
     '''
-    def add_direction(self, fields="Heading (degrees)"):
-        sub_df = self.df[fields]
+    def add_direction(self, fields="Heading (degrees)", df_path=""):
+        df = pd.read_csv(df_path)
+        sub_df = df[fields]
         averaged_vals = sub_df.rolling(self.window_size, closed="left", center=False).mean()
         
         # shift the values forward and backwards to create the lookback period
@@ -49,7 +49,7 @@ class Labeler(object):
         
         # TODO: Vectorize this quick
         x = heading_delta.apply(lambda angle: self.check_direction(angle))
-        self.df["direction"] = x
-        self.df["back_avg"] = backwards_vals
-        self.df["forward_avg"] = forwards_vals
-        return self.df[["Timestamp (ms)", "direction", "back_avg", "forward_avg"]]
+        df["direction"] = x
+        df["back_avg"] = backwards_vals
+        df["forward_avg"] = forwards_vals
+        return df[["Timestamp (ms)", "direction", "back_avg", "forward_avg"]]
