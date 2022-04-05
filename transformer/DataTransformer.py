@@ -3,14 +3,16 @@ import cv2
 import os
 import yaml
 
-import VideoLoader.VideoLoader as vl
-import SensorLoader.SensorLoader as sl
+
+from AI_Guide_Dog.transformer.VideoTransformer import VideoTransformer
+from AI_Guide_Dog.transformer.SensorTransformer import SensorTransformer
+
 
 class DataTransformer(object):
     def __init__(self, fps=10):
         self.fps = fps
-        self.videoTransformer = vl.VideoTransformer(fps)
-        self.sensorTransformer = sl.SensorTransformer(fps)
+        self.videoTransformer = VideoTransformer(fps)
+        self.sensorTransformer = SensorTransformer(fps)
 
     def transform(self, dir_path, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
         video_file = os.path.join(dir_path, dir_path.split('/')[-1]+'.mp4')
@@ -29,18 +31,3 @@ class DataTransformer(object):
             result_dict[key] = {'Video': video_data[key], 'Sensor': sensor_data[key]}
         return result_dict
 
-
-def save_data(data, filename):
-    np.save(filename, data)
-
-def load_data(filename):
-    return np.load(filename, allow_pickle=True)
-
-if __name__ == "__main__":
-    with open("config.yaml", "r") as configfile:
-        config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
-    dataTransformer = DataTransformer(config_dict[0]['transformer']['fps'])
-    result = dataTransformer.scrape_all_data(config_dict[0]['transformer']['path'])
-    save_data(result, 'temp.npy')
-    loaded = load_data('temp.npy')
-    print(loaded)
