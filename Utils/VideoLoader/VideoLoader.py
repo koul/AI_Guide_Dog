@@ -54,10 +54,8 @@ class VideoTransformer(object):
                 continue
             
             frames.append(imageInNumpy)
-            
-        if not success:
-            # throw an exception
-            pass
+        
+        print(success)
         
         return frames
 

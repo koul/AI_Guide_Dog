@@ -36,12 +36,31 @@ def save_data(data, filename):
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
+# def parse_one_video(video_sample):
+#     data = {
+#         frames = _int32_feature(video_sample.shape[0]),
+#         height = _int32_feature(video_sample.shape[1]),
+#         width = _int32_feature(video_sample.shape[2]),
+#         channels = _int32_feature(video_sample.shape[3]),
+#         image = _bytes_feature(serialize_array(image))
+#     }
+#     out = tf.train.Example(features=tf.train.Features(feature=data))
+#     return out
+
+def store_as_tfrecord(videos):
+    filename= filename+".tfrecords"
+    writer = tf.io.TFRecordWriter(filename)
+
 if __name__ == "__main__":
     with open("../config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict[0]['Transformer']['resolution'][0])
     dataTransformer = DataTransformer(config_dict[0]['Transformer']['fps'])
     result = dataTransformer.scrape_all_data(config_dict[0]['Transformer']['path'])
+    #print(result.keys())
     # save_data(result, 'temp.npy')
     # loaded = load_data('temp.npy')
     # print(loaded)
+    video_sample = result['sample']['Video']
+    print(video_sample.shape)
+    #store_as_tfrecord(video_sample)
