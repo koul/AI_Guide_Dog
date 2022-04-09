@@ -1,0 +1,4 @@
+- transformer:
+    fps: 10
+    path: "data/demo_data"
+    resolution: [512,512]

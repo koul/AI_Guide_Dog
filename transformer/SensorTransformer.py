@@ -1,6 +1,16 @@
 import pandas as pd
 import numpy as np
+import os
 
+
+#import labeler.Labeler as L
+from AI_Guide_Dog.labeler.Labeler import Labeler
+
+'''
+To work:
+- When all sensor values are -1, provide default values to get for the entire duration
+- Handle the case where fps > frames available in dtaframe
+'''
 
 class SensorTransformer(object):
     def __init__(self, fps=10):
@@ -35,12 +45,20 @@ class SensorTransformer(object):
             "Activity Manager": ['Activity Type', 'Number of Steps', 'Distance', 'Floors Ascended', 'Floors Descended',
                                  'Current Pace', 'Current Cadence', 'Average Active Pace']}
 
-    def getSensorDataForCSV(self, filename):
-        df = pd.read_csv(filename)
+        self.labeler = Labeler()
+
+    def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
+        df = self.labeler.add_direction(filename)
         df.fillna(method='bfill', inplace=True)  # backfill the data to account for missing values
         df.dropna(axis=1, how='all', inplace=True)  # drop a metric if it has no sensor information
-        return self.get_sensor_data(df, ref_time=2, secs_in_past=1, secs_in_future=1, sampling_rate=4,
-                               sensor_list=self.sensor_types)
+
+        # currently, takes in from start to endtime
+        return self.get_sensor_data(df, ref_time=-1, secs_in_past=-1, secs_in_future=-1, sampling_rate=self.fps,
+                                    sensor_list=self.sensor_types)
+
+        #return self.get_sensor_data(df, ref_time=2, secs_in_past=1, secs_in_future=1, sampling_rate=self.fps,
+        #                       sensor_list=self.sensor_types)
+
 
     def add_missing_timestamp_to_df(self, df, ref_time, secs_in_past, secs_in_future, fps):
 
@@ -50,11 +68,17 @@ class SensorTransformer(object):
 
         # get missing indices
         last_csv_time_stamp = df.index.values.tolist()[::-1][0]
-        # to handle the corner case where start_time can go negative
-        start_time = max((ref_time - secs_in_past) * 1000, 0)
-        # to handle the corner case where we don't cross the boundary
-        end_time = min((ref_time + secs_in_future) * 1000, last_csv_time_stamp)
-        total_time = (ref_time + 2 * secs_in_future) * 1000
+
+        # when all these 3 are -1, we consider the entire video [default scenario]
+        if(ref_time==-1 and secs_in_past==-1 and secs_in_future==-1):
+            start_time = 0
+            end_time = last_csv_time_stamp
+        else:
+            # to handle the corner case where start_time can go negative
+            start_time = max((ref_time - secs_in_past) * 1000, 0)
+            # to handle the corner case where we don't cross the boundary
+            end_time = min((ref_time + secs_in_future) * 1000, last_csv_time_stamp)
+            total_time = (ref_time + 2 * secs_in_future) * 1000
         sample_duration = (int)(1000 / fps)  # fps is the sampling rate
         # end_time + 1 since we want end_time to be inclusive
         timestamp_of_interest = np.arange(start_time + sample_duration, end_time + 1, sample_duration)
@@ -79,11 +103,24 @@ class SensorTransformer(object):
         result_dict = {}
         for sensor in sensor_list:
             columns_to_retrieve = [x for x in self.senor_to_metric_dict[sensor] if x in df.columns]
-            result_dict[sensor] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[
-                columns_to_retrieve].to_dict('list')
+            # execute this if you don't need timestamp value
+            #result_dict[sensor] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[
+            #    columns_to_retrieve].to_dict('list')
             # execute this if you need timestamp value as well
-            # result_dict[sensor] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[columns_to_retrieve].to_dict()
+            result_dict[sensor] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[columns_to_retrieve].to_dict()
+        result_dict["direction_label"] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[
+            ["direction"]].to_dict()
         return result_dict
 
-sensorTransformer = SensorTransformer()
-sensor_data_dict = sensorTransformer.getSensorDataForCSV("2022-02-17T20_32_33.869Z.csv")
+
+    def scrape_all_data(self, path):
+        directories = [f for f in os.listdir(path) if f[:4]=="2022"]
+        for directory in directories:
+            dir_path = os.path.join(path, directory)
+            sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
+            result_dict = {}
+            for sensor_file in sensor_files:
+                output = self.transform(dir_path + '/' + sensor_file)
+                name = sensor_file.split('.')[0]
+                result_dict[name] = output
+        return result_dict
