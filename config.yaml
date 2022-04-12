@@ -2,3 +2,12 @@
     fps: 10
     path: "data/demo_data"
     resolution: [512,512]
+
+- labeler:
+      lookback: 90
+      lookforward: 120
+      window_size: 10
+      cutoffs_hard: [70, 100]
+      cutoffs_slight: 0
+      smoothing_window: 6
+

@@ -12,20 +12,24 @@ DELTA_ANGLE: delta = (end- start) % 360
 DIRECTION: minimum of either CW or CCW 
 
 '''
+
+
 class Labeler(object):
-    def __init__(self, lookback=90, lookforward=120, window_size=10, cutoffs_hard=[70, 100], cutoffs_slight=None):
+    def __init__(self, lookback=90, lookforward=120, window_size=10, cutoffs_hard=[70, 100], cutoffs_slight=None,
+                 smoothing_window=6):
         self.lookback = lookback
         self.window_size = window_size
         self.lookforward = lookforward
         
         self.hard_left_cutoffs = [(360-cutoffs_hard[1]), (360-cutoffs_hard[0])]
         self.hard_right_cutoffs = cutoffs_hard
+        self.smoothing_window = smoothing_window
 
         
     def check_direction(self, angle):
-        if angle < self.hard_right_cutoffs[1] and angle > self.hard_right_cutoffs[0]:
+        if self.hard_right_cutoffs[1] > angle > self.hard_right_cutoffs[0]:
             return 1
-        elif angle < self.hard_left_cutoffs[1] and angle > self.hard_left_cutoffs[0]:
+        elif self.hard_left_cutoffs[1] > angle > self.hard_left_cutoffs[0]:
             return -1
         return 0
 
@@ -49,7 +53,9 @@ class Labeler(object):
         
         # TODO: Vectorize this quick
         x = heading_delta.apply(lambda angle: self.check_direction(angle))
-        df["direction"] = x
+        x = (x + 1).rolling(window=self.smoothing_window, center=True).mean().round()
+        df["direction"] = x - 1
         df["back_avg"] = backwards_vals
         df["forward_avg"] = forwards_vals
+
         return df

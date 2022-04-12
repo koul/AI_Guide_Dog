@@ -18,8 +18,8 @@ def save_data(data, filename):
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
-def transform(data_file_path, fps):
-    dataTransformer = DataTransformer.DataTransformer(fps)
+def transform(data_file_path, fps, config_dict):
+    dataTransformer = DataTransformer.DataTransformer(fps, config_dict)
     result = dataTransformer.scrape_all_data(data_file_path)
     save_data(result, 'data.npz')
 
@@ -28,9 +28,6 @@ def transform(data_file_path, fps):
 After calling transform, train model on the dumped data
 in the folders
 '''
-
-#def train_model():
-
 
 
 def load_config():
@@ -45,7 +42,7 @@ TODO: full pipeline
 if __name__ == "__main__":
     config_dict = load_config()
     #avoid running transform if .nz has already been generated
-    transform(config_dict[0]['transformer']['path'], config_dict[0]['transformer']['fps'])
+    transform(config_dict[0]['transformer']['path'], config_dict[0]['transformer']['fps'], config_dict)
     #train_model()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model_path = "" #model path

@@ -9,10 +9,10 @@ from AI_Guide_Dog.transformer.SensorTransformer import SensorTransformer
 
 
 class DataTransformer(object):
-    def __init__(self, fps=10):
+    def __init__(self, fps=10, config_dict=None):
         self.fps = fps
         self.videoTransformer = VideoTransformer(fps)
-        self.sensorTransformer = SensorTransformer(fps)
+        self.sensorTransformer = SensorTransformer(fps, config_dict)
 
     def transform(self, dir_path, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
         video_file = os.path.join(dir_path, dir_path.split('/')[-1]+'.mp4')

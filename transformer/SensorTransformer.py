@@ -13,7 +13,7 @@ To work:
 '''
 
 class SensorTransformer(object):
-    def __init__(self, fps=10):
+    def __init__(self, fps=10, config_dict=None):
         self.fps = fps
         self.columns = ['Timestamp (ms)', 'Triggering Sensor', 'Latitude', 'Longitude',
                    'Altitude', 'Heading (degrees)', 'Heading accuracy (degrees)',
@@ -45,7 +45,12 @@ class SensorTransformer(object):
             "Activity Manager": ['Activity Type', 'Number of Steps', 'Distance', 'Floors Ascended', 'Floors Descended',
                                  'Current Pace', 'Current Cadence', 'Average Active Pace']}
 
-        self.labeler = Labeler()
+        self.labeler = Labeler(lookback=config_dict[0]["labeler"]["lookback"],
+                               lookforward=config_dict[0]["labeler"]["lookforward"],
+                               window_size=config_dict[0]["labeler"]["window_size"],
+                               cutoffs_hard=config_dict[0]["labeler"]["cutoffs_hard"],
+                               cutoffs_slight=config_dict[0]["labeler"]["cutoffs_slight"],
+                               smoothing_window=config_dict[0]["labeler"]["smoothing_window"])
 
     def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
         df = self.labeler.add_direction(filename)
