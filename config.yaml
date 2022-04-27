@@ -1,4 +1,0 @@
-- Transformer:
-    fps: 5
-    resolution: [512,512]
-    path: "../data/"
