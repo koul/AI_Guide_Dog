@@ -33,7 +33,7 @@ class Labeler(object):
     INPUT: List of fields to process
     OUTPUT: Processed DataFrame with Direction for hard turns and also slight turns
     '''
-    def add_direction(self, fields="Heading (degrees)", df_path=""):
+    def add_direction(self, df_path="", fields="Heading (degrees)"):
         df = pd.read_csv(df_path)
         sub_df = df[fields]
         averaged_vals = sub_df.rolling(self.window_size, closed="left", center=False).mean()
@@ -52,4 +52,4 @@ class Labeler(object):
         df["direction"] = x
         df["back_avg"] = backwards_vals
         df["forward_avg"] = forwards_vals
-        return df[["Timestamp (ms)", "direction", "back_avg", "forward_avg"]]
+        return df
