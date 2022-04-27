@@ -37,7 +37,7 @@ class VideoTransformer(object):
         return numpyFrames
 
     def scrape_all_data(self, path):
-        directories = [f for f in os.listdir(path)]
+        directories = [f for f in os.listdir(path) if f[:4]=="2022"]
         file_list = []
         for directory in directories:
             dir_path = os.path.join(path, directory)
@@ -45,10 +45,10 @@ class VideoTransformer(object):
             result_dict = {}
             video_file = video_files[0]
             file_list.append(dir_path + '/' + video_file)
-        
+
         pool = Pool(os.cpu_count())
         results = pool.map(self.transform, file_list)
-        
+
         result_dict = {}
         for idx, file in enumerate(file_list):
             output = results[idx]
@@ -56,5 +56,3 @@ class VideoTransformer(object):
             result_dict[name] = output
 
         return result_dict
-
-videoTransformer = VideoTransformer()
