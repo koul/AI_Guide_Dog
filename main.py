@@ -1,7 +1,7 @@
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np
-from trainer.Tester import *
+# from trainer.Tester import *
 
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
@@ -47,9 +47,9 @@ if __name__ == "__main__":
     #avoid running transform if .nz has already been generated
     transform(config_dict[0]['transformer']['path'], config_dict[0]['transformer']['fps'])
     #train_model()
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    model_path = "" #model path
-    test=Tester(model_path, device)
-    video_ids = [] # videos to generate predcitions for 
-    test.validation_pipeline(video_ids)
+    # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    # model_path = "" #model path
+    # test=Tester(model_path, device)
+    # video_ids = [] # videos to generate predcitions for 
+    # test.validation_pipeline(video_ids)
     # loaded = load_data('temp.npy')

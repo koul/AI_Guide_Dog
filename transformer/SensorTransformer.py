@@ -4,7 +4,7 @@ import os
 
 
 #import labeler.Labeler as L
-from AI_Guide_Dog.labeler.Labeler import Labeler
+from labeler.Labeler import Labeler
 
 '''
 To work:
@@ -115,10 +115,10 @@ class SensorTransformer(object):
 
     def scrape_all_data(self, path):
         directories = [f for f in os.listdir(path) if f[:4]=="2022"]
+        result_dict = {}
         for directory in directories:
             dir_path = os.path.join(path, directory)
             sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
-            result_dict = {}
             for sensor_file in sensor_files:
                 output = self.transform(dir_path + '/' + sensor_file)
                 name = sensor_file.split('.')[0]
