@@ -12,11 +12,11 @@ from utils import *
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
 class VideoDataset(Dataset):
-    def __init__(self, files, transforms, seq_len, base_path):
+    def __init__(self, files, transforms, seq_len, frame_path):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len
-        self.base_path = base_path
+        self.frame_path = frame_path
         X = []
         y = []
         for f in files:
@@ -40,7 +40,7 @@ class VideoDataset(Dataset):
         video = torch.FloatTensor(self.seq_len, CHANNELS, HEIGHT, WIDTH)
         for e,filename in enumerate(seq_filename):
             try:
-                frame = np.load(osp.join(self.base_path,filename), allow_pickle=True)
+                frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = (frame - frame.min())/(frame.max() - frame.min())
                 frame = self.transforms(frame)
 
@@ -54,12 +54,12 @@ class VideoDataset(Dataset):
         
 # For CNN model
 class FrameDataset(Dataset):
-    def __init__(self, x, y, transforms, base_path):
+    def __init__(self, x, y, transforms, frame_path):
         self.transforms = transforms
         self.X = x
         self.y = y
         # self.seq_len = seq_len
-        self.base_path = base_path
+        self.frame_path = frame_path
         
     def __len__(self):
         return len(self.X)
@@ -67,7 +67,7 @@ class FrameDataset(Dataset):
     def __getitem__(self, idx):
         seq_filename = self.X[idx]
         try:
-            frame = np.load(osp.join(self.base_path,seq_filename), allow_pickle=True)
+            frame = np.load(osp.join(self.frame_path,seq_filename), allow_pickle=True)
             frame = (frame - frame.min())/(frame.max() - frame.min())
             frame = self.transforms(frame)
             

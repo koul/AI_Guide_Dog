@@ -15,8 +15,8 @@ class Trainer:
         self.config = config_dict
         SEQUENCE_LENGTH = config_dict['data']['SEQUENCE_LENGTH']
 
-        self.train_dataset = VideoDataset(train_files, transforms=train_transforms, seq_len = SEQUENCE_LENGTH, base_path = config_dict['data']['processed_frames'])
-        self.val_dataset = VideoDataset(test_files, transforms=val_transforms, seq_len = SEQUENCE_LENGTH, base_path = config_dict['data']['processed_frames'])
+        self.train_dataset = VideoDataset(train_files, transforms=train_transforms, seq_len = SEQUENCE_LENGTH, frame_path = config_dict['data']['processed_frames'])
+        self.val_dataset = VideoDataset(test_files, transforms=val_transforms, seq_len = SEQUENCE_LENGTH, frame_path = config_dict['data']['processed_frames'])
 
 
         train_args = dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], drop_last=False)

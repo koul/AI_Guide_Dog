@@ -53,10 +53,11 @@ if __name__ == "__main__":
         #   a. resize the frame according to resolution specified in config.yaml  
         #   b. save the frames to a data.processed_frames
         #   c. get the frame label and timestamp
-        #  4. Create a csv - video_filename.csv containing {frame_relative_path, label(rename as direction), timestamp}
+        #  4. Create a csv - video_filename.csv containing {frame_name, label(rename as direction), timestamp}
         #  5. Store csv to data.processed_csvs
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'])
     
+
     # Training setup begins
 
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
@@ -64,6 +65,7 @@ if __name__ == "__main__":
 
     val_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
 
+    # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
     train_files, test_files = make_tt_split(config_dict['data']['processed_csvs'])
 
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files)
