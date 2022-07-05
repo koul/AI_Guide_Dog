@@ -1,9 +1,9 @@
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np
-from trainer.utils import *
+from utils import *
 from torchvision import transforms
-from Trainer import Trainer
+from trainer.Trainer import Trainer
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -14,15 +14,15 @@ https://www.dropbox.com/sh/fbo4dr3wlpob3px/AADKhrnCyaGWCSDb6XoVOBMna?dl=0
 '''
 
 def save_data(data, filename):
-    np.savez(filename, data)
+    np.savez(filename, **data)
 
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
-def transform(data_file_path, fps):
+def transform(data_file_path, fps, data_save_file):
     dataTransformer = DataTransformer.DataTransformer(fps)
     result = dataTransformer.scrape_all_data(data_file_path)
-    save_data(result, 'data.npz')
+    save_data(result, data_save_file)
 
 
 '''
@@ -35,6 +35,7 @@ in the folders
 def load_config():
     with open("config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
+    # print(config_dict)
     return config_dict
 
 
@@ -42,10 +43,10 @@ def load_config():
 TODO: full pipeline
 '''
 if __name__ == "__main__":
-    config_dict = load_config()[0]
+    config_dict = load_config()
 
     #avoid running transform if .nz has already been generated
-    if(config_dict['trainer']['enable_preprocessing'] == True):
+    if(config_dict['global']['enable_preprocessing'] == True):
         #The following function is expected to:
         #  1. Pick up the extract the video and sensor data
         #  2. Transform video according to the required fps
@@ -55,9 +56,13 @@ if __name__ == "__main__":
         #   c. get the frame label and timestamp
         #  4. Create a csv - video_filename.csv containing {frame_name, label(rename as direction), timestamp}
         #  5. Store csv to data.processed_csvs
-        transform(config_dict['transformer']['path'], config_dict['transformer']['fps'])
+        transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'])
     
+    df = np.load(config_dict['transformer']['data_save_file']+'.npz', allow_pickle=True)
+    print(dict(df['sample']).keys())
+    exit()
 
+    
     # Training setup begins
 
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]

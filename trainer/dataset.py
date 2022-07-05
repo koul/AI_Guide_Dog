@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from config import *
+# from config import *
 # import ffmpeg
 import os
 import os.path as osp
