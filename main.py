@@ -13,16 +13,19 @@ https://www.dropbox.com/sh/o8orrxczmthtja6/AABCl_5tqbHt-DJoc1RnnjVDa?dl=0
 https://www.dropbox.com/sh/fbo4dr3wlpob3px/AADKhrnCyaGWCSDb6XoVOBMna?dl=0
 '''
 
-def save_data(data, filename):
-    np.savez(filename, **data)
+def save_data(video_data, sensor_data, filename):
+    # np.savez(filename, **data)
+    np.savez(filename+'_sensor', **sensor_data)
+    np.savez(filename+'_video', **video_data)
+        
 
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
 def transform(data_file_path, fps, data_save_file):
     dataTransformer = DataTransformer.DataTransformer(fps)
-    result = dataTransformer.scrape_all_data(data_file_path)
-    save_data(result, data_save_file)
+    video_data, sensor_data = dataTransformer.scrape_all_data(data_file_path)
+    save_data(video_data, sensor_data, data_save_file)
 
 
 '''
@@ -58,11 +61,15 @@ if __name__ == "__main__":
         #  5. Store csv to data.processed_csvs
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'])
     
-    df = np.load(config_dict['transformer']['data_save_file']+'.npz', allow_pickle=True)
-    print(dict(df['sample']).keys())
+    df_videos = np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True)
+    print(dict(df_videos).keys())
+
+    # need video and sensor data separately
+    df_sensor = np.load(config_dict['transformer']['data_save_file']+'_sensor.npy', allow_pickle=True)
+    print(dict(df_sensor).keys())
     exit()
 
-    
+
     # Training setup begins
 
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
