@@ -4,8 +4,8 @@ import os
 import yaml
 
 
-from AI_Guide_Dog.transformer.VideoTransformer import VideoTransformer
-from AI_Guide_Dog.transformer.SensorTransformer import SensorTransformer
+from transformer.VideoTransformer import VideoTransformer
+from transformer.SensorTransformer import SensorTransformer
 
 
 class DataTransformer(object):

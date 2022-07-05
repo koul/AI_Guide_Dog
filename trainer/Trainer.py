@@ -1,7 +1,7 @@
 import torch
-from dataset import VideoDataset
+from trainer.dataset import VideoDataset
 from torch.utils.data import DataLoader
-from models import *
+from trainer.models import *
 from tqdm import tqdm
 from utils import save
 
