@@ -18,12 +18,12 @@ trainer:
     BATCH: 32
     lr: 0.01
     epochs: 30
-    lamda: 1e-3  #L2 regularization #changed from 1e-4
+    lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: ""
     model:
         name: "ConvLSTM"
         convlstm_hidden: 128
         num_conv_lstm_layers: 2
-        pretrained_path: NULL
-        optimizer_path: NULL
+        pretrained_path: ""
+        optimizer_path: ""

@@ -88,7 +88,7 @@ if __name__ == "__main__":
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos)
 
-    exit()
+    # exit()
 
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):

@@ -35,18 +35,19 @@ class Trainer:
        
         self.epochs = config_dict['trainer']['epochs']
 
-        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'], ['num_conv_lstm_layers'],True)
+        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
-        if(config_dict['trainer']['model']['pretained_path'] != NULL):
+        if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
         
         self.model = self.model.to(self.device)
 
         self.criterion = nn.CrossEntropyLoss()
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
+        
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
         
-        if(config_dict['trainer']['model']['optimizer_path'] != NULL):
+        if(config_dict['trainer']['model']['optimizer_path'] != ""):
             self.optimizer.load_state_dict(torch.load('./models/attempt3_1sec_prior/optimizer_params_00000000.pth'))
 
         # for g in optimizer.param_groups:
