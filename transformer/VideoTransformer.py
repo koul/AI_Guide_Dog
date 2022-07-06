@@ -55,7 +55,8 @@ class VideoTransformer(object):
 
             imageInNumpy = np.array(image)
 
-            if imageInNumpy.shape != (self.resolution[0], self.resolution[0], 3):
+            if imageInNumpy.shape != (self.resolution[0], self.resolution[1], 3):
+                print("Error processing frame: Shape error: ", imageInNumpy.shape)
                 continue
 
             frames.append(imageInNumpy)
@@ -72,7 +73,7 @@ class VideoTransformer(object):
         return numpyFrames
 
     def scrape_all_data(self, path):
-        directories = [f for f in os.listdir(path) if f[:4]=="2022"]
+        directories = [f for f in os.listdir(path)]
         file_list = []
         for directory in directories:
             dir_path = os.path.join(path, directory)
