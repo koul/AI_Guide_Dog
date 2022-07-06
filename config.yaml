@@ -1,28 +1,29 @@
-- global: 
+global: 
     root_dir: ""
     iteration: 1
-- transformer:
+    enable_preprocessing: false
+transformer:
     fps: 10
-    path: "data/demo_data"
-    resolution: [512,512] #can you change the code to use resolution values from data.HEIGHT and data.WIDTH?
-- data:
+    path: "data/TrainingData"
+    data_save_file: "data/sample_data" #file path without .npz
+    # resolution: [128,128] #can you change the code to use resolution values from data.HEIGHT and data.WIDTH?
+data:
     processed_frames: ""
     processed_csvs: ""
     HEIGHT: 128
     WIDTH: 128
     CHANNELS: 3
     SEQUENCE_LENGTH: 8
-- trainer:
-    enable_preprocessing: false
+trainer:
     BATCH: 32
     lr: 0.01
     epochs: 30
-    lamda: 1e-3  #L2 regularization #changed from 1e-4
+    lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: ""
     model:
         name: "ConvLSTM"
         convlstm_hidden: 128
         num_conv_lstm_layers: 2
-        pretrained_path: NULL
-        optimizer_path: NULL
+        pretrained_path: ""
+        optimizer_path: ""

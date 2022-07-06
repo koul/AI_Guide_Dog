@@ -114,7 +114,7 @@ class SensorTransformer(object):
 
 
     def scrape_all_data(self, path):
-        directories = [f for f in os.listdir(path) if f[:4]=="2022"]
+        directories = [f for f in os.listdir(path)]
         result_dict = {}
         for directory in directories:
             dir_path = os.path.join(path, directory)

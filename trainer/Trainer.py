@@ -1,23 +1,31 @@
 import torch
-from dataset import VideoDataset
+from trainer.dataset import VideoDataset
 from torch.utils.data import DataLoader
-from models import *
+from trainer.models import *
 from tqdm import tqdm
 from utils import save
 
 class Trainer:
     # initialize a new trainer
-    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files):    
+    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos):    
         self.cuda = torch.cuda.is_available()
-        print(self.cuda)
+        # print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         
         self.config = config_dict
         SEQUENCE_LENGTH = config_dict['data']['SEQUENCE_LENGTH']
 
-        self.train_dataset = VideoDataset(train_files, transforms=train_transforms, seq_len = SEQUENCE_LENGTH, frame_path = config_dict['data']['processed_frames'])
-        self.val_dataset = VideoDataset(test_files, transforms=val_transforms, seq_len = SEQUENCE_LENGTH, frame_path = config_dict['data']['processed_frames'])
+        self.train_dataset = VideoDataset(df_videos, train_files, transforms=train_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
+        
+        # a,x = self.train_dataset.__getitem__(0)
+        # b,y = self.train_dataset.__getitem__(1)
+        # # print(self.train_dataset.__getitem__(0))
+        # # print(self.train_dataset.__getitem__(1))
+        # print(a[1,:,:,:] == b[0,:,:,:])
+        # print(x)
+        # print(y)
 
+        self.val_dataset = VideoDataset(df_videos, test_files, transforms=val_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
 
         train_args = dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.train_loader = DataLoader(self.train_dataset, **train_args)
@@ -27,18 +35,19 @@ class Trainer:
        
         self.epochs = config_dict['trainer']['epochs']
 
-        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'], ['num_conv_lstm_layers'],True)
+        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
-        if(config_dict['trainer']['model']['pretained_path'] != NULL):
+        if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
         
         self.model = self.model.to(self.device)
 
         self.criterion = nn.CrossEntropyLoss()
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
+        
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
         
-        if(config_dict['trainer']['model']['optimizer_path'] != NULL):
+        if(config_dict['trainer']['model']['optimizer_path'] != ""):
             self.optimizer.load_state_dict(torch.load('./models/attempt3_1sec_prior/optimizer_params_00000000.pth'))
 
         # for g in optimizer.param_groups:
