@@ -6,7 +6,7 @@ transformer:
     fps: 10
     path: "data/TrainingData"
     data_save_file: "data/sample_data" #file path without .npz
-    resolution: [512,512] #can you change the code to use resolution values from data.HEIGHT and data.WIDTH?
+    # resolution: [128,128] #can you change the code to use resolution values from data.HEIGHT and data.WIDTH?
 data:
     processed_frames: ""
     processed_csvs: ""

@@ -2,7 +2,7 @@ import os
 import cv2
 import pandas as pd
 # from config import *
-from random import random
+from random import shuffle
 import os.path as osp
 import torch
 
@@ -16,16 +16,24 @@ def preprocess_labels(df):
     df_new['labels'] = df['directions'][viable_indices].reset_index(drop = True)
     return df_new
     
-def make_tt_split(data_folder):
-    X = []
-    y = []
-    files = []
-    for filename in os.listdir(data_folder):
-        if(filename[-3:]=="csv"):
-            files.append(osp.join(data_folder,filename))
+# def make_tt_split(data_folder):
+#     X = []
+#     y = []
+#     files = []
+#     for filename in os.listdir(data_folder):
+#         if(filename[-3:]=="csv"):
+#             files.append(osp.join(data_folder,filename))
     
-    random.shuffle(files)
+#     random.shuffle(files)
     
+#     ts = int(len(files) * 0.25)
+#     test_files = files[:ts]
+#     train_files = files[ts:]
+#     print("Test files ",test_files)
+#     return train_files, test_files
+
+def make_tt_split(files):
+    shuffle(files)
     ts = int(len(files) * 0.25)
     test_files = files[:ts]
     train_files = files[ts:]

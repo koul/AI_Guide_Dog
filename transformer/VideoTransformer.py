@@ -55,7 +55,8 @@ class VideoTransformer(object):
 
             imageInNumpy = np.array(image)
 
-            if imageInNumpy.shape != (self.resolution[0], self.resolution[0], 3):
+            if imageInNumpy.shape != (self.resolution[0], self.resolution[1], 3):
+                print("Error processing frame: Shape error: ", imageInNumpy.shape)
                 continue
 
             frames.append(imageInNumpy)
