@@ -4,6 +4,7 @@ import numpy as np
 from utils import *
 from torchvision import transforms
 from trainer.Trainer import Trainer
+import pickle
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -15,10 +16,12 @@ https://www.dropbox.com/sh/fbo4dr3wlpob3px/AADKhrnCyaGWCSDb6XoVOBMna?dl=0
 
 def save_data(video_data, sensor_data, filename):
     # np.savez(filename, **data)
-    np.savez(filename+'_sensor', **sensor_data)
+    # np.savez(filename+'_sensor', **sensor_data)
     np.savez(filename+'_video', **video_data)
-        
+    with open(filename+'_sensor.pickle', 'wb') as handle:
+        pickle.dump(sensor_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+        
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
@@ -67,8 +70,11 @@ if __name__ == "__main__":
     # need video and sensor data separately
     # df_sensor = np.load(config_dict['transformer']['data_save_file']+'_sensor.npy', allow_pickle=True)
     # print(dict(df_sensor).keys())
-
-    # exit()
+    with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
+        df_sensor = pickle.load(handle)
+    
+    print(df_sensor['sample']['direction_label']['direction'].keys())
+    exit()
 
 
     # Training setup begins

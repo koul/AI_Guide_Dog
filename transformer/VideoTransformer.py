@@ -1,72 +1,36 @@
-from multiprocessing import Pool
-
 import numpy as np
-import cv2
 import os
-
+from multiprocessing import Pool
+import ffmpeg
 
 class VideoTransformer(object):
-    def __init__(self, fps=10, resolution=[512, 512]):
+    def __init__(self, fps = 10, resolution = [512,512]):
         self.fps = fps
         self.resolution = resolution
 
     def _getVideo(self, filename):
-        cap = cv2.VideoCapture(filename)
-        cap.set(3, self.resolution[0])
-        cap.set(4, self.resolution[1])
-        fps = int(cap.get(5))
-        if fps < self.fps:
-            print(
-                f"Video captured at lower frame rate than the requested fps. Video FPS - {fps}. Requested FPS - {self.fps}")
-        return cap
+        video_stream = ffmpeg.input(filename)
+        return video_stream
 
-    # def _resize(self, image):
-    #     resized = cv2.resize(image, (1560, 1170), interpolation = cv2.INTER_AREA)
-    #     return resized
-
-    def _getFrames(self, videoCapture, fps, ref_time=-1, secs_in_past=-1, secs_in_future=-1):
-
-        count = 1
-
-        if ref_time == -1:
-            start_time = 0
-            frame_rate = videoCapture.get(cv2.CAP_PROP_FPS)  # OpenCV2 version 2 used "CV_CAP_PROP_FPS"
-            frame_count = int(videoCapture.get(cv2.CAP_PROP_FRAME_COUNT))
-            end_time = (frame_count / frame_rate) * 1000
-        else:
-            start_time = (ref_time - secs_in_past) * 1000
-            end_time = (ref_time + secs_in_future) * 1000
-
-        success = True
-        interval = 1000.0 / fps
-
-        frames = []
-
-        while success and start_time + count < end_time:
-            videoCapture.set(cv2.CAP_PROP_POS_MSEC, (start_time + count * interval))
-            count = count + 1
-            success, image = videoCapture.read()
-            if success:
-                image = cv2.resize(
-                    image,
-                    (self.resolution[0], self.resolution[1]),
-                    interpolation=cv2.INTER_CUBIC
-                )
-
-            imageInNumpy = np.array(image)
-
-            if imageInNumpy.shape != (self.resolution[0], self.resolution[1], 3):
-                print("Error processing frame: Shape error: ", imageInNumpy.shape)
-                continue
-
-            frames.append(imageInNumpy)
-
-        return frames
+    def _getFrames(self, videoCapture, fps, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
+        
+        if ref_time != -1 and secs_in_past != -1 and secs_in_future != -1:
+            videoCapture = videoCapture.trim(start = ref_time - secs_in_past, duration = secs_in_past + secs_in_future).filter('setpts', 'PTS-STARTPTS')
+        
+        videoCapture = videoCapture.filter('fps', fps = fps, round = 'up').filter('scale', w = self.resolution[0], h = self.resolution[1])
+        return videoCapture
 
     def _convertToNumpy(self, frames):
-        return np.array(frames)
+        out, err = (
+            frames
+            .output('pipe:', format='rawvideo', pix_fmt='rgb24')
+            .run(capture_stdout=True)
+        )
+        print("Error: ", err)
+        video = np.frombuffer(out, np.uint8).reshape([-1, self.resolution[0], self.resolution[1], 3])[1:,:,:,:]
+        return video
 
-    def transform(self, filename, ref_time=-1, secs_in_past=-1, secs_in_future=-1):
+    def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
         video = self._getVideo(filename)
         frames = self._getFrames(video, self.fps, ref_time, secs_in_past, secs_in_future)
         numpyFrames = self._convertToNumpy(frames)
