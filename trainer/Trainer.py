@@ -7,25 +7,28 @@ from utils import save
 
 class Trainer:
     # initialize a new trainer
-    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos):    
+    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor):    
         self.cuda = torch.cuda.is_available()
         # print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         
         self.config = config_dict
-        SEQUENCE_LENGTH = config_dict['data']['SEQUENCE_LENGTH']
+        self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
 
-        self.train_dataset = VideoDataset(df_videos, train_files, transforms=train_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
+        self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
         
         # a,x = self.train_dataset.__getitem__(0)
         # b,y = self.train_dataset.__getitem__(1)
+        # print(a.shape)
+        # print(b.shape)
         # # print(self.train_dataset.__getitem__(0))
         # # print(self.train_dataset.__getitem__(1))
         # print(a[1,:,:,:] == b[0,:,:,:])
         # print(x)
         # print(y)
 
-        self.val_dataset = VideoDataset(df_videos, test_files, transforms=val_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
+        # exit()
+        self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
 
         train_args = dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.train_loader = DataLoader(self.train_dataset, **train_args)
@@ -84,7 +87,7 @@ class Trainer:
             total_loss += float(loss)
 
             batch_bar.set_postfix(
-                acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'] * self.config['trainer']['SEQUENCE_LENGTH'])),
+                acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'] * self.seq_len)),
                 loss="{:.04f}".format(float(total_loss / (i + 1))),
                 num_correct=num_correct,
                 lr="{:.04f}".format(float(self.optimizer.param_groups[0]['lr'])))
@@ -98,7 +101,7 @@ class Trainer:
             
 
         batch_bar.close()
-        acc = 100 * num_correct / (len(self.train_dataset) * self.config['trainer']['SEQUENCE_LENGTH'])
+        acc = 100 * num_correct / (len(self.train_dataset) * self.seq_len)
         print("Epoch {}/{}: Train Acc {:.04f}%, Train Loss {:.04f}, Learning Rate {:.04f}".format(
             self.epoch + 1,
             self.epochs,
@@ -123,11 +126,11 @@ class Trainer:
             val_num_correct += int((torch.argmax(outputs, axis=2) == vy).sum())
             del outputs
 
-        acc = 100 * val_num_correct / (len(self.val_dataset) * self.config['trainer']['SEQUENCE_LENGTH'])
+        acc = 100 * val_num_correct / (len(self.val_dataset) * self.seq_len)
         print("Validation: {:.04f}%".format(acc))
         return acc
 
-    def save(self, acc):
-        save(self.config, self.model, self.epoch, acc, optim = False)
-        save(self.config, self.optimizer, self.epoch, acc, optim = True)
+    def save(self, acc, epoch):
+        save(self.config, self.model, epoch, acc, optim = False)
+        save(self.config, self.optimizer, epoch, acc, optim = True)
         

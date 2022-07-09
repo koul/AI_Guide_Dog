@@ -15,7 +15,13 @@ def preprocess_labels(df):
     df_new = df[label_indices != len(df)].reset_index(drop = True)
     df_new['labels'] = df['directions'][viable_indices].reset_index(drop = True)
     return df_new
-    
+
+
+def convert_to_dataframe(d):
+    df = pd.DataFrame.from_dict(d, orient ='index') 
+    df = df.reset_index(drop = False).reset_index(drop = False)
+    df.columns = ['frame_index', 'timestamp', 'directions']
+    return df
 # def make_tt_split(data_folder):
 #     X = []
 #     y = []
@@ -48,7 +54,7 @@ def save(config, model, index, acc, optim = False):
     if(optim):
         torch.save(model.state_dict(), save_path+'/{}_optimizer_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
     else:
-        torch.save(model.state_dict(), save_path+'/attempt_8_frames_resnet18_new_data_diff_split'+'/{}_model_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
+        torch.save(model.state_dict(), save_path+'/{}_model_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
 
 ## Following is to be incorporated into Transformer for getting data at frame level
 def label_map(lab):
