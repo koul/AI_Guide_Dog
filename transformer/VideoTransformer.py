@@ -26,6 +26,7 @@ class VideoTransformer(object):
             .output('pipe:', format='rawvideo', pix_fmt='rgb24')
             .run(capture_stdout=True)
         )
+        print("Error: ", err)
         video = np.frombuffer(out, np.uint8).reshape([-1, self.resolution[0], self.resolution[1], 3])[1:,:,:,:]
         return video
 
@@ -36,7 +37,7 @@ class VideoTransformer(object):
         return numpyFrames
 
     def scrape_all_data(self, path):
-        directories = [f for f in os.listdir(path) if f[:4]=="2022"]
+        directories = [f for f in os.listdir(path)]
         file_list = []
         for directory in directories:
             dir_path = os.path.join(path, directory)
