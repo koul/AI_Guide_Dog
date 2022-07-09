@@ -1,6 +1,6 @@
 global: 
     root_dir: ""
-    iteration: 1
+    iteration: "test_integration"
     enable_preprocessing: false
 transformer:
     fps: 10
@@ -20,7 +20,7 @@ trainer:
     epochs: 30
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
-    model_save_path: ""
+    model_save_path: "data/models/"
     model:
         name: "ConvLSTM"
         convlstm_hidden: 128

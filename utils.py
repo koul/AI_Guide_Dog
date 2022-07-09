@@ -54,7 +54,7 @@ def save(config, model, index, acc, optim = False):
     if(optim):
         torch.save(model.state_dict(), save_path+'/{}_optimizer_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
     else:
-        torch.save(model.state_dict(), save_path+'/attempt_8_frames_resnet18_new_data_diff_split'+'/{}_model_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
+        torch.save(model.state_dict(), save_path+'/{}_model_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
 
 ## Following is to be incorporated into Transformer for getting data at frame level
 def label_map(lab):
