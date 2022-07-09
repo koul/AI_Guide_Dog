@@ -7,7 +7,7 @@ from utils import save
 
 class Trainer:
     # initialize a new trainer
-    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos):    
+    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor):    
         self.cuda = torch.cuda.is_available()
         # print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -15,17 +15,20 @@ class Trainer:
         self.config = config_dict
         SEQUENCE_LENGTH = config_dict['data']['SEQUENCE_LENGTH']
 
-        self.train_dataset = VideoDataset(df_videos, train_files, transforms=train_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
+        self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
         
         # a,x = self.train_dataset.__getitem__(0)
         # b,y = self.train_dataset.__getitem__(1)
+        # print(a.shape)
+        # print(b.shape)
         # # print(self.train_dataset.__getitem__(0))
         # # print(self.train_dataset.__getitem__(1))
         # print(a[1,:,:,:] == b[0,:,:,:])
         # print(x)
         # print(y)
 
-        self.val_dataset = VideoDataset(df_videos, test_files, transforms=val_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
+        # exit()
+        self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = SEQUENCE_LENGTH, config_dict=self.config)
 
         train_args = dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.train_loader = DataLoader(self.train_dataset, **train_args)

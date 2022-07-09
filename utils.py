@@ -15,7 +15,13 @@ def preprocess_labels(df):
     df_new = df[label_indices != len(df)].reset_index(drop = True)
     df_new['labels'] = df['directions'][viable_indices].reset_index(drop = True)
     return df_new
-    
+
+
+def convert_to_dataframe(d):
+    df = pd.DataFrame.from_dict(d, orient ='index') 
+    df = df.reset_index(drop = False).reset_index(drop = False)
+    df.columns = ['frame_index', 'timestamp', 'directions']
+    return df
 # def make_tt_split(data_folder):
 #     X = []
 #     y = []
