@@ -1,6 +1,7 @@
 *.pyc
 *.DS*
 *.npy
+data/*
 DS_Store
 *.venv/
 venv/*
