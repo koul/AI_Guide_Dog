@@ -12,31 +12,27 @@ from utils import *
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
 class VideoDataset(Dataset):
-    def __init__(self, df_videos, files, transforms, seq_len, config_dict=None):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len
         self.df_videos = df_videos
+        self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
         # self.frame_path = frame_path
         self.X_vid = []
         self.X_index = []
         y = []
         for f in files:
+            df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
+            df_processed = preprocess_labels(df) # assign 1 sec forward labels
 
-        #     df = pd.read_csv(f)
-        #     df_processed = preprocess_labels(df) # assign 1 sec forward labels
-
-        #     # Generate training sequences
-            # for i in range(len(df_processed)-self.seq_len):
-            #     X.append(df_processed['frames'][i:i+seq_len].to_numpy())
-            #     y.append(df_processed['labels'][i+seq_len-1])
-            for i in range(20):
+            # Generate training sequences
+            for i in range(len(df_processed)-self.seq_len):
                 self.X_vid.append(f)
-                self.X_index.append(i)
-                y.append(2)
+                self.X_index.append(df_processed['frame_index'][i])
+                y.append(label_map(df_processed['labels'][i]))
 
-        # self.X = np.stack(X, axis = 0)
         # self.X = np.stack(X, axis = 0)
         self.y = np.array(y)
         

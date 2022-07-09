@@ -1,7 +1,7 @@
 global: 
     root_dir: ""
     iteration: 1
-    enable_preprocessing: true
+    enable_preprocessing: false
 transformer:
     fps: 10
     path: "data/TrainingData"

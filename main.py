@@ -65,7 +65,7 @@ if __name__ == "__main__":
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],[config_dict['data']['HEIGHT'],config_dict['data']['WIDTH']])
     
     df_videos = np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True)
-    print(dict(df_videos).keys())
+    # print(df_videos['sample'].shape)
 
     # need video and sensor data separately
     # df_sensor = np.load(config_dict['transformer']['data_save_file']+'_sensor.npy', allow_pickle=True)
@@ -73,8 +73,8 @@ if __name__ == "__main__":
     with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
     
-    print(df_sensor['sample']['direction_label']['direction'].keys())
-    exit()
+    # print(df_sensor['sample']['direction_label']['direction'])
+    # exit()
 
 
     # Training setup begins
@@ -92,10 +92,11 @@ if __name__ == "__main__":
     print(train_files)
     print(test_files)
     
-    trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos)
+    trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
 
-    # exit()
-
+    acc = trainer.validate()
+    trainer.save(acc)
+    exit()
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):
         trainer.train()
