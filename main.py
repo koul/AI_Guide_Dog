@@ -53,32 +53,18 @@ if __name__ == "__main__":
 
     #avoid running transform if .nz has already been generated
     if(config_dict['global']['enable_preprocessing'] == True):
-        #The following function is expected to:
-        #  1. Pick up the extract the video and sensor data
-        #  2. Transform video according to the required fps
-        #  3. For each frame in a given video do:
-        #   a. resize the frame according to resolution specified in config.yaml  
-        #   b. save the frames to a data.processed_frames
-        #   c. get the frame label and timestamp
-        #  4. Create a csv - video_filename.csv containing {frame_name, label(rename as direction), timestamp}
-        #  5. Store csv to data.processed_csvs
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],[config_dict['data']['HEIGHT'],config_dict['data']['WIDTH']])
     
     df_videos = np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True)
     # print(df_videos['sample'].shape)
 
     # need video and sensor data separately
-    # df_sensor = np.load(config_dict['transformer']['data_save_file']+'_sensor.npy', allow_pickle=True)
-    # print(dict(df_sensor).keys())
     with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
     
     # print(df_sensor['sample']['direction_label']['direction'])
-    # exit()
-
-
+    
     # Training setup begins
-
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
 
@@ -88,17 +74,14 @@ if __name__ == "__main__":
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
     train_files, test_files = make_tt_split(list(dict(df_videos).keys()))
-
+    
     print(train_files)
     print(test_files)
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
-
-    acc = trainer.validate()
-    trainer.save(acc)
-    exit()
+    
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):
         trainer.train()
         acc = trainer.validate()
-        trainer.save(acc)
+        trainer.save(acc, epoch)
