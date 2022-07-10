@@ -1,29 +1,27 @@
 global: 
     root_dir: ""
-    iteration: "test_integration"
+    iteration: "library_aditi_run1"
     enable_preprocessing: false
 transformer:
-    fps: 10
-    path: "data/TrainingData"
-    data_save_file: "data/sample_data" #file path without .npz
+    fps: 5
+    path: "data/LibraryAditi"
+    data_save_file: "data/processed/lib_aditi" #file path without .npz
     # resolution: [128,128] #can you change the code to use resolution values from data.HEIGHT and data.WIDTH?
 data:
-    processed_frames: ""
-    processed_csvs: ""
     HEIGHT: 128
     WIDTH: 128
     CHANNELS: 3
     SEQUENCE_LENGTH: 8
 trainer:
-    BATCH: 32
+    BATCH: 8
     lr: 0.01
-    epochs: 30
+    epochs: 20
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
-    model_save_path: "data/models/"
+    model_save_path: "../efs/Capstone/models/"
     model:
         name: "ConvLSTM"
         convlstm_hidden: 128
-        num_conv_lstm_layers: 2
+        num_conv_lstm_layers: 1
         pretrained_path: ""
         optimizer_path: ""
