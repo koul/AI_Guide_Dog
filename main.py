@@ -55,8 +55,8 @@ if __name__ == "__main__":
     if(config_dict['global']['enable_preprocessing'] == True):
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],[config_dict['data']['HEIGHT'],config_dict['data']['WIDTH']])
     
-    df_videos = np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True)
-    # print(df_videos['sample'].shape)
+    df_videos = dict(np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True))
+    print(df_videos.keys())
 
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
@@ -73,12 +73,13 @@ if __name__ == "__main__":
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
-    train_files, test_files = make_tt_split(list(dict(df_videos).keys()))
+    train_files, test_files = make_tt_split(list(df_videos.keys()))
     
     print(train_files)
     print(test_files)
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
+    trainer.save(0, -1)
     
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):
