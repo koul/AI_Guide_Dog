@@ -83,6 +83,6 @@ if __name__ == "__main__":
     
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):
-        trainer.train()
+        trainer.train(epoch)
         acc = trainer.validate()
         trainer.save(acc, epoch)
