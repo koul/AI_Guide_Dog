@@ -5,6 +5,7 @@ import pandas as pd
 from random import shuffle
 import os.path as osp
 import torch
+from torch.utils.data import WeightedRandomSampler
 
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
@@ -22,21 +23,6 @@ def convert_to_dataframe(d):
     df = df.reset_index(drop = False).reset_index(drop = False)
     df.columns = ['frame_index', 'timestamp', 'directions']
     return df
-# def make_tt_split(data_folder):
-#     X = []
-#     y = []
-#     files = []
-#     for filename in os.listdir(data_folder):
-#         if(filename[-3:]=="csv"):
-#             files.append(osp.join(data_folder,filename))
-    
-#     random.shuffle(files)
-    
-#     ts = int(len(files) * 0.25)
-#     test_files = files[:ts]
-#     train_files = files[ts:]
-#     print("Test files ",test_files)
-#     return train_files, test_files
 
 def make_tt_split(files):
     shuffle(files)
@@ -46,6 +32,20 @@ def make_tt_split(files):
     print("Test files ",test_files)
     return train_files, test_files
 
+def labelCount(label, n_classes):
+    label_count = [0]*(n_classes)
+    for lab in label:
+        label_count[lab] += 1
+    return label_count
+
+def sampler_(dataset_labels, n_classes):
+    dataset_counts = labelCount(dataset_labels, n_classes)
+    print(dataset_counts)
+    num_samples = sum(dataset_counts)
+    class_weights = [num_samples/i for i in dataset_counts]
+    weights = [class_weights[y] for y in dataset_labels]
+    sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
+    return sampler
 
 def save(config, model, index, acc, optim = False):
     save_path = os.path.join(config['global']['root_dir'],config['trainer']['model_save_path'], str(config['global']['iteration']))
@@ -55,29 +55,6 @@ def save(config, model, index, acc, optim = False):
         torch.save(model.state_dict(), save_path+'/{}_optimizer_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
     else:
         torch.save(model.state_dict(), save_path+'/{}_model_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
-
-## Following is to be incorporated into Transformer for getting data at frame level
-def label_map(lab):
-    if(lab == 0):
-        return 2
-    elif(lab == -1):
-        return 0
-    else:
-        return 1
-    
-def get_all_files_from_dir(directory, vids = False):
-    file_paths = []
-    print(directory)
-    try:
-        for root, dirs, files in os.walk(directory):
-            # print(files)
-            if(vids):
-                file_paths += [os.path.join(root, x,x+".mp4") for x in dirs]
-            else:
-                file_paths += [os.path.join(root, x) for x in files]
-        return sorted(file_paths)
-    except Exception as e:
-        print(e)
 
 def label_map(lab):
     if(lab == 0):

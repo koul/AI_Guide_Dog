@@ -3,7 +3,7 @@ from trainer.dataset import VideoDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
-from utils import save
+from utils import *
 
 class Trainer:
     # initialize a new trainer
@@ -11,10 +11,11 @@ class Trainer:
         self.cuda = torch.cuda.is_available()
         # print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-        
+
         self.config = config_dict
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
-
+        self.epochs = config_dict['trainer']['epochs']
+        
         self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
         
         # a,x = self.train_dataset.__getitem__(0)
@@ -26,13 +27,18 @@ class Trainer:
         # print(a[1,:,:,:] == b[0,:,:,:])
         # print(x)
         # print(y)
+      
+        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])
+        
+        train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+
+        self.train_loader = DataLoader(self.train_dataset, **train_args)
+
 
         self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
 
-        train_args = dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
-        self.train_loader = DataLoader(self.train_dataset, **train_args)
-
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
+
         self.val_loader = DataLoader(self.val_dataset, **val_args)
        
         self.epochs = config_dict['trainer']['epochs']
@@ -62,7 +68,7 @@ class Trainer:
         print(self.model)
 
 
-    def train(self):
+    def train(self, epoch):
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
 
         num_correct = 0
@@ -81,7 +87,7 @@ class Trainer:
                 del x
                 loss = self.criterion(outputs.view(-1, self.config['trainer']['num_classes']), y.long().view(-1))
 
-            num_correct += int((torch.argmax(outputs, axis=2) == y).sum())
+            num_correct += int((torch.argmax(outputs, axis=1) == y).sum())
             del outputs
             total_loss += float(loss)
 
@@ -102,7 +108,7 @@ class Trainer:
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset) * self.seq_len)
         print("Epoch {}/{}: Train Acc {:.04f}%, Train Loss {:.04f}, Learning Rate {:.04f}".format(
-            self.epoch + 1,
+            epoch + 1,
             self.epochs,
             acc,
             float(total_loss / len(self.train_loader)),
@@ -122,7 +128,7 @@ class Trainer:
                 outputs = self.model(vx)
                 del vx
 
-            val_num_correct += int((torch.argmax(outputs, axis=2) == vy).sum())
+            val_num_correct += int((torch.argmax(outputs, axis=1) == vy).sum())
             del outputs
 
         acc = 100 * val_num_correct / (len(self.val_dataset) * self.seq_len)

@@ -1,6 +1,6 @@
 global: 
     root_dir: ""
-    iteration: "library_aditi_run1"
+    iteration: "library_aditi_balanced_run2"
     enable_preprocessing: false
 transformer:
     fps: 5
