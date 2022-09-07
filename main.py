@@ -17,6 +17,10 @@ https://www.dropbox.com/sh/fbo4dr3wlpob3px/AADKhrnCyaGWCSDb6XoVOBMna?dl=0
 def save_data(video_data, sensor_data, filename):
     # np.savez(filename, **data)
     # np.savez(filename+'_sensor', **sensor_data)
+    save_dir = filename.split('/')
+    save_dir = "/".join(save_dir[:-1])
+    if os.path.exists(save_dir) == False:
+        os.mkdir(save_dir)
     np.savez(filename+'_video', **video_data)
     with open(filename+'_sensor.pickle', 'wb') as handle:
         pickle.dump(sensor_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
