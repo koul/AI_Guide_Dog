@@ -43,6 +43,8 @@ class VideoTransformer(object):
             dir_path = os.path.join(path, directory)
             video_files = [f for f in os.listdir(dir_path) if f.endswith('.mp4')]
             print(video_files)
+            if(len(video_files) == 0):
+                continue
             video_file = video_files[0]
             file_list.append(dir_path + '/' + video_file)
 
