@@ -1,12 +1,11 @@
 global: 
     root_dir: ""
     iteration: "library_aditi_balanced_run2"
-    enable_preprocessing: false
+    enable_preprocessing: true
 transformer:
     fps: 5
-    path: "data/LibraryAditi"
-    data_save_file: "data/processed/lib_aditi" #file path without .npz
-    # resolution: [128,128] #can you change the code to use resolution values from data.HEIGHT and data.WIDTH?
+    path: "data/library"
+    data_save_file: "data/processed/library" #file path without .npz
 data:
     HEIGHT: 128
     WIDTH: 128
@@ -18,7 +17,7 @@ trainer:
     epochs: 20
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
-    model_save_path: "../efs/Capstone/models/"
+    model_save_path: "models/"
     model:
         name: "ConvLSTM"
         convlstm_hidden: 128
