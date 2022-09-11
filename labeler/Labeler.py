@@ -8,7 +8,7 @@ Cutoffs are defined as
 Each second is ~ 30 rows in the CSV that we read (but is not)
 
 WINDOW_SIZE = determines how much to be averaging the data that we have
-DELTA_ANGLE: delta = (end- start) % 360
+DELTA_ANGLE: delta = (end - start) % 360
 DIRECTION: minimum of either CW or CCW 
 
 '''
@@ -22,7 +22,7 @@ class Labeler(object):
         self.hard_right_cutoffs = cutoffs_hard
 
         
-    def check_direction(self, angle):
+    def check_classifier_direction(self, angle):
         if angle < self.hard_right_cutoffs[1] and angle > self.hard_right_cutoffs[0]:
             return 1
         elif angle < self.hard_left_cutoffs[1] and angle > self.hard_left_cutoffs[0]:
@@ -30,10 +30,25 @@ class Labeler(object):
         return 0
 
     '''
+    There is NaN at the beginning of dataset that is set to 0. Should it be set to 0?
+    '''
+    def check_regression_direction(self, angle):
+        if angle <= self.hard_right_cutoffs[1]: #right
+            return angle / self.hard_right_cutoffs[1]
+        elif angle >= self.hard_left_cutoffs[0]: # left
+            return (angle - 360) / self.hard_right_cutoffs[1]
+        elif angle is None:
+            return 0
+        elif angle > self.hard_right_cutoffs[1] and angle < 180:
+            return 1
+        else:
+            return -1
+
+    '''
     INPUT: List of fields to process
     OUTPUT: Processed DataFrame with Direction for hard turns and also slight turns
     '''
-    def add_direction(self, df_path="", fields="Heading (degrees)"):
+    def add_direction(self, df_path="", labeler_regression_tag=False, fields="Heading (degrees)"):
         df = pd.read_csv(df_path)
         sub_df = df[fields]
         averaged_vals = sub_df.rolling(self.window_size, closed="left", center=False).mean()
@@ -48,7 +63,10 @@ class Labeler(object):
         # convert to a hard right or left turn
         
         # TODO: Vectorize this quick
-        x = heading_delta.apply(lambda angle: self.check_direction(angle))
+        if labeler_regression_tag is False:
+            x = heading_delta.apply(lambda angle: self.check_classifier_direction(angle))
+        else:
+            x = heading_delta.apply(lambda angle: self.check_regression_direction(angle))
         df["direction"] = x
         df["back_avg"] = backwards_vals
         df["forward_avg"] = forwards_vals

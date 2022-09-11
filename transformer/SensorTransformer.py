@@ -47,8 +47,8 @@ class SensorTransformer(object):
 
         self.labeler = Labeler()
 
-    def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
-        df = self.labeler.add_direction(filename)
+    def transform(self, filename, labeler_regression_tag=False, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
+        df = self.labeler.add_direction(filename, labeler_regression_tag)
         df.fillna(method='bfill', inplace=True)  # backfill the data to account for missing values
         df.dropna(axis=1, how='all', inplace=True)  # drop a metric if it has no sensor information
 
@@ -113,14 +113,14 @@ class SensorTransformer(object):
         return result_dict
 
 
-    def scrape_all_data(self, path):
+    def scrape_all_data(self, path, labeler_regression_tag=False):
         directories = [f for f in os.listdir(path)]
         result_dict = {}
         for directory in directories:
             dir_path = os.path.join(path, directory)
             sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
             for sensor_file in sensor_files:
-                output = self.transform(dir_path + '/' + sensor_file)
+                output = self.transform(dir_path + '/' + sensor_file, labeler_regression_tag)
                 name = sensor_file.split('.')[0]
                 result_dict[name] = output
         return result_dict

@@ -25,9 +25,9 @@ def save_data(video_data, sensor_data, filename):
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
-def transform(data_file_path, fps, data_save_file, resolution):
+def transform(data_file_path, fps, data_save_file, resolution, labeler_regression_tag):
     dataTransformer = DataTransformer.DataTransformer(fps, resolution)
-    video_data, sensor_data = dataTransformer.scrape_all_data(data_file_path)
+    video_data, sensor_data = dataTransformer.scrape_all_data(data_file_path, labeler_regression_tag)
     save_data(video_data, sensor_data, data_save_file)
 
 
@@ -39,7 +39,8 @@ in the folders
 
 
 def load_config():
-    with open("config.yaml", "r") as configfile:
+    # with open("config.yaml", "r") as configfile:
+    with open("AI_Guide_Dog/config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict)
     return config_dict
@@ -53,7 +54,8 @@ if __name__ == "__main__":
 
     #avoid running transform if .nz has already been generated
     if(config_dict['global']['enable_preprocessing'] == True):
-        transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],[config_dict['data']['HEIGHT'],config_dict['data']['WIDTH']])
+        transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],\
+            [config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']], config_dict['labeler']['regression'])
     
     df_videos = dict(np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True))
     print(df_videos.keys())

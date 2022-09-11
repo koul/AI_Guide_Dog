@@ -23,9 +23,9 @@ class DataTransformer(object):
         print(sensor_frames.keys())
 
 
-    def scrape_all_data(self, path):
+    def scrape_all_data(self, path, labeler_regression_tag):
         video_data = self.videoTransformer.scrape_all_data(path)
-        sensor_data = self.sensorTransformer.scrape_all_data(path)
+        sensor_data = self.sensorTransformer.scrape_all_data(path, labeler_regression_tag)
         # result_dict = {}
         # for key in video_data.keys():
         #     result_dict[key] = {'Video': video_data[key], 'Sensor': sensor_data[key]}
