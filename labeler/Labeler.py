@@ -63,11 +63,13 @@ class Labeler(object):
         # convert to a hard right or left turn
         
         # TODO: Vectorize this quick
-        if labeler_regression_tag is False:
-            x = heading_delta.apply(lambda angle: self.check_classifier_direction(angle))
-        else:
-            x = heading_delta.apply(lambda angle: self.check_regression_direction(angle))
-        df["direction"] = x
+        # if labeler_regression_tag is False:
+        #     x = heading_delta.apply(lambda angle: self.check_classifier_direction(angle))
+        # else:
+        #     x = heading_delta.apply(lambda angle: self.check_regression_direction(angle))
+        classifier_direction = heading_delta.apply(lambda angle: self.check_classifier_direction(angle))
+        regression_direction = heading_delta.apply(lambda angle: self.check_regression_direction(angle))
+        df["direction"] = regression_direction
         df["back_avg"] = backwards_vals
         df["forward_avg"] = forwards_vals
         return df
