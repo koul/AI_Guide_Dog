@@ -36,12 +36,14 @@ class ConvLSTMCell(nn.Module):
                               padding=self.padding,
                               bias=self.bias)
 
+
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state
 
         combined = torch.cat([input_tensor, h_cur], dim=1)  # concatenate along channel axis
 
         combined_conv = self.conv(combined)
+
         cc_i, cc_f, cc_o, cc_g = torch.split(combined_conv, self.hidden_dim, dim=1)
         i = torch.sigmoid(cc_i)
         f = torch.sigmoid(cc_f)
@@ -190,17 +192,30 @@ class ConvLSTM(nn.Module):
 
 class ConvLSTMModel(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers, height, width,
+    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers, height, width, enable_qat = False,
                  batch_first=False, bias=True, return_all_layers=False, num_classes = 3):
         super(ConvLSTMModel, self).__init__()
+        self.enable_qat = enable_qat #flag to enable quantization aware training, default is set to false
+        self.quant = torch.quantization.QuantStub()
         self.convlstm = ConvLSTM(input_dim, hidden_dim, kernel_size, num_layers,batch_first, bias, return_all_layers)
         self.linear = nn.Linear(hidden_dim * height * width, num_classes)
+        self.dequant = torch.quantization.DeQuantStub()
+
 
     def forward(self, input_tensor, hidden_state=None):
+
+      if self.enable_qat:
+        #print("QAT is happening!")
+        input_tensor = self.quant(input_tensor)
+
       x,_ = self.convlstm(input_tensor)
       # print(x[0].shape)  # torch.Size([2, 8, 128, 256, 256])
       x = torch.flatten(x[0][:,-1,:,:,:], start_dim=1)
       # print(x.shape)  	# torch.Size([2, 8, 8388608])
       x = self.linear(x) #op: [batch, num_classes]
+
+      if self.enable_qat:
+        x = self.dequant(x)
+
       # print(x.shape)
       return x

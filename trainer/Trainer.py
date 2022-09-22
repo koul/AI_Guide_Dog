@@ -15,6 +15,8 @@ class Trainer:
         self.config = config_dict
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
         self.epochs = config_dict['trainer']['epochs']
+
+        self.enable_qat = config_dict['trainer']['enable_qat']
         
         self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
         
@@ -43,7 +45,7 @@ class Trainer:
        
         self.epochs = config_dict['trainer']['epochs']
 
-        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
+        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'], config_dict['trainer']['enable_qat'],True)
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
@@ -73,10 +75,16 @@ class Trainer:
 
         num_correct = 0
         total_loss = 0
+
+        self.model.train()
+
+        if self.enable_qat:
+            # TODO: try different global config parameters
+            self.model.qconfig = torch.quantization.get_default_qat_qconfig('fbgemm')
+            torch.quantization.prepare_qat(self.model, inplace = True)
         
         for i, (x, y) in enumerate(self.train_loader):
-        
-            self.model.train()
+
             self.optimizer.zero_grad()
 
             x = x.float().to(self.device)
@@ -116,7 +124,10 @@ class Trainer:
 
     
     def validate(self):
+
         self.model.eval()
+        if self.enable_qat:
+            self.model_int8 = torch.quantization.convert(self.model)
         val_num_correct = 0
         
         for i, (vx, vy) in tqdm(enumerate(self.val_loader)):
@@ -125,11 +136,17 @@ class Trainer:
             vy = vy.to(self.device)
 
             with torch.no_grad():
-                outputs = self.model(vx)
+                if self.enable_qat:
+                    outputs = self.model_int8(vx)
+                else:
+                    outputs = self.model(vx)
                 del vx
 
             val_num_correct += int((torch.argmax(outputs, axis=1) == vy).sum())
             del outputs
+
+        print("Len of Val Dataset:", len(self.val_dataset))
+        print("Seq Len:", self.seq_len)
 
         acc = 100 * val_num_correct / (len(self.val_dataset) * self.seq_len)
         print("Validation: {:.04f}%".format(acc))

@@ -40,6 +40,8 @@ class VideoTransformer(object):
         directories = [f for f in os.listdir(path)]
         file_list = []
         for directory in directories:
+            if directory.startswith("."): # to ignore the temp files that get created like ".DS_Store"
+                continue
             dir_path = os.path.join(path, directory)
             video_files = [f for f in os.listdir(dir_path) if f.endswith('.mp4')]
             print(video_files)
