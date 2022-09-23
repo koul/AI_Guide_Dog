@@ -9,7 +9,7 @@ class Trainer:
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor):    
         self.cuda = torch.cuda.is_available()
-        # print(self.cuda)
+        print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         self.config = config_dict
@@ -56,7 +56,7 @@ class Trainer:
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
         
         if(config_dict['trainer']['model']['optimizer_path'] != ""):
-            self.optimizer.load_state_dict(torch.load('./models/attempt3_1sec_prior/optimizer_params_00000000.pth'))
+            self.optimizer.load_state_dict(torch.load(config_dict['trainer']['model']['optimizer_path']))
 
         # for g in optimizer.param_groups:
         #     g['lr'] = lr
@@ -85,14 +85,14 @@ class Trainer:
             with torch.cuda.amp.autocast():
                 outputs = self.model(x)
                 del x
-                loss = self.criterion(outputs.view(-1, self.config['trainer']['num_classes']), y.long().view(-1))
+                loss = self.criterion(outputs, y.long())
 
             num_correct += int((torch.argmax(outputs, axis=1) == y).sum())
             del outputs
             total_loss += float(loss)
 
             batch_bar.set_postfix(
-                acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'] * self.seq_len)),
+                acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'])),
                 loss="{:.04f}".format(float(total_loss / (i + 1))),
                 num_correct=num_correct,
                 lr="{:.04f}".format(float(self.optimizer.param_groups[0]['lr'])))
@@ -106,7 +106,7 @@ class Trainer:
             
 
         batch_bar.close()
-        acc = 100 * num_correct / (len(self.train_dataset) * self.seq_len)
+        acc = 100 * num_correct / (len(self.train_dataset))
         print("Epoch {}/{}: Train Acc {:.04f}%, Train Loss {:.04f}, Learning Rate {:.04f}".format(
             epoch + 1,
             self.epochs,
@@ -131,7 +131,7 @@ class Trainer:
             val_num_correct += int((torch.argmax(outputs, axis=1) == vy).sum())
             del outputs
 
-        acc = 100 * val_num_correct / (len(self.val_dataset) * self.seq_len)
+        acc = 100 * val_num_correct / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
         return acc
 

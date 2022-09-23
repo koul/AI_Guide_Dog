@@ -1,11 +1,11 @@
 global: 
     root_dir: ""
-    iteration: "library_aditi_balanced_run2"
-    enable_preprocessing: true
+    iteration: "debug"
+    enable_preprocessing: false
 transformer:
     fps: 5
-    path: "data/library"
-    data_save_file: "data/processed/library" #file path without .npz
+    path: "data/ghc_data"
+    data_save_file: "data/processed/ghc_data" #file path without .npz
 data:
     HEIGHT: 128
     WIDTH: 128
@@ -20,7 +20,7 @@ trainer:
     model_save_path: "models/"
     model:
         name: "ConvLSTM"
-        convlstm_hidden: 128
+        convlstm_hidden: 256
         num_conv_lstm_layers: 1
         pretrained_path: ""
         optimizer_path: ""
