@@ -1,13 +1,13 @@
 global: 
     root_dir: ""
-    iteration: "library_aditi_balanced_run2"
-    enable_preprocessing: True
+    iteration: "SeattleLibraryDataset"
+    enable_preprocessing: False
 labeler:
     regression: True
 transformer:
     fps: 5
-    path: "data/library"
-    data_save_file: "data/processed/library" #file path without .npz
+    path: "data/SeattleLibraryDataset"
+    data_save_file: "data/processed/SeattleLibraryDataset" #file path without .npz
 data:
     HEIGHT: 128
     WIDTH: 128

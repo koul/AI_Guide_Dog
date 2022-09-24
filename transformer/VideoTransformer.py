@@ -46,15 +46,16 @@ class VideoTransformer(object):
             if(len(video_files) == 0):
                 continue
             video_file = video_files[0]
-            file_list.append(dir_path + '/' + video_file)
+            file_list.append(dir_path + '\\' + video_file)
 
         pool = Pool(os.cpu_count())
+        print(file_list)
         results = pool.map(self.transform, file_list)
 
         result_dict = {}
         for idx, file in enumerate(file_list):
             output = results[idx]
-            name = file_list[idx].split('/')[-1].split('.')[0]
+            name = file_list[idx].split('\\')[-1].split('.')[0]
             result_dict[name] = output
 
         return result_dict

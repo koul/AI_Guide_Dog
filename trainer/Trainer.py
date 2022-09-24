@@ -9,7 +9,9 @@ class Trainer:
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor):    
         self.cuda = torch.cuda.is_available()
-        # print(self.cuda)
+        print("###################")
+        print(self.cuda)
+        print("###################")
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         self.config = config_dict

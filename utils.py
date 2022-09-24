@@ -42,7 +42,14 @@ def sampler_(dataset_labels, n_classes):
     dataset_counts = labelCount(dataset_labels, n_classes)
     print(dataset_counts)
     num_samples = sum(dataset_counts)
-    class_weights = [num_samples/i for i in dataset_counts]
+    class_weights = []
+    for i in dataset_counts:
+        if i != 0:
+            class_weights.append(num_samples/i)
+        else:
+            class_weights.append(0)
+
+    # class_weights = [num_samples/i for i in dataset_counts if i != 0 else 0]
     weights = [class_weights[y] for y in dataset_labels]
     sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
     return sampler
@@ -80,7 +87,7 @@ def get_all_files_from_dir(directory, vids = False):
     
 # Function for processing the videos and labels to get labels at the frame level
 # def process_video(video_file, labels):
-#     video_filename = video_file.split('/')[-1].split('.')[0]
+#     video_filename = video_file.split('\\')[-1].split('.')[0]
 #     vidcap = cv2.VideoCapture(video_file)
 
 #     ctr = 0
@@ -129,7 +136,7 @@ def get_all_files_from_dir(directory, vids = False):
 #     print(f.keys())
 #     # for each single video
 #     for video_file in get_all_files_from_dir(VID_PATH):
-#         video_filename = video_file.split('/')[-1].split('.')[0]
+#         video_filename = video_file.split('\\')[-1].split('.')[0]
 #         print(video_filename)
 
 #         # Check if it has already been processed, i.e. a processed csv exists in the processed folder for this video
@@ -144,7 +151,7 @@ def get_all_files_from_dir(directory, vids = False):
 #     print(fp)
 #     # for each single video
 #     for fl in fp:
-#         video_filename = fl.split('/')[-1]
+#         video_filename = fl.split('\\')[-1]
 #         # Check if it has already been processed
 #         if(video_filename not in os.listdir(VID_PATH)):
 #             # change fps

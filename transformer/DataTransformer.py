@@ -15,9 +15,9 @@ class DataTransformer(object):
         self.sensorTransformer = SensorTransformer(fps)
 
     def transform(self, dir_path, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
-        video_file = os.path.join(dir_path, dir_path.split('/')[-1]+'.mp4')
+        video_file = os.path.join(dir_path, dir_path.split('\\')[-1]+'.mp4')
         video_frames = self.videoTransformer.transform(video_file, ref_time, secs_in_past, secs_in_future)
-        sensor_file = os.path.join(dir_path, dir_path.split('/')[-1]+'.csv')
+        sensor_file = os.path.join(dir_path, dir_path.split('\\')[-1]+'.csv')
         sensor_frames = self.sensorTransformer.transform(sensor_file, ref_time, secs_in_past, secs_in_future)
         print(video_frames.shape)
         print(sensor_frames.keys())

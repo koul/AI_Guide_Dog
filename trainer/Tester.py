@@ -65,7 +65,7 @@ class Tester:
     def validation_pipeline(self, video_ids):
         preprocessing_pipeline(video_ids)
         for full in video_ids:
-            # fn =  full.split('/')[-1].split('.')[0]
+            # fn =  full.split('\\')[-1].split('.')[0]
             X, y, df = prep_video_test(osp.join(DATA_SAVE_PATH,full+".csv"))
             test_dataset = FrameDataset(X, y, transforms=self.val_transforms, base_path = PROCESSED_PATH)
             val_args = dict(shuffle=False, batch_size=BATCH, num_workers=2, pin_memory=True, drop_last=False) if cuda else dict(shuffle=False, batch_size=BATCH, drop_last=False)

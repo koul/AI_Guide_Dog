@@ -13,7 +13,7 @@ from preprocessing import *
 class Preprocessor:
 
     def process_video(video_file, labels):
-        video_filename = video_file.split('/')[-1].split('.')[0]
+        video_filename = video_file.split('\\')[-1].split('.')[0]
         vidcap = cv2.VideoCapture(video_file)
 
         ctr = 0
@@ -47,7 +47,7 @@ class Preprocessor:
         f = np.load(LABEL_FILE, allow_pickle = True)
         print(f.keys())
         for video_filename in video_ids:
-            # video_filename = video_file.split('/')[-1].split('.')[0]
+            # video_filename = video_file.split('\\')[-1].split('.')[0]
             print(video_filename)
             if(video_filename+".csv" not in os.listdir(DATA_SAVE_PATH)):
                 labels = f[video_filename]['Sensor']['direction_label']['direction']
@@ -56,10 +56,10 @@ class Preprocessor:
             
     def process_raw_videos(video_ids):
         fp = get_all_files_from_dir(VID_PATH_OG, vids=True)
-        fp = [f for f in fp if f.split('/')[-1].split('.')[0] in video_ids]
+        fp = [f for f in fp if f.split('\\')[-1].split('.')[0] in video_ids]
         print(fp)
         for fl in fp:
-            video_filename = fl.split('/')[-1]
+            video_filename = fl.split('\\')[-1]
             if(video_filename not in os.listdir(VID_PATH)):
                 ffmpeg.input(fl).filter('fps', fps=10, round='up').output(VID_PATH+video_filename).run() 
 

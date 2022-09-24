@@ -120,7 +120,7 @@ class SensorTransformer(object):
             dir_path = os.path.join(path, directory)
             sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
             for sensor_file in sensor_files:
-                output = self.transform(dir_path + '/' + sensor_file, labeler_regression_tag)
+                output = self.transform(dir_path + '\\' + sensor_file, labeler_regression_tag)
                 name = sensor_file.split('.')[0]
                 result_dict[name] = output
         return result_dict
