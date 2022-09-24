@@ -22,7 +22,7 @@ trainer:
     model_save_path: "models/"
     model:
         name: "ConvLSTM"
-        convlstm_hidden: 128
+        convlstm_hidden: 256
         num_conv_lstm_layers: 1
         pretrained_path: ""
         optimizer_path: ""
