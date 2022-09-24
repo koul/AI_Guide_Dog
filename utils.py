@@ -20,6 +20,7 @@ def preprocess_labels(df):
 
 def convert_to_dataframe(d):
     df = pd.DataFrame.from_dict(d, orient ='index') 
+    df.sort_index(inplace = True)
     df = df.reset_index(drop = False).reset_index(drop = False)
     df.columns = ['frame_index', 'timestamp', 'directions']
     return df
@@ -40,7 +41,7 @@ def labelCount(label, n_classes):
 
 def sampler_(dataset_labels, n_classes):
     dataset_counts = labelCount(dataset_labels, n_classes)
-    print(dataset_counts)
+    print("Label counts before balancing: ", dataset_counts)
     num_samples = sum(dataset_counts)
     class_weights = [num_samples/i for i in dataset_counts]
     weights = [class_weights[y] for y in dataset_labels]
