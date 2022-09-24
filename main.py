@@ -86,6 +86,7 @@ if __name__ == "__main__":
     print(train_files)
     print(test_files)
     
+    #trainer = Trainer(4, [128,128,128,128], config_dict, df_videos, df_sensor, train_files, test_files, train_transforms, val_transforms)
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
     trainer.save(0, -1)
     

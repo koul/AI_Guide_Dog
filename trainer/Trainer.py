@@ -5,8 +5,9 @@ from trainer.models import *
 from tqdm import tqdm
 from utils import *
 
-class Trainer:
+class Trainer():
     # initialize a new trainer
+ 
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor):    
         self.cuda = torch.cuda.is_available()
         print(self.cuda)
@@ -43,7 +44,8 @@ class Trainer:
        
         self.epochs = config_dict['trainer']['epochs']
 
-        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
+        self.model = RNN(4, [128,128,128,128], self.config)
+        #self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
