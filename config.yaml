@@ -1,4 +1,4 @@
-global: 
+global:
     root_dir: ""
     iteration: "debug"
     enable_preprocessing: false
@@ -18,6 +18,12 @@ data:
     SEQUENCE_LENGTH: 10
     VAL_INTENT: ""
 trainer:
+    patch_size: 4
+    img_channel: 1
+    img_width: 128
+    filter_size: 5
+    stride: 1
+    layer_norm: 0
     BATCH: 8
     lr: 0.01
     epochs: 2

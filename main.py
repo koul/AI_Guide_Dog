@@ -29,7 +29,7 @@ def save_data(video_data, sensor_data, filename):
     with open(filename+'_sensor.pickle', 'wb') as handle:
         pickle.dump(sensor_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        
+
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
@@ -84,10 +84,10 @@ if __name__ == "__main__":
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file'] + '_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
-    
+
     # pdb.set_trace()
     # print(df_sensor['sample']['direction_label']['direction'])
-    
+
     # Training setup begins
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
@@ -107,13 +107,13 @@ if __name__ == "__main__":
     #             train_files.append(f)
     # else:
     train_files, val_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
-    
+
     print("Train Files:", train_files)
     print("Val Files:", val_files)
-    
+
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor)
     trainer.save(0, -1)
-    
+
     epochs = config_dict['trainer']['epochs']
 
     for epoch in range(epochs):
