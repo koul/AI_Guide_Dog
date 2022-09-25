@@ -18,6 +18,7 @@ trainer:
     filter_size: 5
     stride: 1
     layer_norm: 0
+    visual: 0
     BATCH: 8
     lr: 0.01
     epochs: 20
