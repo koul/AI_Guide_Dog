@@ -4,7 +4,7 @@ import yaml
 import numpy as np
 from utils import *
 from torchvision import transforms
-from trainer.Trainer import Trainer
+from trainer.Trainer import Trainer, TrainerPredRNN
 import pickle
 import pdb
 import warnings
