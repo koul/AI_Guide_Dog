@@ -42,7 +42,15 @@ def sampler_(dataset_labels, n_classes):
     dataset_counts = labelCount(dataset_labels, n_classes)
     print(dataset_counts)
     num_samples = sum(dataset_counts)
-    class_weights = [num_samples/i for i in dataset_counts]
+    
+    class_weights = []
+    for i in dataset_counts:
+        if i != 0:
+            class_weights.append(num_samples/i)
+        else:
+            class_weights.append(0)
+
+    # class_weights = [num_samples/i for i in dataset_counts]
     weights = [class_weights[y] for y in dataset_labels]
     sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
     return sampler

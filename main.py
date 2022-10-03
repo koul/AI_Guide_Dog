@@ -43,7 +43,7 @@ in the folders
 
 
 def load_config():
-    with open("config.yaml", "r") as configfile:
+    with open("AI_Guide_Dog" + '/' + "config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict)
     return config_dict
@@ -66,8 +66,6 @@ if __name__ == "__main__":
     with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
     
-    # print(df_sensor['sample']['direction_label']['direction'])
-    
     # Training setup begins
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
@@ -79,8 +77,28 @@ if __name__ == "__main__":
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
     train_files, test_files = make_tt_split(list(df_videos.keys()))
     
-    print(train_files)
-    print(test_files)
+    # print("##############")
+    # print(train_files)
+    # print(test_files)
+    # df = convert_to_dataframe(df_sensor[train_files[0]]['direction_label']['direction'])
+    # df_processed = preprocess_labels(df)
+    # df_processed.to_csv("classification_test.csv", index=False)  
+    # df = convert_to_dataframe(df_sensor[train_files[0]]['direction_label']['regression_direction'])
+    # df_processed = preprocess_labels(df)
+    # df_processed.to_csv("regression_test.csv", index=False)  
+
+    # df = convert_to_dataframe(df_sensor[train_files[0]]['direction_label']['angle'])
+    # df_processed = preprocess_labels(df)
+    # df_processed.to_csv("angle_test.csv", index=False)  
+    # df = convert_to_dataframe(df_sensor[train_files[0]]['direction_label']['forward_avg'])
+
+    # df_processed = preprocess_labels(df)
+    # df_processed.to_csv("f_test.csv", index=False)  
+    # df = convert_to_dataframe(df_sensor[train_files[0]]['direction_label']['back_avg'])
+    # df_processed = preprocess_labels(df)
+    # df_processed.to_csv("b_test.csv", index=False)  
+    # print(train_files[0])
+    # print("##############")
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
     trainer.save(0, -1)

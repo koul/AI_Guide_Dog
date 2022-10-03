@@ -109,7 +109,7 @@ class SensorTransformer(object):
             # execute this if you need timestamp value as well
             result_dict[sensor] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[columns_to_retrieve].to_dict()
         result_dict["direction_label"] = df[(df.index.isin(timestamp_of_interest))].drop(['Triggering Sensor'], axis=1)[
-            ["direction"]].to_dict()
+            ["direction", "regression_direction", "angle", "forward_avg", "back_avg"]].to_dict()
         return result_dict
 
 

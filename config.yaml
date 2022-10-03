@@ -1,11 +1,11 @@
 global: 
     root_dir: ""
     iteration: "quantization"
-    enable_preprocessing: true
+    enable_preprocessing: false
 transformer:
     fps: 5
-    path: "data/library"
-    data_save_file: "data/processed/library" #file path without .npz
+    path: "data/SeattleLibraryDataset"
+    data_save_file: "data/processed/SeattleLibraryDataset" #file path without .npz
 data:
     HEIGHT: 128
     WIDTH: 128
@@ -18,7 +18,7 @@ trainer:
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     enable_qat: True
-    model_save_path: "models/"
+    model_save_path: "models/quant_model/"
     model:
         name: "ConvLSTM"
         convlstm_hidden: 128

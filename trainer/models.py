@@ -42,6 +42,9 @@ class ConvLSTMCell(nn.Module):
 
         combined = torch.cat([input_tensor, h_cur], dim=1)  # concatenate along channel axis
 
+        # print("########")
+        # print(combined.dtype)
+        # print("########")
         combined_conv = self.conv(combined)
 
         cc_i, cc_f, cc_o, cc_g = torch.split(combined_conv, self.hidden_dim, dim=1)
@@ -155,6 +158,9 @@ class ConvLSTM(nn.Module):
             h, c = hidden_state[layer_idx]
             output_inner = []
             for t in range(seq_len):
+                # print("########")
+                # print(h.dtype, c.dtype)
+                # print("########")
                 h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :],
                                                  cur_state=[h, c])
                 output_inner.append(h) #[batch_size, self.hidden_dim, height, width]
@@ -207,6 +213,10 @@ class ConvLSTMModel(nn.Module):
       if self.enable_qat:
         #print("QAT is happening!")
         input_tensor = self.quant(input_tensor)
+        input_tensor = input_tensor.type(torch.float32)
+        # print("########")
+        # print(input_tensor.dtype)
+        # print("########")
 
       x,_ = self.convlstm(input_tensor)
       # print(x[0].shape)  # torch.Size([2, 8, 128, 256, 256])
