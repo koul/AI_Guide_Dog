@@ -9,6 +9,7 @@ import numpy as np
 import os
 import os.path as osp
 from utils import *
+import pdb
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
 class VideoDataset(Dataset):
@@ -26,13 +27,16 @@ class VideoDataset(Dataset):
         for f in files:
             df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
             df_processed = preprocess_labels(df) # assign 1 sec forward labels
+            # pdb.set_trace()
 
             # Generate training sequences
             for i in range(len(df_processed)-self.seq_len):
                 self.X_vid.append(f)
                 self.X_index.append(df_processed['frame_index'][i])
-                y.append(label_map(df_processed['labels'][i]))
 
+                # Picking the label of the last element of the sequence
+                y.append(label_map(df_processed['labels'][i+self.seq_len-1]))
+              
         # self.X = np.stack(X, axis = 0)
         self.y = np.array(y)
         
@@ -55,7 +59,7 @@ class VideoDataset(Dataset):
             try:
                 # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
-                frame = (frame - frame.min())/(frame.max() - frame.min())
+                # frame = (frame - frame.min())/(frame.max() - frame.min())
                 frame = self.transforms(frame)
 
             except Exception as ex:
