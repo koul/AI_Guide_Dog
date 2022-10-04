@@ -261,6 +261,8 @@ class TrainerPredRNN():
         self.scaler = torch.cuda.amp.GradScaler()
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
 
+        self.decouple_beta = config_dict['trainer']['model']['decouple_beta']
+
         print(self.model)
 
 
@@ -281,7 +283,7 @@ class TrainerPredRNN():
             with torch.cuda.amp.autocast():
                 outputs, decouple_loss = self.model(x)
                 del x
-                loss = self.criterion(outputs, y.long()) + decouple_loss # Add Decouple loss to objective to decouple C and M
+                loss = self.criterion(outputs, y.long()) + self.decouple_beta * decouple_loss # Add Decouple loss to objective to decouple C and M
 
             num_correct += int((torch.argmax(outputs, axis=1) == y).sum())
             del outputs

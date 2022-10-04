@@ -233,9 +233,9 @@ class PredRNN(nn.Module):
 
             for l in range(1, self.num_layers):
                 all_h_t[l], all_c_t[l], memory, delta_c, delta_m = self.cell_list[l](input_tensor=all_h_t[l-1],
-                                                                                curr_state=[all_h_t[l], all_c_t[l], memory])
-                all_delta_c[i] = F.normalize(self.adapter(delta_c).view(delta_c.shape[0], delta_c.shape[1], -1), dim=2)
-                all_delta_m[i] = F.normalize(self.adapter(delta_m).view(delta_m.shape[0], delta_m.shape[1], -1), dim=2)
+                                                                                cur_state=[all_h_t[l], all_c_t[l], memory])
+                all_delta_c[i] = F.normalize(self.decouple_conv(delta_c).view(delta_c.shape[0], delta_c.shape[1], -1), dim=2)
+                all_delta_m[i] = F.normalize(self.decouple_conv(delta_m).view(delta_m.shape[0], delta_m.shape[1], -1), dim=2)
 
             print(f'all_h_t[self.num_layers - 1]: {all_h_t[self.num_layers - 1].shape}')
             all_h_t[self.num_layers - 1] = self.conv_last(all_h_t[self.num_layers - 1])
