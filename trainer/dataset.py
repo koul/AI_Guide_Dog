@@ -11,6 +11,60 @@ import os.path as osp
 from utils import *
 import pdb
 
+# For ConvLSTM model (or other sequence-based models requiring a sequences of sensor data as a single training example).
+class SensorDataset(Dataset):
+    def __init__(self, df_sensor, files, attr_list, seq_len, config_dict=None):
+        
+        self.files = files
+        self.seq_len = seq_len
+        self.attr_list = attr_list
+        self.df_sensor = df_sensor #df_sensor[FILENAME][ATTR]: Dict
+        self.config = config_dict
+
+        self.X_vid = []
+        self.X_index = []
+        y = []
+
+        for f in files:
+            df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
+            df_processed = preprocess_labels(df) # assign 1 sec forward labels
+
+            # Generate training sequences
+            for i in range(len(df_processed)-self.seq_len):
+                self.X_vid.append(f)
+                self.X_index.append(df_processed['frame_index'][i])
+
+                # Picking the label of the last element of the sequence
+                y.append(label_map(df_processed['labels'][i+self.seq_len-1]))
+              
+        self.y = np.array(y)
+        
+        
+    def __len__(self):
+        return len(self.y)
+    
+    def __getitem__(self, idx):
+
+        vid_file = self.X_vid[idx]
+        vid_idx = self.X_index[idx]
+
+        # Get sensor data for selected attributes, with shape: (seq_len, num_attr)
+        sensor = torch.FloatTensor(self.seq_len, len(self.attr_list))
+        
+        for i in range(vid_idx, vid_idx+self.seq_len): 
+            try:
+                frame_sensor = torch.FloatTensor([self.df_sensor[vid_file][i][attr] for attr in self.attr_list])
+            except Exception as ex:
+                print(ex)
+                frame_sensor = torch.zeros(len(self.attr_list))
+        
+            sensor[i-vid_idx,:,:,:] = frame_sensor
+        
+        # normalize feature
+        sensor = (sensor - sensor.min())/(sensor.max() - sensor.min())
+        return sensor, self.y[idx]
+
+
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
 class VideoDataset(Dataset):
     def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None):
