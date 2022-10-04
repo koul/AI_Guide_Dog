@@ -1,4 +1,5 @@
 
+from distutils.command import config
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np
@@ -9,6 +10,8 @@ import pickle
 import pdb
 import warnings
 warnings.filterwarnings("ignore")
+import wandb
+
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -111,7 +114,11 @@ if __name__ == "__main__":
     print("Train Files:", train_files)
     print("Val Files:", val_files)
 
-    trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor)
+    # trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
+    if config_dict['trainer']['wandb']:
+        wandb.init(project='AI_Guide_Dog')
+
+    trainer = TrainerPredRNN(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor)
     trainer.save(0, -1)
 
     epochs = config_dict['trainer']['epochs']
