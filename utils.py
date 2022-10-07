@@ -6,6 +6,9 @@ from random import shuffle
 import os.path as osp
 import torch
 from torch.utils.data import WeightedRandomSampler
+# import seaborn as sns
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
@@ -48,6 +51,15 @@ def sampler_(dataset_labels, n_classes):
     sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
     return sampler
 
+def get_gps_probabilities(gps_range) :
+    mid = (gps_range[0]+gps_range[1])/2
+    x = np.arange(-mid, mid)
+    xU, xL = x + 0.5, x - 0.5 
+    prob = ss.norm.cdf(xU, scale = 3) - ss.norm.cdf(xL, scale = 3)
+    prob = prob / prob.sum() # normalize the probabilities so their sum is 1
+    return prob
+
+
 def save(config, model, index, acc, optim = False):
     save_path = os.path.join(config['global']['root_dir'],config['trainer']['model_save_path'], str(config['global']['iteration']))
     if not os.path.exists(save_path):
@@ -78,7 +90,21 @@ def get_all_files_from_dir(directory, vids = False):
         return sorted(file_paths)
     except Exception as e:
         print(e)
-    
+
+def dcr_helper(actual, predicitons):
+    train_cm = confusion_matrix(train_actual, train_predictions)
+    cm_df_train = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
+    print(cm_df_train)
+    print('\nClassification Report\n')
+    print(classification_report(actual, predicitons))
+
+def display_classification_report(train_actual, train_predictions, val_actual, val_predictions):
+    print('\nTaining set stats\n')
+    dcr_helper(train_actual, train_predicitons)
+
+    print('\nValidation set stats\n')
+    dcr_helper(val_actual, val_predicitons)
+
 # Function for processing the videos and labels to get labels at the frame level
 # def process_video(video_file, labels):
 #     video_filename = video_file.split('/')[-1].split('.')[0]

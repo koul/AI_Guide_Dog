@@ -3,14 +3,14 @@ global:
     iteration: "debug"
     enable_preprocessing: false
 transformer:
-    fps: 5
+    fps: 4
     path: "data/ghc_data"
     data_save_file: "data/processed/ghc_data" #file path without .npz
 data:
-    HEIGHT: 128
-    WIDTH: 128
+    HEIGHT: 64
+    WIDTH: 64
     CHANNELS: 3
-    SEQUENCE_LENGTH: 8
+    SEQUENCE_LENGTH: 20
 trainer:
     BATCH: 8
     lr: 0.01

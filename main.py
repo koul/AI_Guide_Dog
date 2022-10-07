@@ -91,6 +91,7 @@ if __name__ == "__main__":
     
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):
-        trainer.train(epoch)
-        acc = trainer.validate()
+        train_actual, train_predicitons = trainer.train(epoch)
+        acc, val_actual, val_predictions = trainer.validate()
+        display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
         trainer.save(acc, epoch)
