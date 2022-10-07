@@ -1,3 +1,4 @@
+
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np
@@ -5,6 +6,7 @@ from utils import *
 from torchvision import transforms
 from trainer.Trainer import Trainer
 import pickle
+import pdb
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -62,10 +64,12 @@ if __name__ == "__main__":
     df_videos = dict(np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True))
     print(df_videos.keys())
 
+    
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
     
+    # pdb.set_trace()
     # print(df_sensor['sample']['direction_label']['direction'])
     
     # Training setup begins
@@ -87,6 +91,7 @@ if __name__ == "__main__":
     
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):
-        trainer.train(epoch)
-        acc = trainer.validate()
+        train_actual, train_predicitons = trainer.train(epoch)
+        acc, val_actual, val_predictions = trainer.validate()
+        display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
         trainer.save(acc, epoch)
