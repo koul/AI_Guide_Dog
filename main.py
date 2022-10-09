@@ -48,6 +48,7 @@ def load_config():
     with open("config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict)
+    print(config_dict['trainer']['model']['sensor_attr_list'])
     return config_dict
 
 

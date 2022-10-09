@@ -204,3 +204,51 @@ class ConvLSTMModel(nn.Module):
       x = self.linear(x) #op: [batch, num_classes]
       # print(x.shape)
       return x
+
+class LSTMModel(nn.Module):
+
+    def __init__(self, input_dim, layer_dim, hidden_dim = 64, num_classes = 3):
+        super(LSTMModel, self).__init__()
+
+        # Defining the number of layers and the nodes in each layer
+        self.hidden_dim = hidden_dim
+        self.layer_dim = layer_dim
+
+        # LSTM layers
+        # can consider adding dropout probability later on
+        self.lstm = nn.LSTM(
+            input_dim, hidden_dim, self.layer_dim, batch_first=True
+        )
+
+        # Fully connected layer
+        self.fc = nn.Linear(hidden_dim, num_classes)
+
+
+    def forward(self, x):
+        """The forward method takes input tensor x and does forward propagation
+
+                Args:
+                    x (torch.Tensor): The input tensor of the shape (batch size, sequence length, input_dim)
+
+                Returns:
+                    torch.Tensor: The output tensor of the shape (batch size, output_dim)
+
+        """
+        # Initializing hidden state for first input with zeros
+        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+
+        # Initializing cell state for first input with zeros
+        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+
+        # We need to detach as we are doing truncated backpropagation through time (BPTT)
+        # If we don't, we'll backprop all the way to the start even after going through another batch
+        # Forward propagation by passing in the input, hidden state, and cell state into the model
+        out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
+
+        # Reshaping the outputs in the shape of (batch_size, seq_length, hidden_size)
+        # so that it can fit into the fully connected layer - picking the last seq position ouput
+        out = out[:, -1, :]
+
+        # Convert the final state to our desired output shape (batch_size, output_dim)
+        out = self.fc(out)
+        return out

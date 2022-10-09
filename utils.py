@@ -27,7 +27,7 @@ def convert_to_dataframe(d):
 
 def make_tt_split(files):
     shuffle(files)
-    ts = int(len(files) * 0.25)
+    ts = int(len(files) * 0.25) # change this back to 0.25 later
     test_files = files[:ts]
     train_files = files[ts:]
     print("Test files ",test_files)

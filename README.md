@@ -28,3 +28,5 @@ result = dataTransformer.scrape_all_data(config_dict[0]['Transformer']['path'])
 # Optional: Save result to numpy file
 save_data(result, 'result.npy')
 ```
+
+To install VIT from transformers : pip install -q git+https://github.com/huggingface/transformers.git
