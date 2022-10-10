@@ -1,11 +1,11 @@
 global: 
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: true
+    enable_preprocessing: false
 transformer:
     fps: 5
-    path: "data/tiny_data"
-    data_save_file: "data/processed/tiny_data" #file path without .npz
+    path: "data/seattlelibrary"
+    data_save_file: "data/processed/seattlelibrary" #file path without .npz
 data:
     HEIGHT: 224 #128
     WIDTH: 224 #128

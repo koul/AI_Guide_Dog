@@ -213,6 +213,8 @@ class LSTMModel(nn.Module):
         # Defining the number of layers and the nodes in each layer
         self.hidden_dim = hidden_dim
         self.layer_dim = layer_dim
+        
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         # LSTM layers
         # can consider adding dropout probability later on
@@ -235,10 +237,10 @@ class LSTMModel(nn.Module):
 
         """
         # Initializing hidden state for first input with zeros
-        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+        h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).to(self.device).requires_grad_()
 
         # Initializing cell state for first input with zeros
-        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).requires_grad_()
+        c0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).to(self.device).requires_grad_()
 
         # We need to detach as we are doing truncated backpropagation through time (BPTT)
         # If we don't, we'll backprop all the way to the start even after going through another batch

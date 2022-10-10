@@ -11,6 +11,9 @@ import os.path as osp
 from utils import *
 import pdb
 from transformers import ViTForImageClassification
+
+from transformers import ViTFeatureExtractor
+
 import torch
 from sklearn import preprocessing
 
@@ -87,13 +90,15 @@ class SensorVideoDataset(Dataset):
         self.X_index = []
         self.X_sensor_timestamp = []
         y = []
+
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-
         self.vit_model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
-        self.vit_model = self.vit_model.to(self.device)
-
+        #self.vit_model = self.vit_model.to(self.device)
         self.vit_model.eval()
+        self.vit_model.to(self.device)
+
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained('google/vit-base-patch16-224')
+
 
         for f in files:
             df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
@@ -109,6 +114,8 @@ class SensorVideoDataset(Dataset):
 
                 # Picking the label of the last element of the sequence
                 y.append(label_map(df_processed['labels'][i + self.seq_len - 1]))
+
+                
 
         # self.X = np.stack(X, axis = 0)
         self.y = np.array(y)
@@ -169,8 +176,20 @@ class SensorVideoDataset(Dataset):
                 frame = torch.zeros(
                     (self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
 
-            outputs = self.vit_model(frame.unsqueeze(0)) # error - expected 4 got 3
-            logits = outputs.logits
+            #print("Reached here ------")
+
+            encoding = self.feature_extractor(images=frame, return_tensors="pt")
+
+            pixel_values = encoding['pixel_values'].to(self.device)
+
+            with torch.no_grad():
+                outputs = self.vit_model(pixel_values)
+                logits = outputs.logits
+
+            #outputs = self.vit_model(frame.unsqueeze(0))
+
+            #print("Reached after vit pass ------")
+
             video[i - vid_idx, :] = logits # here we instead want 8*1000
 
         #finally return sensor + video merged together along an axis [8*10003]

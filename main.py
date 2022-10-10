@@ -7,6 +7,7 @@ from torchvision import transforms
 from trainer.Trainer import Trainer
 import pickle
 import pdb
+import torch
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -56,6 +57,9 @@ def load_config():
 TODO: full pipeline
 '''
 if __name__ == "__main__":
+
+    torch.multiprocessing.set_start_method('spawn')
+
     config_dict = load_config()
 
     #avoid running transform if .nz has already been generated
