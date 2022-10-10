@@ -13,6 +13,8 @@ class Trainer:
         print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+        print("\nCurrent device is: ", self.device, " \n")
+
         self.config = config_dict
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
         self.epochs = config_dict['trainer']['epochs']

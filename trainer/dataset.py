@@ -87,9 +87,12 @@ class SensorVideoDataset(Dataset):
         self.X_index = []
         self.X_sensor_timestamp = []
         y = []
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 
         self.vit_model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
+        self.vit_model = self.vit_model.to(self.device)
+
         self.vit_model.eval()
 
         for f in files:
