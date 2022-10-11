@@ -76,7 +76,15 @@ if __name__ == "__main__":
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
 
-    train_transforms = transforms.Compose([transforms.ToTensor()])
+    # train_transforms = transforms.Compose([transforms.ToTensor()])
+    train_transforms = transforms.Compose([ # Transformation applied on frame level so how would this affect the continuity of video?
+                transforms.ToPILImage(),
+                transforms.RandomApply(torch.nn.ModuleList([transforms.RandomAffine(0, scale=(0.75, 1.1)),  # Scaling
+                                                transforms.RandomAffine(degrees=(-30, 30)),              # Rotation
+                                                transforms.RandomAffine(0, translate=(0.3, 0.3)),        # Vertical and horizontal scaling
+                                                ]), p=0.5), # Probability of the transformation being applied
+                transforms.ToTensor()
+                ])
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
 

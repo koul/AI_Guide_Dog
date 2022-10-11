@@ -4,8 +4,8 @@ global:
     enable_preprocessing: false
 transformer:
     fps: 5
-    path: "data/ghc_data"
-    data_save_file: "data/processed/ghc_data" #file path without .npz
+    path: "data/SeattleLibraryDataset"
+    data_save_file: "data/processed/SeattleLibraryDataset" #file path without .npz
 data:
     HEIGHT: 128
     WIDTH: 128
