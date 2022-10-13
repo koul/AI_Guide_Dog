@@ -69,6 +69,9 @@ class Trainer:
             self.model = LSTMModel(input_dim = config_dict['trainer']['model']['dense_frame_input_dim'] + len(config_dict['trainer']['model']['sensor_attr_list']),
                                    layer_dim = config_dict['trainer']['model']['num_lstm_layers'], hidden_dim = config_dict['trainer']['model']['lstm_hidden'],
                                    num_classes = 3)
+        elif self.model_name == "bert_sensor":
+            
+
         else:
             print("Error parsing model name, please reverify model details in config.yaml")
 

@@ -24,11 +24,29 @@ trainer:
     #    num_conv_lstm_layers: 1
     #    pretrained_path: ""
     #    optimizer_path: ""
+    # model:
+    #      name: "LSTM_Multimodal"
+    #      lstm_hidden: 128 #try 128 later
+    #      num_lstm_layers: 2 #try 3,4,5 later
+    #      dense_frame_input_dim: 1000 #final input is dense_frame_input_dim + sensor_data_dim
+    #      train_with_sensor: True
+    #      sensor_attr_list:
+    #          - "Gyrometer:Gyrometer - X axis"
+    #          - "Gyrometer:Gyrometer - Y axis"
+    #          - "Gyrometer:Gyrometer - Z axis"
+    #          - "Magnetometer:Magnetometer - X axis"
+    #          - "Magnetometer:Magnetometer - Y axis"
+    #          - "Magnetometer:Magnetometer - Z axis"
+    #          - "Magnetometer:Magnetometer - X axis"
+    #          - "Magnetometer:Magnetometer - Y axis"
+    #          - "Magnetometer:Magnetometer - Z axis"
+    #          - "Accelerometer:Acceleration - X axis"
+    #          - "Accelerometer:Acceleration - Y axis"
+    #          - "Accelerometer:Acceleration - Z axis"
+    #      pretrained_path: ""
+    #      optimizer_path: ""
     model:
-         name: "LSTM_Multimodal"
-         lstm_hidden: 128 #try 128 later
-         num_lstm_layers: 2 #try 3,4,5 later
-         dense_frame_input_dim: 1000 #final input is dense_frame_input_dim + sensor_data_dim
+         name: "bert_sensor"
          train_with_sensor: True
          sensor_attr_list:
              - "Gyrometer:Gyrometer - X axis"
