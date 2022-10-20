@@ -70,10 +70,10 @@ class SpatioTemporalLSTMCell(nn.Module):
         delta_m: change in m_memory (b, hidden_dim, h, w)
         """
         h_cur, c_cur, m_cur = cur_state
-        print(f'input_tensor: {input_tensor.shape}, h_cur: {h_cur.shape}')
+        # print(f'input_tensor: {input_tensor.shape}, h_cur: {h_cur.shape}')
         combined = torch.cat([input_tensor, h_cur], dim=1)  # concatenate along channel axis
 
-        print(f'combined: {combined.shape}')
+        # print(f'combined: {combined.shape}')
         combined_conv = self.conv(combined)
         cc_i, cc_f, cc_g, cc_i_prime, cc_f_prime, cc_g_prime, cc_o = torch.split(combined_conv, self.hidden_dim, dim=1)
         i = torch.sigmoid(cc_i)
@@ -95,7 +95,7 @@ class SpatioTemporalLSTMCell(nn.Module):
         o_with_mem = torch.sigmoid(cc_o + self.conv_memory_to_o(c_m_next))
         # print(f'o_with_mem: {o_with_mem.shape}')
         h_next = o_with_mem * torch.tanh(self.conv_memory_to_h_next(c_m_next))
-        print(f'h_next: {h_next.shape}')
+        # print(f'h_next: {h_next.shape}')
 
         return h_next, c_next, m_next, delta_c, delta_m
 
@@ -141,7 +141,7 @@ class PredRNN(nn.Module):
         kernel_size = self._extend_for_multilayer(kernel_size, num_layers)
         hidden_dim = self._extend_for_multilayer(hidden_dim, num_layers)
 
-        print(f'hidden_dims: {hidden_dim}, {num_layers}')
+        # print(f'hidden_dims: {hidden_dim}, {num_layers}')
         if not len(kernel_size) == len(hidden_dim) == num_layers:
             raise ValueError('Inconsistent list length.')
 
@@ -190,7 +190,7 @@ class PredRNN(nn.Module):
             input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
 
         b, _, _, h, w = input_tensor.size()
-        print(f'Batch size {b}')
+        # print(f'Batch size {b}')
 
         # Implement stateful ConvLSTM
         if hidden_state is not None:
@@ -237,10 +237,10 @@ class PredRNN(nn.Module):
                 all_delta_c[i] = F.normalize(self.decouple_conv(delta_c).view(delta_c.shape[0], delta_c.shape[1], -1), dim=2)
                 all_delta_m[i] = F.normalize(self.decouple_conv(delta_m).view(delta_m.shape[0], delta_m.shape[1], -1), dim=2)
 
-            print(f'all_h_t[self.num_layers - 1]: {all_h_t[self.num_layers - 1].shape}')
+            # print(f'all_h_t[self.num_layers - 1]: {all_h_t[self.num_layers - 1].shape}')
             all_h_t[self.num_layers - 1] = self.conv_last(all_h_t[self.num_layers - 1])
-            print(f'h_t last: {all_h_t[self.num_layers - 1].shape}')
-            print(f'h_t last: {len(all_h_t)}')
+            # print(f'h_t last: {all_h_t[self.num_layers - 1].shape}')
+            # print(f'h_t last: {len(all_h_t)}')
             time_output_list.append(all_h_t[self.num_layers - 1])
 
             for i in range(0, self.num_layers):
@@ -250,7 +250,7 @@ class PredRNN(nn.Module):
         decouple_loss = torch.mean(torch.stack(decouple_losses, dim=0))
 
         time_outputs = torch.stack(time_output_list, dim=1)
-        print(f'time_outputs: {time_outputs.shape}, {time_output_list[0].shape} {len(time_output_list)}')
+        # print(f'time_outputs: {time_outputs.shape}, {time_output_list[0].shape} {len(time_output_list)}')
 
         # for layer_idx in range(self.num_layers):
 
@@ -286,7 +286,6 @@ class PredRNN(nn.Module):
             raise ValueError('`kernel_size` must be tuple or list of tuples')
 
     @staticmethod
-
     def _extend_for_multilayer(param, num_layers):
         if not isinstance(param, list):
             param = [param] * num_layers
@@ -303,7 +302,7 @@ class PredRnnModel(nn.Module):
 
     def forward(self, input_tensor, hidden_state=None):
       x, decouple_loss = self.predRNN(input_tensor)
-      print(x.shape)  # torch.Size([2, 8, 128, 256, 256])
+      print(x.shape)  # torch.Size([8, 8, 128, 128, 128])
       x = torch.flatten(x[:,-1,:,:,:], start_dim=1)
       # print(x.shape)  	# torch.Size([2, 8, 8388608])
       x = self.linear(x) #op: [batch, num_classes]

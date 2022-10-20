@@ -285,7 +285,9 @@ class TrainerPredRNN():
             with torch.cuda.amp.autocast():
                 outputs, decouple_loss = self.model(x)
                 del x
-                loss = self.criterion(outputs, y.long()) + self.decouple_beta * decouple_loss # Add Decouple loss to objective to decouple C and M
+                CE_loss = self.criterion(outputs, y.long())
+                decouple_loss = self.decouple_beta * decouple_loss # Add Decouple loss to objective to decouple C and M
+                loss = CE_loss + decouple_loss
 
             pred_class = torch.argmax(outputs, axis=1)
 
@@ -295,6 +297,8 @@ class TrainerPredRNN():
             num_correct += int((pred_class == y).sum())
             del outputs
             total_loss += float(loss)
+            print(f'Batch ce_loss {CE_loss.item() / len(y)}')
+            print(f'Batch decouple_loss {decouple_loss.item() / len(y)}')
 
             batch_bar.set_postfix(
                 acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'])),
