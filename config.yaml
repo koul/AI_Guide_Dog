@@ -32,8 +32,9 @@ trainer:
     num_classes: 3
     model_save_path: "models/"
     model:
-        name: "ConvLSTM"
-        convlstm_hidden: "256"
+        name: "PredRNN"
+        convlstm_hidden: 128
         num_conv_lstm_layers: 1
+        decouple_beta: 0.1
         pretrained_path: ""
         optimizer_path: ""

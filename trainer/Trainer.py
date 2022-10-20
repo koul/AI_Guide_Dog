@@ -271,6 +271,8 @@ class TrainerPredRNN():
 
         num_correct = 0
         total_loss = 0
+        actual = []
+        predictions = []
 
         for i, (x, y) in enumerate(self.train_loader):
 
@@ -285,7 +287,12 @@ class TrainerPredRNN():
                 del x
                 loss = self.criterion(outputs, y.long()) + self.decouple_beta * decouple_loss # Add Decouple loss to objective to decouple C and M
 
-            num_correct += int((torch.argmax(outputs, axis=1) == y).sum())
+            pred_class = torch.argmax(outputs, axis=1)
+
+            actual.extend(y)
+            predictions.extend(pred_class)
+
+            num_correct += int((pred_class == y).sum())
             del outputs
             total_loss += float(loss)
 
@@ -312,10 +319,14 @@ class TrainerPredRNN():
             float(total_loss / len(self.train_loader)),
             float(self.optimizer.param_groups[0]['lr'])))
 
+        return actual, predictions
+
 
     def validate(self):
         self.model.eval()
         val_num_correct = 0
+        actual = []
+        predictions = []
 
         for i, (vx, vy) in tqdm(enumerate(self.val_loader)):
 
@@ -326,12 +337,17 @@ class TrainerPredRNN():
                 outputs, _ = self.model(vx)
                 del vx
 
-            val_num_correct += int((torch.argmax(outputs, axis=1) == vy).sum())
+            pred_class = torch.argmax(outputs, axis=1)
+
+            actual.extend(vy)
+            predictions.extend(pred_class)
+
+            val_num_correct += int((pred_class == vy).sum())
             del outputs
 
         acc = 100 * val_num_correct / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
-        return acc
+        return acc, actual, predictions
 
     def save(self, acc, epoch):
         save(self.config, self.model, epoch, acc, optim = False)
