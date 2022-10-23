@@ -2,6 +2,7 @@ global:
     root_dir: ""
     iteration: "seattle_library_intent_weighted_loss_2_layers"
     enable_preprocessing: false
+    seed: 8
 transformer:
     fps: 4
     path: "data/library"
@@ -11,7 +12,6 @@ data:
     WIDTH: 64
     CHANNELS: 3
     SEQUENCE_LENGTH: 20
-    TEST_FILES: "2022-07-12T17:12:05, 2022-07-12T17:54:18, 2022-07-12T17:02:16"
 trainer:
     BATCH: 4
     lr: 0.01
@@ -21,7 +21,7 @@ trainer:
     model_save_path: "models/"
     model:
         name: "ConvLSTM"
-        convlstm_hidden: "256,128"
-        num_conv_lstm_layers: 2
+        convlstm_hidden: "512"
+        num_conv_lstm_layers: 1
         pretrained_path: ""
         optimizer_path: ""

@@ -2,7 +2,7 @@ import os
 import cv2
 import pandas as pd
 # from config import *
-from random import shuffle
+import random
 import os.path as osp
 import torch
 from torch.utils.data import WeightedRandomSampler
@@ -28,8 +28,8 @@ def convert_to_dataframe(d):
     df.columns = ['frame_index', 'timestamp', 'directions']
     return df
 
-def make_tt_split(files):
-    shuffle(files)
+def make_tt_split(files, seed):
+    random.Random(seed).shuffle(files)
     ts = int(len(files) * 0.25)
     test_files = files[:ts]
     train_files = files[ts:]
