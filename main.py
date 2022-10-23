@@ -7,6 +7,8 @@ from torchvision import transforms
 from trainer.Trainer import Trainer
 import pickle
 import pdb
+import warnings
+warnings.filterwarnings("ignore")
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -81,17 +83,25 @@ if __name__ == "__main__":
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
-    train_files, test_files = make_tt_split(list(df_videos.keys()))
+    if(config_dict['data']['TEST_FILES'] is not None):
+        test_files = config_dict['data']['TEST_FILES']
+        test_files = [t.strip() for t in test_files.split(',')]
+        train_files = []
+        for f in list(df_videos.keys()):
+            if (f not in test_files):
+                train_files.append(f)
+    else:
+        train_files, test_files = make_tt_split(list(df_videos.keys()))
     
-    print(train_files)
-    print(test_files)
+    print("Train Files:", train_files)
+    print("Test Files:", test_files)
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
     trainer.save(0, -1)
     
     epochs = config_dict['trainer']['epochs']
     for epoch in range(epochs):
-        train_actual, train_predicitons = trainer.train(epoch)
+        train_actual, train_predictions = trainer.train(epoch)
         acc, val_actual, val_predictions = trainer.validate()
         display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
         trainer.save(acc, epoch)

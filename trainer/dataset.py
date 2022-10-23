@@ -207,7 +207,7 @@ class IntentVideoDataset(Dataset):
         
         if(self.y[idx] != 2): # it is not front label
             intent = np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.gps_prob) #intent start position
-        else
+        else:
             intent = -1 # none (2) intent
 
 

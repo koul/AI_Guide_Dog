@@ -91,19 +91,20 @@ def get_all_files_from_dir(directory, vids = False):
     except Exception as e:
         print(e)
 
-def dcr_helper(actual, predicitons):
-    train_cm = confusion_matrix(train_actual, train_predictions)
-    cm_df_train = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
-    print(cm_df_train)
+def dcr_helper(actual, predictions):
+    cm = confusion_matrix(actual, predictions)
+    print(cm)
+    # cm_df = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
+    # print(cm_df)
     print('\nClassification Report\n')
-    print(classification_report(actual, predicitons))
+    print(classification_report(actual, predictions))
 
 def display_classification_report(train_actual, train_predictions, val_actual, val_predictions):
     print('\nTaining set stats\n')
-    dcr_helper(train_actual, train_predicitons)
+    dcr_helper(train_actual, train_predictions)
 
     print('\nValidation set stats\n')
-    dcr_helper(val_actual, val_predicitons)
+    dcr_helper(val_actual, val_predictions)
 
 # Function for processing the videos and labels to get labels at the frame level
 # def process_video(video_file, labels):

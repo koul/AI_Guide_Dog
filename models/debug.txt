@@ -1,0 +1,73 @@
+Debug with ghc data ,  y per sequence, no gps
+
+
+ConvLSTMModel(
+  (convlstm): ConvLSTM(
+    (cell_list): ModuleList(
+      (0): ConvLSTMCell(
+        (conv): Conv2d(259, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      )
+    )
+  )
+  (linear): Linear(in_features=4194304, out_features=3, bias=True)
+)
+Epoch 1/20: Train Acc 34.8371%, Train Loss 3477.4802, Learning Rate 0.0099                                                               
+103it [01:29,  1.15it/s]
+Validation: 9.5990%
+Epoch 2/20: Train Acc 37.3434%, Train Loss 2667.1112, Learning Rate 0.0098                                                               
+103it [01:29,  1.14it/s]
+Validation: 44.3499%
+Epoch 3/20: Train Acc 38.8471%, Train Loss 2537.0043, Learning Rate 0.0095                                                               
+103it [01:28,  1.16it/s]
+Validation: 28.0680%
+Epoch 4/20: Train Acc 40.2673%, Train Loss 1929.3534, Learning Rate 0.0090                                                               
+103it [01:23,  1.23it/s]
+Validation: 76.3062%
+Epoch 5/20: Train Acc 44.6951%, Train Loss 1247.3229, Learning Rate 0.0085                                                               
+103it [01:30,  1.14it/s]
+Validation: 75.5772%
+Epoch 6/20: Train Acc 50.2089%, Train Loss 988.6979, Learning Rate 0.0079                                                                
+103it [01:30,  1.14it/s]
+Validation: 54.7995%
+Epoch 7/20: Train Acc 47.4520%, Train Loss 1594.8418, Learning Rate 0.0073                                                               
+103it [01:29,  1.15it/s]
+Validation: 28.1896%
+Epoch 8/20: Train Acc 51.9632%, Train Loss 1281.1009, Learning Rate 0.0065                                                               
+103it [01:22,  1.26it/s]
+Validation: 75.6987%
+Epoch 9/20: Train Acc 61.6541%, Train Loss 713.8726, Learning Rate 0.0058                                                                                                                
+103it [01:23,  1.23it/s]
+Validation: 24.9089%
+Epoch 10/20: Train Acc 67.1679%, Train Loss 445.5035, Learning Rate 0.0050                                                                                                               
+103it [01:23,  1.23it/s]
+Validation: 70.2309%
+Train:  30%|▎| 45/150 [00:45<01:47,  1.03s/it, acc=69.4444%, loss                                                                                                           Epoch 11/20: Train Acc 66.8338%, Train Loss 427.9276, Learning Rate 0.0042                                                               
+103it [01:31,  1.13it/s]
+Validation: 76.3062%
+Epoch 12/20: Train Acc 69.0058%, Train Loss 394.0306, Learning Rate 0.0035                                                               
+103it [01:31,  1.13it/s]
+Validation: 14.2163%
+Epoch 13/20: Train Acc 75.4386%, Train Loss 271.7864, Learning Rate 0.0027                                                               
+103it [01:22,  1.25it/s]
+Validation: 43.1349%
+Epoch 14/20: Train Acc 79.7828%, Train Loss 153.0404, Learning Rate 0.0021                                                               
+103it [01:22,  1.25it/s]
+Validation: 53.8275%
+Epoch 15/20: Train Acc 83.0409%, Train Loss 108.9539, Learning Rate 0.0015                                                               
+103it [01:27,  1.18it/s]
+Validation: 66.2211%
+Epoch 16/20: Train Acc 87.0510%, Train Loss 69.0149, Learning Rate 0.0010                                                                
+103it [01:30,  1.14it/s]
+Validation: 63.1835%
+Epoch 17/20: Train Acc 87.9699%, Train Loss 53.6757, Learning Rate 0.0005                                                                
+103it [01:29,  1.14it/s]
+Validation: 64.7631%
+Epoch 18/20: Train Acc 92.4812%, Train Loss 30.7521, Learning Rate 0.0002                                                                
+103it [01:30,  1.14it/s]
+Validation: 66.5857%
+Epoch 19/20: Train Acc 92.3977%, Train Loss 23.8360, Learning Rate 0.0001                                                                
+103it [01:29,  1.14it/s]
+Validation: 67.4362%
+Epoch 20/20: Train Acc 93.5673%, Train Loss 25.4451, Learning Rate 0.0000                                                                
+103it [01:22,  1.25it/s]
+Validation: 67.1932%

@@ -1,18 +1,19 @@
 global: 
     root_dir: ""
-    iteration: "debug"
+    iteration: "seattle_library_intent_weighted_loss_2_layers"
     enable_preprocessing: false
 transformer:
     fps: 4
-    path: "data/ghc_data"
-    data_save_file: "data/processed/ghc_data" #file path without .npz
+    path: "data/library"
+    data_save_file: "data/processed/seattle_library_4fps" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
     CHANNELS: 3
     SEQUENCE_LENGTH: 20
+    TEST_FILES: "2022-07-12T17:12:05, 2022-07-12T17:54:18, 2022-07-12T17:02:16"
 trainer:
-    BATCH: 8
+    BATCH: 4
     lr: 0.01
     epochs: 20
     lambda: 0.001  #L2 regularization #changed from 1e-4
@@ -20,7 +21,7 @@ trainer:
     model_save_path: "models/"
     model:
         name: "ConvLSTM"
-        convlstm_hidden: 256
-        num_conv_lstm_layers: 1
+        convlstm_hidden: "256,128"
+        num_conv_lstm_layers: 2
         pretrained_path: ""
         optimizer_path: ""

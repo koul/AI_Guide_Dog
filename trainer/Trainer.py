@@ -42,15 +42,21 @@ class Trainer:
         self.val_loader = DataLoader(self.val_dataset, **val_args)
        
         self.epochs = config_dict['trainer']['epochs']
+        
+        hidden_dim = [int(k.strip()) for k in config_dict['trainer']['model']['convlstm_hidden'].split(',')]
 
-        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
+        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
         
         self.model = self.model.to(self.device)
 
-        self.criterion = nn.CrossEntropyLoss()
+        #Assigning more weight to left and right turns in loss calculation
+        weights = [2.0,2.0,1.0]
+        class_weights = torch.FloatTensor(weights).to(self.device)
+        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+        
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
         
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
@@ -91,8 +97,8 @@ class Trainer:
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y)
-            predictions.extend(pred_class)
+            actual.extend(y.detach().cpu())
+            predictions.extend(pred_class.detach().cpu())
 
             num_correct += int((pred_class == y).sum())
             del outputs
@@ -110,6 +116,7 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
+      
             
 
         batch_bar.close()
@@ -143,11 +150,13 @@ class Trainer:
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y)
-            predictions.extend(pred_class)
+            actual.extend(vy.detach().cpu())
+            predictions.extend(pred_class.detach().cpu())
 
             val_num_correct += int((pred_class == vy).sum())
             del outputs
+         
+            
 
         acc = 100 * val_num_correct / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
