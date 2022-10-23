@@ -9,7 +9,7 @@ class VideoTransformer(object):
         self.resolution = resolution
 
     def _getVideo(self, filename):
-        video_stream = ffmpeg.input(filename)
+        video_stream = ffmpeg.input(filename, format='gray')
         return video_stream
 
     def _getFrames(self, videoCapture, fps, ref_time=-1, secs_in_past = -1, secs_in_future=-1):

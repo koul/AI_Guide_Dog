@@ -36,6 +36,8 @@ def load_data(filename):
 def transform(data_file_path, fps, data_save_file, resolution):
     dataTransformer = DataTransformer.DataTransformer(fps, resolution)
     video_data, sensor_data = dataTransformer.scrape_all_data(data_file_path)
+    # print(video_data.keys())
+    # exit()
     save_data(video_data, sensor_data, data_save_file)
 
 

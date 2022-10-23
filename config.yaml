@@ -1,21 +1,22 @@
 global: 
     root_dir: ""
-    iteration: "seattle_library_intent_weighted_loss_2_layers"
+    iteration: "seattle_library_intent_weighted_loss_32_gray_2fps"
     enable_preprocessing: false
     seed: 8
 transformer:
-    fps: 4
+    fps: 2
     path: "data/library"
-    data_save_file: "data/processed/seattle_library_4fps" #file path without .npz
+    data_save_file: "data/processed/seattle_library_2fps" #file path without .npz
 data:
-    HEIGHT: 64
-    WIDTH: 64
-    CHANNELS: 3
-    SEQUENCE_LENGTH: 20
+    HEIGHT: 32
+    WIDTH: 32
+    CHANNELS: 1
+    SEQUENCE_LENGTH: 10
+    VAL_INTENT: None
 trainer:
     BATCH: 4
     lr: 0.01
-    epochs: 20
+    epochs: 25
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
