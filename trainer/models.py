@@ -254,3 +254,23 @@ class LSTMModel(nn.Module):
         # Convert the final state to our desired output shape (batch_size, output_dim)
         out = self.fc(out)
         return out
+
+class BertModel(nn.Module):
+    def __init__(self, vocab_size=30522, hidden_dim=768, num_attr = 3, num_classes = 3):
+        super(BertModel, self).__init__()
+        config= BertConfig(vocab_size=vocab_size, 
+                            hidden_size=hidden_dim, 
+                            hidden_act='relu', 
+                            hidden_dropout_prob=0.1, 
+                            attention_probs_dropout_prob=0.1
+                        )
+        self.bert = BertModel(config)
+        new_emb = ConvertEmbedding(num_attr, hidden_dim)
+        self.bert.set_input_embeddings(new_emb)
+        self.linear = nn.Linear(hidden_dim, num_classes)
+
+    def forward(self, input_tensor, hidden_state=None):
+      x,_ = self.bert(input_tensor)[:, 0] #op: [batch, hidden_dim]
+      x = self.linear(x) #op: [batch, num_classes]
+      print(x.shape)
+      return x

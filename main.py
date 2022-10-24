@@ -49,7 +49,7 @@ def load_config():
     with open("config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict)
-    print(config_dict['trainer']['model']['sensor_attr_list'])
+    # print(config_dict['trainer']['model']['sensor_attr_list'])
     return config_dict
 
 
@@ -75,7 +75,8 @@ if __name__ == "__main__":
         df_sensor = pickle.load(handle)
     
     # pdb.set_trace()
-    # print(df_sensor['sample']['direction_label']['direction'])
+    # for k, v in df_sensor['sample'].items():
+    #     print(k, df_sensor['sample'][k].keys())
     
     # Training setup begins
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]

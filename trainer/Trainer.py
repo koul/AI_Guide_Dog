@@ -1,10 +1,11 @@
 import torch
-from trainer.dataset import SensorVideoDataset
+from trainer.dataset import SensorDataset, SensorVideoDataset
 from trainer.dataset import VideoDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
+
 
 class Trainer:
     # initialize a new trainer
@@ -22,23 +23,28 @@ class Trainer:
         self.model_name = config_dict['trainer']['model']['name']
         
 
-        if config_dict['trainer']['model']['name'] == "LSTM_Multimodal": #If multi_modal training
+        if self.model_name == "multimodal": #If multi_modal training
             self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name, transforms=train_transforms,
                                                            seq_len = self.seq_len, dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim'],
                                                            sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+            self.val_dataset = SensorVideoDataset(df_videos, df_sensor, test_files, self.model_name, transforms=val_transforms,
+                                                           seq_len = self.seq_len, dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim'],
+                                                           sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+        elif config_dict['trainer']['data_type'] == 'sensor':
+            self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len, sensor_attr_list= config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+            self.val_dataset = SensorDataset(df_videos, df_sensor, test_files, self.seq_len, sensor_attr_list= config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
         else:
             self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms,
                                               seq_len=self.seq_len, config_dict=self.config)
+            self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms,
+                                            seq_len=self.seq_len, config_dict=self.config)
 
-        # a,x = self.train_dataset.__getitem__(0)
-        # b,y = self.train_dataset.__getitem__(1)
-        # print(a.shape)
-        # print(b.shape)
-        # # print(self.train_dataset.__getitem__(0))
-        # # print(self.train_dataset.__getitem__(1))
-        # print(a[1,:,:,:] == b[0,:,:,:])
-        # print(x)
-        # print(y)
+        a,x = self.train_dataset.__getitem__(0)
+        b,y = self.train_dataset.__getitem__(1)
+        print(a.shape)
+        print(b.shape)
+        print(x)
+        print(y)
       
         sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])
         
@@ -46,14 +52,6 @@ class Trainer:
 
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
-
-        if self.model_name == "LSTM_Multimodal": #If multi_modal training
-            self.val_dataset = SensorVideoDataset(df_videos, df_sensor, test_files, self.model_name, transforms=val_transforms,
-                                                           seq_len = self.seq_len, dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim'],
-                                                           sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
-        else:
-            self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms,
-                                            seq_len=self.seq_len, config_dict=self.config)
 
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
 
@@ -65,12 +63,14 @@ class Trainer:
             self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'], (3,3),
                                        config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],
                                        config_dict['data']['WIDTH'],True)
+
         elif self.model_name == "LSTM_Multimodal":
             self.model = LSTMModel(input_dim = config_dict['trainer']['model']['dense_frame_input_dim'] + len(config_dict['trainer']['model']['sensor_attr_list']),
                                    layer_dim = config_dict['trainer']['model']['num_lstm_layers'], hidden_dim = config_dict['trainer']['model']['lstm_hidden'],
                                    num_classes = 3)
+                                   
         elif self.model_name == "bert_sensor":
-            
+            self.model = BertModel()
 
         else:
             print("Error parsing model name, please reverify model details in config.yaml")
@@ -80,7 +80,6 @@ class Trainer:
         
         self.model = self.model.to(self.device)
 
-        self.criterion = nn.CrossEntropyLoss()
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
         
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])

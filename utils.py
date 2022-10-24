@@ -6,6 +6,8 @@ from random import shuffle
 import os.path as osp
 import torch
 from torch.utils.data import WeightedRandomSampler
+import torch.nn as nn
+import math
 
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
@@ -171,3 +173,12 @@ def prep_video_test(filename):
     y = y.to_numpy()
     
     return X, y, df
+
+class ConvertEmbedding(nn.Module):
+    def __init__(self, inp_size,d_model):
+        super(ConvertEmbedding, self).__init__()
+        self.lut = nn.Linear(inp_size, d_model)
+        self.d_model = d_model
+
+    def forward(self, x):
+        return self.lut(x) * math.sqrt(self.d_model)

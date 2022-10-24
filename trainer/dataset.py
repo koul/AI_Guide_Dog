@@ -16,61 +16,73 @@ from transformers import ViTFeatureExtractor
 
 import torch
 from sklearn import preprocessing
+import itertools
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of sensor data as a single training example).
 class SensorDataset(Dataset):
-    def __init__(self, df_sensor, files, attr_list, seq_len, config_dict=None):
-        
+    def __init__(self, df_videos, df_sensor, files, seq_len, sensor_attr_list, config_dict=None):
+
         self.files = files
         self.seq_len = seq_len
-        self.attr_list = attr_list
-        self.df_sensor = df_sensor #df_sensor[FILENAME][ATTR]: Dict
+        self.sensor_feat_len = len(sensor_attr_list)
+        self.df_videos = df_videos
+        self.df_sensor = df_sensor  # df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
-
+        self.attr_list = sensor_attr_list
         self.X_vid = []
         self.X_index = []
+        self.X_sensor_timestamp = []
         y = []
+
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         for f in files:
             df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
-            df_processed = preprocess_labels(df) # assign 1 sec forward labels
+            df_processed = preprocess_labels(df)  # assign 1 sec forward labels
 
             # Generate training sequences
-            for i in range(len(df_processed)-self.seq_len):
+            # for each time stamp in df_processed
+            for i in range(len(df_processed) - self.seq_len):
                 self.X_vid.append(f)
                 self.X_index.append(df_processed['frame_index'][i])
+                self.X_sensor_timestamp.append(df_processed['timestamp'][i])
 
                 # Picking the label of the last element of the sequence
-                y.append(label_map(df_processed['labels'][i+self.seq_len-1]))
-              
+                y.append(label_map(df_processed['labels'][i + self.seq_len - 1]))
+
+            
         self.y = np.array(y)
-        
-        
+
+        # TODO: later apply normalization for the entire dataframe in SensorTransformer coz this sees only 8 instances of values
+        # normalize feature
+        #sensor = (sensor - sensor.min()) / (sensor.max() - sensor.min())
+
     def __len__(self):
         return len(self.y)
-    
+
     def __getitem__(self, idx):
 
         vid_file = self.X_vid[idx]
         vid_idx = self.X_index[idx]
 
-        # Get sensor data for selected attributes, with shape: (seq_len, num_attr)
-        sensor = torch.FloatTensor(self.seq_len, len(self.attr_list))
-        
-        for i in range(vid_idx, vid_idx+self.seq_len): 
+        sensor = torch.FloatTensor(self.seq_len, self.sensor_feat_len)
+
+        for i in range(vid_idx, vid_idx + self.seq_len):
             try:
-                frame_sensor = torch.FloatTensor([self.df_sensor[vid_file][i][attr] for attr in self.attr_list])
+                frame_sensor = torch.FloatTensor([self.df_sensor[vid_file][str(attr).split(':')[0]][str(attr).split(':')[1]][self.X_sensor_timestamp[i]] for attr in self.attr_list])
             except Exception as ex:
                 print(ex)
                 frame_sensor = torch.zeros(len(self.attr_list))
 
-            # how is senor a 4d data?
-            sensor[i-vid_idx,:,:,:] = frame_sensor
-        
-        # normalize feature
-        sensor = (sensor - sensor.min())/(sensor.max() - sensor.min())
-        return sensor, self.y[idx]
+            sensor[i - vid_idx, :] = frame_sensor # tensor of seq_len * attr_list
 
+        # TODO: later apply normalization for the entire dataframe in SensorTransformer coz this sees only 8 instances of values
+        # normalize feature
+        sensor = (sensor - sensor.min()) / (sensor.max() - sensor.min())
+
+        #TODO: inspect what this sensor object contains
+        return sensor, self.y[idx]
+        
 # this class return multi modal dataset with sensor + video fused together
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
 class SensorVideoDataset(Dataset):

@@ -1,16 +1,19 @@
 global: 
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: false
+    enable_preprocessing: False
 transformer:
     fps: 5
-    path: "data/seattlelibrary"
-    data_save_file: "data/processed/seattlelibrary" #file path without .npz
+    path: "data/"
+    data_save_file: "data/processed/" #file path without .npz
+    # path: "data/TrainingData"
+    # data_save_file: "data/processed/TrainingData" #file path without .npz
 data:
     HEIGHT: 224 #128
     WIDTH: 224 #128
     CHANNELS: 3
     SEQUENCE_LENGTH: 8
+    sensor_attr: ["GPS"]
 trainer:
     BATCH: 8
     lr: 0.01
@@ -18,12 +21,15 @@ trainer:
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
-    #model:
-    #    name: "ConvLSTM"
-    #    convlstm_hidden: 256
-    #    num_conv_lstm_layers: 1
-    #    pretrained_path: ""
-    #    optimizer_path: ""
+    model:
+       name: "ConvLSTM"
+       convlstm_hidden: 256
+       num_conv_lstm_layers: 1
+       pretrained_path: ""
+       optimizer_path: ""    
+    
+    data_type: "video"
+
     # model:
     #      name: "LSTM_Multimodal"
     #      lstm_hidden: 128 #try 128 later
@@ -45,21 +51,21 @@ trainer:
     #          - "Accelerometer:Acceleration - Z axis"
     #      pretrained_path: ""
     #      optimizer_path: ""
-    model:
-         name: "bert_sensor"
-         train_with_sensor: True
-         sensor_attr_list:
-             - "Gyrometer:Gyrometer - X axis"
-             - "Gyrometer:Gyrometer - Y axis"
-             - "Gyrometer:Gyrometer - Z axis"
-             - "Magnetometer:Magnetometer - X axis"
-             - "Magnetometer:Magnetometer - Y axis"
-             - "Magnetometer:Magnetometer - Z axis"
-             - "Magnetometer:Magnetometer - X axis"
-             - "Magnetometer:Magnetometer - Y axis"
-             - "Magnetometer:Magnetometer - Z axis"
-             - "Accelerometer:Acceleration - X axis"
-             - "Accelerometer:Acceleration - Y axis"
-             - "Accelerometer:Acceleration - Z axis"
-         pretrained_path: ""
-         optimizer_path: ""
+    # model:
+    #      name: "bert_sensor"
+    #      train_with_sensor: True
+    #      sensor_attr_list:
+    #          - "Gyrometer:Gyrometer - X axis"
+    #          - "Gyrometer:Gyrometer - Y axis"
+    #          - "Gyrometer:Gyrometer - Z axis"
+    #          - "Magnetometer:Magnetometer - X axis"
+    #          - "Magnetometer:Magnetometer - Y axis"
+    #          - "Magnetometer:Magnetometer - Z axis"
+    #          - "Magnetometer:Magnetometer - X axis"
+    #          - "Magnetometer:Magnetometer - Y axis"
+    #          - "Magnetometer:Magnetometer - Z axis"
+    #          - "Accelerometer:Acceleration - X axis"
+    #          - "Accelerometer:Acceleration - Y axis"
+    #          - "Accelerometer:Acceleration - Z axis"
+    #      pretrained_path: ""
+    #      optimizer_path: ""
