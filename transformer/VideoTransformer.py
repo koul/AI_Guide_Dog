@@ -4,9 +4,10 @@ from multiprocessing import Pool
 import ffmpeg
 
 class VideoTransformer(object):
-    def __init__(self, fps = 10, resolution = [512,512]):
+    def __init__(self, fps = 10, resolution = [512,512], channels = 3):
         self.fps = fps
         self.resolution = resolution
+        self.channels =channels
 
     def _getVideo(self, filename):
         video_stream = ffmpeg.input(filename)
@@ -23,11 +24,11 @@ class VideoTransformer(object):
     def _convertToNumpy(self, frames):
         out, err = (
             frames
-            .output('pipe:', format='rawvideo', pix_fmt='rgb24')
+            .output('pipe:', format='rawvideo', pix_fmt='gray')
             .run(capture_stdout=True)
         )
         print("Error: ", err)
-        video = np.frombuffer(out, np.uint8).reshape([-1, self.resolution[0], self.resolution[1], 3])[1:,:,:,:]
+        video = np.frombuffer(out, np.uint8).reshape([-1, self.resolution[0], self.resolution[1], self.channels])[1:,:,:,:]
         return video
 
     def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
@@ -56,5 +57,7 @@ class VideoTransformer(object):
             output = results[idx]
             name = file_list[idx].split('/')[-1].split('.')[0]
             result_dict[name] = output
+            # import cv2
+            # cv2.imwrite('myImage.png', output[0])
 
         return result_dict
