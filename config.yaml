@@ -1,13 +1,13 @@
 global: 
     root_dir: ""
     iteration: "seattle_library_intent_weighted_loss_gray_2fps"
-    enable_preprocessing: false
+    enable_preprocessing: falsen
     seed: 8
-    enable_intent: true
+    enable_intent: false
 transformer:
     fps: 2
-    path: "/data/library"
-    data_save_file: "/data/processed/seattle_library_2fps" #file path without .npz
+    path: "/data"
+    data_save_file: "/data/processed/" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64

@@ -44,7 +44,7 @@ class Trainer:
                 self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms,
                                                 seq_len=self.seq_len, config_dict=self.config)
                 self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms,
-                                                seq_len=self.seq_len, config_dict=self.config) df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
+                                                seq_len=self.seq_len, config_dict=self.config) 
         
         sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
