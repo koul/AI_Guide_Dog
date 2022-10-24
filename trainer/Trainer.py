@@ -1,5 +1,5 @@
 import torch
-from trainer.dataset import VideoDataset
+from trainer.dataset import VideoDataset,IntentVideoDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
@@ -16,36 +16,28 @@ class Trainer:
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
         self.epochs = config_dict['trainer']['epochs']
         
-        self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-        
-        # a,x = self.train_dataset.__getitem__(0)
-        # b,y = self.train_dataset.__getitem__(1)
-        # print(a.shape)
-        # print(b.shape)
-        # # print(self.train_dataset.__getitem__(0))
-        # # print(self.train_dataset.__getitem__(1))
-        # print(a[1,:,:,:] == b[0,:,:,:])
-        # print(x)
-        # print(y)
+        if(config_dict['global']['enable_intent']):
+            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+        else:
+            self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
       
-        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])
-        
+        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
-
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
-
-        self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
-
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
-
         self.val_loader = DataLoader(self.val_dataset, **val_args)
        
-        self.epochs = config_dict['trainer']['epochs']
-        
+        self.epochs = config_dict['trainer']['epochs']    
         hidden_dim = [int(k.strip()) for k in config_dict['trainer']['model']['convlstm_hidden'].split(',')]
 
-        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
+        channels = config_dict['data']['CHANNELS']
+        if(config_dict['global']['enable_intent']):
+            channels = channels + 1
+            
+        self.model = ConvLSTMModel(channels, hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
@@ -86,9 +78,10 @@ class Trainer:
         
             self.model.train()
             self.optimizer.zero_grad()
-
+            
             x = x.float().to(self.device)
             y = y.to(self.device)
+            
             
             with torch.cuda.amp.autocast():
                 outputs = self.model(x)
@@ -117,7 +110,6 @@ class Trainer:
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
       
-            
 
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset))

@@ -192,11 +192,11 @@ class IntentVideoDataset(Dataset):
         self.y = np.array(y)
         self.test = test
         if(test):
-            if(config_dict['data']['VAL_INTENT'] is None):
+            if(config_dict['data']['VAL_INTENT'] == ""):
                 self.intent_positions = []
                 for i in self.y:
                     if(i!=2):
-                        self.intent_positions.append(np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.gps_prob)) #intent start position
+                        self.intent_positions.append(np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.prob_gps)) #intent start position
                     else:
                         self.intent_positions.append(-1)
                 
@@ -222,7 +222,7 @@ class IntentVideoDataset(Dataset):
             intent = self.intent_positions[idx]
         else:
             if(self.y[idx] != 2): # it is not front label
-                intent = np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.gps_prob) #intent start position
+                intent = np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.prob_gps) #intent start position
             else:
                 intent = -1 # none (2) intent
 

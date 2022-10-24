@@ -33,8 +33,8 @@ def save_data(video_data, sensor_data, filename):
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
-def transform(data_file_path, fps, data_save_file, resolution):
-    dataTransformer = DataTransformer.DataTransformer(fps, resolution)
+def transform(data_file_path, fps, data_save_file, resolution, channels):
+    dataTransformer = DataTransformer.DataTransformer(fps, resolution, channels)
     video_data, sensor_data = dataTransformer.scrape_all_data(data_file_path)
     # print(video_data.keys())
     # exit()
@@ -63,12 +63,11 @@ if __name__ == "__main__":
 
     #avoid running transform if .nz has already been generated
     if(config_dict['global']['enable_preprocessing'] == True):
-        transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],[config_dict['data']['HEIGHT'],config_dict['data']['WIDTH']])
+        transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],[config_dict['data']['HEIGHT'],config_dict['data']['WIDTH']], config_dict['data']['CHANNELS'])
     
     df_videos = dict(np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True))
     print(df_videos.keys())
 
-    
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
