@@ -1,23 +1,23 @@
 global: 
     root_dir: ""
-    iteration: "debug"
-    enable_preprocessing: False
+    iteration: "seattle_library_intent_weighted_loss_gray_2fps"
+    enable_preprocessing: false
+    seed: 8
+    enable_intent: true
 transformer:
-    fps: 5
-    path: "data/"
-    data_save_file: "data/processed/" #file path without .npz
-    # path: "data/TrainingData"
-    # data_save_file: "data/processed/TrainingData" #file path without .npz
+    fps: 2
+    path: "/data/library"
+    data_save_file: "/data/processed/seattle_library_2fps" #file path without .npz
 data:
-    HEIGHT: 224 #128
-    WIDTH: 224 #128
-    CHANNELS: 3
-    SEQUENCE_LENGTH: 8
-    sensor_attr: ["GPS"]
+    HEIGHT: 64
+    WIDTH: 64
+    CHANNELS: 1
+    SEQUENCE_LENGTH: 10
+    VAL_INTENT: "validation_intent.npy"
 trainer:
     BATCH: 8
     lr: 0.01
-    epochs: 20
+    epochs: 25
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"

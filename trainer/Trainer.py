@@ -1,6 +1,6 @@
 import torch
 from trainer.dataset import SensorDataset, SensorVideoDataset
-from trainer.dataset import VideoDataset
+from trainer.dataset import VideoDataset,IntentVideoDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
@@ -21,46 +21,48 @@ class Trainer:
         self.epochs = config_dict['trainer']['epochs']
 
         self.model_name = config_dict['trainer']['model']['name']
+        self.data_type = config_dict['trainer']['data_type']
         
-
-        if self.model_name == "multimodal": #If multi_modal training
-            self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name, transforms=train_transforms,
-                                                           seq_len = self.seq_len, dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim'],
-                                                           sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
-            self.val_dataset = SensorVideoDataset(df_videos, df_sensor, test_files, self.model_name, transforms=val_transforms,
-                                                           seq_len = self.seq_len, dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim'],
-                                                           sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
-        elif config_dict['trainer']['data_type'] == 'sensor':
-            self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len, sensor_attr_list= config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
-            self.val_dataset = SensorDataset(df_videos, df_sensor, test_files, self.seq_len, sensor_attr_list= config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+        
+        if(config_dict['global']['enable_intent']):
+            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+        
         else:
-            self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms,
-                                              seq_len=self.seq_len, config_dict=self.config)
-            self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms,
-                                            seq_len=self.seq_len, config_dict=self.config)
-
-        a,x = self.train_dataset.__getitem__(0)
-        b,y = self.train_dataset.__getitem__(1)
-        print(a.shape)
-        print(b.shape)
-        print(x)
-        print(y)
-      
-        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])
+            if self.data_type == "multimodal": #If multi_modal training
+                self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name, transforms=train_transforms,
+                                                            seq_len = self.seq_len, dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim'],
+                                                            sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+                self.val_dataset = SensorVideoDataset(df_videos, df_sensor, test_files, self.model_name, transforms=val_transforms,
+                                                            seq_len = self.seq_len, dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim'],
+                                                            sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+            elif self.data_type == 'sensor':
+                self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len, sensor_attr_list= config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+                self.val_dataset = SensorDataset(df_videos, df_sensor, test_files, self.seq_len, sensor_attr_list= config_dict['trainer']['model']['sensor_attr_list'], config_dict=self.config)
+            
+            else:
+                self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms,
+                                                seq_len=self.seq_len, config_dict=self.config)
+                self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms,
+                                                seq_len=self.seq_len, config_dict=self.config) df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
         
+        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
-
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
-
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
-
         self.val_loader = DataLoader(self.val_dataset, **val_args)
        
-        self.epochs = config_dict['trainer']['epochs']
+        self.epochs = config_dict['trainer']['epochs']    
+        hidden_dim = [int(k.strip()) for k in config_dict['trainer']['model']['convlstm_hidden'].split(',')]
 
         if self.model_name == "ConvLSTM":
-            self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'], (3,3),
+            channels = config_dict['data']['CHANNELS']
+
+            if(config_dict['global']['enable_intent']):
+                channels = channels + 1
+            
+            self.model = ConvLSTMModel(channels, hidden_dim, (3,3),
                                        config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],
                                        config_dict['data']['WIDTH'],True)
 
@@ -80,6 +82,11 @@ class Trainer:
         
         self.model = self.model.to(self.device)
 
+        #Assigning more weight to left and right turns in loss calculation
+        weights = [2.0,2.0,1.0]
+        class_weights = torch.FloatTensor(weights).to(self.device)
+        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+        
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
         
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
@@ -102,21 +109,29 @@ class Trainer:
 
         num_correct = 0
         total_loss = 0
+        actual = []
+        predictions = []
         
         for i, (x, y) in enumerate(self.train_loader):
         
             self.model.train()
             self.optimizer.zero_grad()
-
+            
             x = x.float().to(self.device)
             y = y.to(self.device)
+            
             
             with torch.cuda.amp.autocast():
                 outputs = self.model(x)
                 del x
                 loss = self.criterion(outputs, y.long())
 
-            num_correct += int((torch.argmax(outputs, axis=1) == y).sum())
+            pred_class = torch.argmax(outputs, axis=1)
+
+            actual.extend(y.detach().cpu())
+            predictions.extend(pred_class.detach().cpu())
+
+            num_correct += int((pred_class == y).sum())
             del outputs
             total_loss += float(loss)
 
@@ -132,7 +147,7 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
-            
+      
 
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset))
@@ -143,10 +158,16 @@ class Trainer:
             float(total_loss / len(self.train_loader)),
             float(self.optimizer.param_groups[0]['lr'])))
 
+        return actual, predictions
+
     
     def validate(self):
         self.model.eval()
         val_num_correct = 0
+
+        actual = []
+        predictions = []
+
         
         for i, (vx, vy) in tqdm(enumerate(self.val_loader)):
         
@@ -157,12 +178,20 @@ class Trainer:
                 outputs = self.model(vx)
                 del vx
 
-            val_num_correct += int((torch.argmax(outputs, axis=1) == vy).sum())
+            pred_class = torch.argmax(outputs, axis=1)
+
+            actual.extend(vy.detach().cpu())
+            predictions.extend(pred_class.detach().cpu())
+
+            val_num_correct += int((pred_class == vy).sum())
             del outputs
+         
+            
 
         acc = 100 * val_num_correct / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
-        return acc
+        
+        return acc, actual, predictions
 
     def save(self, acc, epoch):
         save(self.config, self.model, epoch, acc, optim = False)
