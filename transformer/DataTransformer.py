@@ -9,9 +9,9 @@ from transformer.SensorTransformer import SensorTransformer
 
 
 class DataTransformer(object):
-    def __init__(self, fps=10, resolution = [512,512]):
+    def __init__(self, fps=10, resolution = [512,512], channels = 3):
         self.fps = fps
-        self.videoTransformer = VideoTransformer(fps, resolution=resolution)
+        self.videoTransformer = VideoTransformer(fps, resolution=resolution, channels = channels)
         self.sensorTransformer = SensorTransformer(fps)
 
     def transform(self, dir_path, ref_time=-1, secs_in_past = -1, secs_in_future=-1):

@@ -1,5 +1,5 @@
 import torch
-from trainer.dataset import VideoDataset
+from trainer.dataset import VideoDataset,IntentVideoDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
@@ -17,29 +17,23 @@ class Trainer:
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
         self.epochs = config_dict['trainer']['epochs']
         
-        self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-        
-        # a,x = self.train_dataset.__getitem__(0)
-        # b,y = self.train_dataset.__getitem__(1)
-        # print(a.shape)
-        # print(b.shape)
-        # # print(self.train_dataset.__getitem__(0))
-        # # print(self.train_dataset.__getitem__(1))
-        # print(a[1,:,:,:] == b[0,:,:,:])
-        # print(x)
-        # print(y)
+        if(config_dict['global']['enable_intent']):
+            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+        else:
+            self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
       
-        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])
-        
+        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
-
         self.train_loader = DataLoader(self.train_dataset, **train_args)
+
 
 
         self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
 
-        val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
 
+        val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.val_loader = DataLoader(self.val_dataset, **val_args)
 
         # TODO: Add test loader with sampler - try with replacement to True and False
@@ -54,16 +48,25 @@ class Trainer:
 
 
        
-        self.epochs = config_dict['trainer']['epochs']
+        self.epochs = config_dict['trainer']['epochs']    
+        hidden_dim = [int(k.strip()) for k in config_dict['trainer']['model']['convlstm_hidden'].split(',')]
 
-        self.model = ConvLSTMModel(config_dict['data']['CHANNELS'], config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
+        channels = config_dict['data']['CHANNELS']
+        if(config_dict['global']['enable_intent']):
+            channels = channels + 1
+            
+        self.model = ConvLSTMModel(channels, hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
         
         self.model = self.model.to(self.device)
 
-        self.criterion = nn.CrossEntropyLoss()
+        #Assigning more weight to left and right turns in loss calculation
+        weights = [2.0,2.0,1.0]
+        class_weights = torch.FloatTensor(weights).to(self.device)
+        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+        
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
         
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
@@ -93,9 +96,10 @@ class Trainer:
         
             self.model.train()
             self.optimizer.zero_grad()
-
+            
             x = x.float().to(self.device)
             y = y.to(self.device)
+            
             
             with torch.cuda.amp.autocast():
                 outputs = self.model(x)
@@ -104,8 +108,8 @@ class Trainer:
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y)
-            predictions.extend(pred_class)
+            actual.extend(y.detach().cpu())
+            predictions.extend(pred_class.detach().cpu())
 
             num_correct += int((pred_class == y).sum())
             del outputs
@@ -123,7 +127,7 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
-            
+      
 
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset))
@@ -156,11 +160,13 @@ class Trainer:
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y)
-            predictions.extend(pred_class)
+            actual.extend(vy.detach().cpu())
+            predictions.extend(pred_class.detach().cpu())
 
             val_num_correct += int((pred_class == vy).sum())
             del outputs
+         
+            
 
         acc = 100 * val_num_correct / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
