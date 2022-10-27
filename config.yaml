@@ -1,7 +1,7 @@
 global: 
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: false
+    enable_preprocessing: true
 transformer:
     fps: 5
     path: "data/tiny_data"

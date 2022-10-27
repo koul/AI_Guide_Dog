@@ -117,6 +117,8 @@ class SensorTransformer(object):
         directories = [f for f in os.listdir(path)]
         result_dict = {}
         for directory in directories:
+            if directory.startswith("."):  # to ignore the temp files that get created like ".DS_Store"
+                continue
             dir_path = os.path.join(path, directory)
             sensor_files = [f for f in os.listdir(dir_path) if f.endswith('.csv')]
             for sensor_file in sensor_files:

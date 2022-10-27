@@ -8,7 +8,7 @@ from utils import *
 class Trainer:
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
-                 test_videos = None):
+                 test_videos = None, test_sensor = None):
         self.cuda = torch.cuda.is_available()
         print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -44,7 +44,7 @@ class Trainer:
 
         # TODO: Add test loader with sampler - try with replacement to True and False
         if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
-            self.test_dataset = VideoDataset(test_videos, df_sensor, list(test_videos.keys()), transforms=val_transforms,
+            self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
                                             seq_len=self.seq_len, config_dict=self.config)
             test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
                             drop_last=False) if self.cuda else dict(shuffle=False,

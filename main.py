@@ -71,6 +71,8 @@ if __name__ == "__main__":
 
     if (config_dict['transformer']['enable_benchmark_test'] == True):
         test_videos = dict(np.load(config_dict['transformer']['test_save_file'] + '_video.npz', allow_pickle=True))
+    with open(config_dict['transformer']['test_save_file'] + '_sensor.pickle', 'rb') as handle:
+        test_sensor = pickle.load(handle)
 
 
     # need video and sensor data separately
@@ -93,10 +95,11 @@ if __name__ == "__main__":
     
     print(train_files)
     
-    trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos)
+    trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor)
     trainer.save(0, -1)
     
     epochs = config_dict['trainer']['epochs']
+
     for epoch in range(epochs):
         train_actual, train_predictions = trainer.train(epoch)
         acc, val_actual, val_predictions = trainer.validate()
