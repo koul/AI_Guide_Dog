@@ -94,16 +94,10 @@ def get_all_files_from_dir(directory, vids = False):
         print(e)
 
 def dcr_helper(actual, predictions):
-<<<<<<< HEAD
-    train_cm = confusion_matrix(actual, predictions)
-    cm_df_train = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
-    print(cm_df_train)
-=======
     cm = confusion_matrix(actual, predictions)
     print(cm)
     # cm_df = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
     # print(cm_df)
->>>>>>> 5c6467c5775eece7df60c8086fb339bf75d6a900
     print('\nClassification Report\n')
     print(classification_report(actual, predictions))
 

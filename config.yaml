@@ -1,9 +1,9 @@
 global: 
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: true
+    enable_preprocessing: false
     seed: 8
-    enable_intent: true
+    enable_intent: false
 transformer:
     fps: 2
     path: "data/Indoor - Seattle Library"
@@ -16,7 +16,7 @@ data:
     WIDTH: 64
     CHANNELS: 1
     SEQUENCE_LENGTH: 10
-    VAL_INTENT: "validation_intent.npy"
+    VAL_INTENT: ""
 trainer:
     BATCH: 8
     lr: 0.01
