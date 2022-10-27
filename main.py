@@ -7,6 +7,8 @@ from torchvision import transforms
 from trainer.Trainer import Trainer
 import pickle
 import pdb
+import warnings
+warnings.filterwarnings("ignore")
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -31,9 +33,11 @@ def save_data(video_data, sensor_data, filename):
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
 
-def transform(data_file_path, fps, data_save_file, resolution):
-    dataTransformer = DataTransformer.DataTransformer(fps, resolution)
+def transform(data_file_path, fps, data_save_file, resolution, channels):
+    dataTransformer = DataTransformer.DataTransformer(fps, resolution, channels)
     video_data, sensor_data = dataTransformer.scrape_all_data(data_file_path)
+    # print(video_data.keys())
+    # exit()
     save_data(video_data, sensor_data, data_save_file)
 
 
@@ -57,14 +61,17 @@ TODO: full pipeline
 if __name__ == "__main__":
     config_dict = load_config()
 
+
     # avoid running transform if .nz has already been generated
     if (config_dict['global']['enable_preprocessing'] == True):
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'],
                   config_dict['transformer']['data_save_file'],
-                  [config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']])
+                  [config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']],
+                  config_dict['data']['CHANNELS'])
         if (config_dict['transformer']['enable_benchmark_test'] == True): transform(
             config_dict['transformer']['test_path'], config_dict['transformer']['fps'],
-            config_dict['transformer']['test_save_file'], [config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']])
+            config_dict['transformer']['test_save_file'], [config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']],
+            config_dict['data']['CHANNELS'])
 
     df_videos = dict(np.load(config_dict['transformer']['data_save_file'] + '_video.npz', allow_pickle=True))
     print(df_videos.keys())
@@ -73,7 +80,6 @@ if __name__ == "__main__":
         test_videos = dict(np.load(config_dict['transformer']['test_save_file'] + '_video.npz', allow_pickle=True))
     with open(config_dict['transformer']['test_save_file'] + '_sensor.pickle', 'rb') as handle:
         test_sensor = pickle.load(handle)
-
 
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file'] + '_sensor.pickle', 'rb') as handle:
@@ -91,9 +97,19 @@ if __name__ == "__main__":
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
-    train_files, val_files = make_tt_split(list(df_videos.keys()))
+
+    # if(config_dict['data']['TEST_FILES'] is not None):
+    #     test_files = config_dict['data']['TEST_FILES']
+    #     test_files = [t.strip() for t in test_files.split(',')]
+    #     train_files = []
+    #     for f in list(df_videos.keys()):
+    #         if (f not in test_files):
+    #             train_files.append(f)
+    # else:
+    train_files, val_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
     
-    print(train_files)
+    print("Train Files:", train_files)
+    print("Val Files:", val_files)
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor)
     trainer.save(0, -1)

@@ -2,13 +2,15 @@ import os
 import cv2
 import pandas as pd
 # from config import *
-from random import shuffle
+import random
 import os.path as osp
 import torch
 from torch.utils.data import WeightedRandomSampler
 # import seaborn as sns
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
+import numpy as np
+import scipy.stats as ss
 
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
@@ -28,8 +30,8 @@ def convert_to_dataframe(d):
     df.columns = ['frame_index', 'timestamp', 'directions']
     return df
 
-def make_tt_split(files):
-    shuffle(files)
+def make_tt_split(files, seed):
+    random.Random(seed).shuffle(files)
     ts = int(len(files) * 0.25)
     test_files = files[:ts]
     train_files = files[ts:]
@@ -92,18 +94,25 @@ def get_all_files_from_dir(directory, vids = False):
         print(e)
 
 def dcr_helper(actual, predictions):
+<<<<<<< HEAD
     train_cm = confusion_matrix(actual, predictions)
     cm_df_train = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
     print(cm_df_train)
+=======
+    cm = confusion_matrix(actual, predictions)
+    print(cm)
+    # cm_df = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
+    # print(cm_df)
+>>>>>>> 5c6467c5775eece7df60c8086fb339bf75d6a900
     print('\nClassification Report\n')
-    print(classification_report(actual, predicitons))
+    print(classification_report(actual, predictions))
 
 def display_classification_report(train_actual, train_predictions, val_actual, val_predictions):
     print('\nTaining set stats\n')
     dcr_helper(train_actual, train_predictions)
 
     print('\nValidation set stats\n')
-    dcr_helper(val_actual, val_predicitons)
+    dcr_helper(val_actual, val_predictions)
 
 # Function for processing the videos and labels to get labels at the frame level
 # def process_video(video_file, labels):
