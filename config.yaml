@@ -3,9 +3,12 @@ global:
     iteration: "debug"
     enable_preprocessing: false
 transformer:
-    fps: 4
-    path: "data/ghc_data"
-    data_save_file: "data/processed/ghc_data" #file path without .npz
+    fps: 5
+    path: "data/tiny_data"
+    data_save_file: "data/processed/tiny_data" #file path without .npz
+    enable_benchmark_test: true
+    test_path: "data/test/Indoor"
+    test_save_file: "data/processed/test/Indoor" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64

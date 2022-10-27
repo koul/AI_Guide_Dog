@@ -7,7 +7,8 @@ from utils import *
 
 class Trainer:
     # initialize a new trainer
-    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor):    
+    def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
+                 test_videos = None):
         self.cuda = torch.cuda.is_available()
         print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -35,11 +36,23 @@ class Trainer:
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
 
-        self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
+        self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
 
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
 
         self.val_loader = DataLoader(self.val_dataset, **val_args)
+
+        # TODO: Add test loader with sampler - try with replacement to True and False
+        if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
+            self.test_dataset = VideoDataset(test_videos, df_sensor, list(test_videos.keys()), transforms=val_transforms,
+                                            seq_len=self.seq_len, config_dict=self.config)
+            test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
+                            drop_last=False) if self.cuda else dict(shuffle=False,
+                                                                    batch_size=config_dict['trainer']['BATCH'],
+                                                                    drop_last=False)
+            self.test_loader = DataLoader(self.test_dataset, **test_args)
+
+
        
         self.epochs = config_dict['trainer']['epochs']
 
@@ -153,6 +166,37 @@ class Trainer:
         print("Validation: {:.04f}%".format(acc))
         
         return acc, actual, predictions
+
+
+    # runs benchmark test at the end (after train and validation)
+    def test(self):
+        self.model.eval()
+        val_num_correct = 0
+
+        actual = []
+        predictions = []
+
+        for i, (vx, vy) in tqdm(enumerate(self.test_loader)):
+            vx = vx.to(self.device)
+            vy = vy.to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(vx)
+                del vx
+
+            pred_class = torch.argmax(outputs, axis=1)
+
+            actual.extend(y)
+            predictions.extend(pred_class)
+
+            val_num_correct += int((pred_class == vy).sum())
+            del outputs
+
+        acc = 100 * val_num_correct / (len(self.val_dataset))
+        print("Benchmark test: {:.04f}%".format(acc))
+
+        return acc, actual, predictions
+
 
     def save(self, acc, epoch):
         save(self.config, self.model, epoch, acc, optim = False)
