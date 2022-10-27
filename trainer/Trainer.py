@@ -186,7 +186,7 @@ class Trainer:
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y)
+            actual.extend(vy)
             predictions.extend(pred_class)
 
             val_num_correct += int((pred_class == vy).sum())

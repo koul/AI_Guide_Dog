@@ -91,8 +91,8 @@ def get_all_files_from_dir(directory, vids = False):
     except Exception as e:
         print(e)
 
-def dcr_helper(actual, predicitons):
-    train_cm = confusion_matrix(train_actual, train_predictions)
+def dcr_helper(actual, predictions):
+    train_cm = confusion_matrix(actual, predictions)
     cm_df_train = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
     print(cm_df_train)
     print('\nClassification Report\n')
@@ -100,7 +100,7 @@ def dcr_helper(actual, predicitons):
 
 def display_classification_report(train_actual, train_predictions, val_actual, val_predictions):
     print('\nTaining set stats\n')
-    dcr_helper(train_actual, train_predicitons)
+    dcr_helper(train_actual, train_predictions)
 
     print('\nValidation set stats\n')
     dcr_helper(val_actual, val_predicitons)

@@ -1,14 +1,14 @@
 global: 
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: true
+    enable_preprocessing: false
 transformer:
-    fps: 5
-    path: "data/tiny_data"
-    data_save_file: "data/processed/tiny_data" #file path without .npz
+    fps: 2
+    path: "data/Indoor - Seattle Library"
+    data_save_file: "data/processed/Indoor - Seattle Library" #file path without .npz
     enable_benchmark_test: true
-    test_path: "data/test/Indoor"
-    test_save_file: "data/processed/test/Indoor" #file path without .npz
+    test_path: "data/test/Mixed"
+    test_save_file: "data/processed/test/Mixed" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
@@ -17,7 +17,7 @@ data:
 trainer:
     BATCH: 8
     lr: 0.01
-    epochs: 20
+    epochs: 2
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
