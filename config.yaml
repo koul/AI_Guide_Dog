@@ -1,23 +1,26 @@
 global: 
     root_dir: ""
-    iteration: "seattle_library_intent_weighted_loss_gray_2fps"
+    iteration: "debug"
     enable_preprocessing: false
     seed: 8
-    enable_intent: true
+    enable_intent: false
 transformer:
     fps: 2
-    path: "data/library"
-    data_save_file: "data/processed/seattle_library_2fps" #file path without .npz
+    path: "data/Indoor - Seattle Library"
+    data_save_file: "data/processed/Indoor - Seattle Library" #file path without .npz
+    enable_benchmark_test: true
+    test_path: "data/test/Mixed"
+    test_save_file: "data/processed/test/Mixed" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
     CHANNELS: 1
     SEQUENCE_LENGTH: 10
-    VAL_INTENT: "validation_intent.npy"
+    VAL_INTENT: ""
 trainer:
     BATCH: 8
     lr: 0.01
-    epochs: 25
+    epochs: 2
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
