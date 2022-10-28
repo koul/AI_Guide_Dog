@@ -124,4 +124,5 @@ if __name__ == "__main__":
 
     # performs final benchmarking after training
     if (config_dict['transformer']['enable_benchmark_test'] == True):
-        acc, val_actual, val_predictions = trainer.test()
+        acc, test_actual, test_predictions = trainer.test()
+        display_test_classification_report(test_actual, test_predictions)

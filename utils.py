@@ -108,6 +108,10 @@ def display_classification_report(train_actual, train_predictions, val_actual, v
     print('\nValidation set stats\n')
     dcr_helper(val_actual, val_predictions)
 
+def display_test_classification_report(test_actual, test_predictions):
+    print('\nTest set stats\n')
+    dcr_helper(test_actual, test_predictions)
+
 # Function for processing the videos and labels to get labels at the frame level
 # def process_video(video_file, labels):
 #     video_filename = video_file.split('/')[-1].split('.')[0]
