@@ -248,7 +248,6 @@ class IntentVideoDataset(Dataset):
         
             context_frame = torch.cat((frame, intent_tensor), dim = 0) #attach intent as last channel
             video[i-vid_idx,:,:,:] = frame
-
           
         # return video
         # return video, torch.LongTensor(self.y[idx])

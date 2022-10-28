@@ -19,10 +19,10 @@ class Trainer:
         
         if(config_dict['global']['enable_intent']):
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
         else:
             self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
       
         sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
@@ -192,7 +192,7 @@ class Trainer:
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y)
+            actual.extend(vy)
             predictions.extend(pred_class)
 
             val_num_correct += int((pred_class == vy).sum())
