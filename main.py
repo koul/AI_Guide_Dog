@@ -1,4 +1,3 @@
-
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np
@@ -10,6 +9,8 @@ import pdb
 import warnings
 warnings.filterwarnings("ignore")
 import torch
+import wandb
+
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
 OUTPUT: N/A - data is dumped to a folder
@@ -46,16 +47,10 @@ def transform(data_file_path, fps, data_save_file, resolution, channels):
 After calling transform, train model on the dumped data
 in the folders
 '''
-#def train_model():
-
-
 def load_config():
     with open("config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
-    # print(config_dict)
-    # print(config_dict['trainer']['model']['sensor_attr_list'])
     return config_dict
-
 
 '''
 TODO: full pipeline
@@ -71,38 +66,26 @@ if __name__ == "__main__":
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'], config_dict['transformer']['data_save_file'],[config_dict['data']['HEIGHT'],config_dict['data']['WIDTH']], config_dict['data']['CHANNELS'])
     
     df_videos = dict(np.load(config_dict['transformer']['data_save_file']+'_video.npz', allow_pickle=True))
-    print(df_videos.keys())
 
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file']+'_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
-    
-    # pdb.set_trace()
-    # for k, v in df_sensor['sample'].items():
-    #     print(k, df_sensor['sample'][k].keys())
-    
-    # Training setup begins
+        print(df_sensor['2022-07-12T16-34-07']['GPS'].keys())
+
+    # Data transformations
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
-
     train_transforms = transforms.Compose([transforms.ToTensor()])
-
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
-    # if(config_dict['data']['TEST_FILES'] is not None):
-    #     test_files = config_dict['data']['TEST_FILES']
-    #     test_files = [t.strip() for t in test_files.split(',')]
-    #     train_files = []
-    #     for f in list(df_videos.keys()):
-    #         if (f not in test_files):
-    #             train_files.append(f)
-    # else:
     train_files, test_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
     
     print("Train Files:", train_files)
     print("Test Files:", test_files)
-    
+
+
+    # Training
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
     trainer.save(0, -1)
     

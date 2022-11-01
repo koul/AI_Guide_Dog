@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.15.0-1021-aws-x86_64-with-glibc2.31",
+    "python": "3.9.4",
+    "heartbeatAt": "2022-10-28T19:53:20.447108",
+    "startedAt": "2022-10-28T19:53:20.127943",
+    "docker": null,
+    "gpu": "Tesla T4",
+    "gpu_count": 1,
+    "cpu_count": 4,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/home/ubuntu/AI_Guide_Dog/main.py",
+    "codePath": "main.py",
+    "git": {
+        "remote": "https://github.com/koul/AI_Guide_Dog.git",
+        "commit": "3ad530ba5c16eb14e8dc0234d017743c21acb3b4"
+    },
+    "email": null,
+    "root": "/home/ubuntu/AI_Guide_Dog",
+    "host": "ip-172-31-89-48",
+    "username": "ubuntu",
+    "executable": "/opt/conda/bin/python3"
+}

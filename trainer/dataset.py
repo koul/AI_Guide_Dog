@@ -4,19 +4,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-# from config import *
-# import ffmpeg
 import os
 import os.path as osp
 from utils import *
 import pdb
 import scipy.stats as ss
 
-from transformers import ViTForImageClassification
+from transformers import ViTForImageClassification, ViTFeatureExtractor
 
-from transformers import ViTFeatureExtractor
-
-import torch
 from sklearn import preprocessing
 import itertools
 

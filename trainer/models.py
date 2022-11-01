@@ -2,7 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
-# from config import *
+from transformers import BertConfig
+from utils import *
+import math
+import wandb
+from bert_utils import *
 
 class ConvLSTMCell(nn.Module):
 
@@ -258,22 +262,41 @@ class LSTMModel(nn.Module):
         out = self.fc(out)
         return out
 
-class BertModel(nn.Module):
-    def __init__(self, vocab_size=30522, hidden_dim=768, num_attr = 3, num_classes = 3):
-        super(BertModel, self).__init__()
+
+class Bert(nn.Module):
+    def __init__(self, device, vocab_size=30522, hidden_dim=768, num_attr = 3, num_classes = 3, seq_len = 10):
+        super(Bert, self).__init__()
         config= BertConfig(vocab_size=vocab_size, 
                             hidden_size=hidden_dim, 
                             hidden_act='relu', 
                             hidden_dropout_prob=0.1, 
-                            attention_probs_dropout_prob=0.1
+                            attention_probs_dropout_prob=0.1,
+                            num_attention_heads=2,
+                            num_hidden_layers=3
                         )
-        self.bert = BertModel(config)
-        new_emb = ConvertEmbedding(num_attr, hidden_dim)
-        self.bert.set_input_embeddings(new_emb)
+        print(config)
+        run_name =   "bert_att_head_" + str(config.num_attention_heads) + "_hid_layer_" + str(config.num_hidden_layers)
+        wandb.init(project="bert-guide-dog", entity="rena-jzhang", name = run_name)
+
+        self.seq_len = seq_len
+        self.bert = BertModel(config, num_attr, seq_len)
+        # attention_mask: same size as input_ids, 1 represents non-padding tokens, 0 represents padding tokens
+
         self.linear = nn.Linear(hidden_dim, num_classes)
 
-    def forward(self, input_tensor, hidden_state=None):
-      x,_ = self.bert(input_tensor)[:, 0] #op: [batch, hidden_dim]
-      x = self.linear(x) #op: [batch, num_classes]
-      print(x.shape)
-      return x
+    def forward(self, input_tensor):
+        device = input_tensor.device
+        input_shape = input_tensor.size()
+        attention_mask = torch.zeros((input_shape[0], self.seq_len)).long().to(device)
+        attention_mask[:, :input_shape[1]] = torch.ones((input_shape[0], input_shape[1])).long().to(device)
+
+        # get the embedding for each input token
+        first_tk = self.bert(input_tensor, attention_mask)
+        logits = self.linear(first_tk)
+
+        return logits
+
+
+
+      
+

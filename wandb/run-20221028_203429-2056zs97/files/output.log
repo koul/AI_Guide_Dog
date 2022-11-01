@@ -1,0 +1,955 @@
+
+
+
+
+
+
+
+
+
+
+Train: 100%|█| 472/472 [00:21<00:00
+
+Epoch 1/25: Train Acc 33.6781%, Train Loss 1.1283, Learning Rate 0.0005
+Validation: 17.6471%
+Taining set stats
+[[695 527  41]
+ [659 545  41]
+ [675 558  30]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.55      0.42      1263
+           1       0.33      0.44      0.38      1245
+           2       0.27      0.02      0.04      1263
+    accuracy                           0.34      3771
+   macro avg       0.31      0.34      0.28      3771
+weighted avg       0.31      0.34      0.28      3771
+Validation set stats
+156it [00:01, 112.69it/s]
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+weighted avg       0.03      0.18      0.05      1241
+
+
+
+
+
+
+
+
+
+Train: 100%|█| 472/472 [00:21<00:00, 27.47it/s, acc=34.5074%, loss=1.0971, lr=0.0005, num_correct=1303]
+
+Epoch 2/25: Train Acc 34.5532%, Train Loss 1.0971, Learning Rate 0.0005
+156it [00:01, 122.49it/s]
+Validation: 16.4384%
+Taining set stats
+[[598 615  13]
+ [568 688  18]
+ [602 652  17]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.49      0.40      1226
+           1       0.35      0.54      0.43      1274
+           2       0.35      0.01      0.03      1271
+    accuracy                           0.35      3771
+   macro avg       0.35      0.35      0.28      3771
+weighted avg       0.35      0.35      0.28      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+weighted avg       0.03      0.16      0.05      1241
+
+
+
+
+
+
+
+
+
+Train: 100%|▉| 471/472 [00:21<00:00, 27.57it/s, acc=32.6536%, loss=1.1043, lr=0.0005, num_correct=1233]
+
+Epoch 3/25: Train Acc 32.6969%, Train Loss 1.1043, Learning Rate 0.0005
+156it [00:01, 124.49it/s]
+Validation: 17.6471%
+Taining set stats
+[[502 681  22]
+ [552 704  40]
+ [562 681  27]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.31      0.42      0.36      1205
+           1       0.34      0.54      0.42      1296
+           2       0.30      0.02      0.04      1270
+    accuracy                           0.33      3771
+   macro avg       0.32      0.33      0.27      3771
+weighted avg       0.32      0.33      0.27      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+weighted avg       0.03      0.18      0.05      1241
+
+
+
+
+
+
+
+
+
+Train:  98%|▉| 462/472 [00:21<00:00, 27.49it/s, acc=33.8553%, loss=1.0876, lr=0.0005, num_correct=1254]
+
+Epoch 4/25: Train Acc 34.0493%, Train Loss 1.0855, Learning Rate 0.0005
+146it [00:00, 170.28it/s]
+Validation: 17.6471%
+Taining set stats
+[[705 574  13]
+ [673 560  17]
+ [691 519  19]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.55      0.42      1292
+           1       0.34      0.45      0.39      1250
+           2       0.39      0.02      0.03      1229
+    accuracy                           0.34      3771
+   macro avg       0.36      0.34      0.28      3771
+weighted avg       0.36      0.34      0.28      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+
+156it [00:01, 112.46it/s]
+
+
+
+
+
+
+
+
+
+Train:  98%|▉| 463/472 [00:20<00:00, 27.21it/s, acc=33.2343%, loss=1.0934, lr=0.0005, num_correct=1231]
+
+Epoch 5/25: Train Acc 33.1212%, Train Loss 1.0949, Learning Rate 0.0005
+139it [00:00, 188.65it/s]
+Validation: 16.4384%
+Taining set stats
+[[513 669  24]
+ [542 721  25]
+ [566 696  15]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.32      0.43      0.36      1206
+           1       0.35      0.56      0.43      1288
+           2       0.23      0.01      0.02      1277
+    accuracy                           0.33      3771
+   macro avg       0.30      0.33      0.27      3771
+weighted avg       0.30      0.33      0.27      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+
+156it [00:01, 116.32it/s]
+
+
+
+
+
+
+
+
+
+Train:  94%|▉| 446/472 [00:20<00:00, 27.49it/s, acc=34.2002%, loss=1.0847, lr=0.0004, num_correct=1223]
+
+Epoch 6/25: Train Acc 34.3145%, Train Loss 1.0852, Learning Rate 0.0004
+107it [00:00, 195.29it/s]
+Validation: 16.4384%
+Taining set stats
+[[632 638   5]
+ [600 662   3]
+ [626 605   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.50      0.40      1275
+           1       0.35      0.52      0.42      1265
+           2       0.00      0.00      0.00      1231
+    accuracy                           0.34      3771
+   macro avg       0.23      0.34      0.27      3771
+weighted avg       0.23      0.34      0.28      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+
+156it [00:01, 121.22it/s]
+
+
+
+
+
+
+
+
+
+Train:  94%|▉| 446/472 [00:20<00:00, 27.22it/s, acc=33.1096%, loss=1.0788, lr=0.0004, num_correct=1184]
+
+Epoch 7/25: Train Acc 33.3864%, Train Loss 1.0765, Learning Rate 0.0004
+91it [00:00, 158.97it/s]
+Validation: 16.4384%
+Taining set stats
+[[584 676   0]
+ [609 675   3]
+ [546 678   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.46      0.39      1260
+           1       0.33      0.52      0.41      1287
+           2       0.00      0.00      0.00      1224
+    accuracy                           0.33      3771
+   macro avg       0.22      0.33      0.27      3771
+weighted avg       0.23      0.33      0.27      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+
+156it [00:01, 109.70it/s]
+
+
+
+
+
+
+
+
+
+
+Train:  94%|▉| 445/472 [00:20<00:00, 27.23it/s, acc=34.2489%, loss=1.0709, lr=0.0004, num_correct=1222]
+Epoch 8/25: Train Acc 34.6327%, Train Loss 1.0689, Learning Rate 0.0004
+11it [00:00, 106.62it/s]
+Validation: 17.6471%
+Taining set stats
+[[628 667   0]
+ [573 678   0]
+ [551 674   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.36      0.48      0.41      1295
+           1       0.34      0.54      0.41      1251
+           2       0.00      0.00      0.00      1225
+    accuracy                           0.35      3771
+   macro avg       0.23      0.34      0.28      3771
+weighted avg       0.23      0.35      0.28      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+
+156it [00:01, 119.87it/s]
+
+
+
+
+
+
+
+
+
+Train:  91%|▉| 428/472 [00:19<00:01, 27.34it/s, acc=34.5280%, loss=1.0624, lr=0.0004, num_correct=1185]
+Epoch 9/25: Train Acc 34.4471%, Train Loss 1.0645, Learning Rate 0.0004
+0it [00:00, ?it/s]
+Validation: 17.6471%
+Taining set stats
+[[808 500   0]
+ [733 491   0]
+ [766 473   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.35      0.62      0.45      1308
+           1       0.34      0.40      0.37      1224
+           2       0.00      0.00      0.00      1239
+    accuracy                           0.34      3771
+   macro avg       0.23      0.34      0.27      3771
+weighted avg       0.23      0.34      0.27      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+
+156it [00:01, 123.10it/s]
+
+
+
+
+
+
+
+
+
+Train:  91%|▉| 429/472 [00:19<00:01, 27.99it/s, acc=34.2733%, loss=1.0686, lr=0.0003, num_correct=1179]
+Epoch 10/25: Train Acc 34.2880%, Train Loss 1.0692, Learning Rate 0.0003
+
+156it [00:01, 115.20it/s]
+Validation: 16.4384%
+Taining set stats
+[[400 792   0]
+ [414 893   0]
+ [432 840   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.32      0.34      0.33      1192
+           1       0.35      0.68      0.47      1307
+           2       0.00      0.00      0.00      1272
+    accuracy                           0.34      3771
+   macro avg       0.22      0.34      0.26      3771
+weighted avg       0.22      0.34      0.27      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+weighted avg       0.03      0.16      0.05      1241
+
+
+
+
+
+
+
+
+
+Train:  99%|▉| 467/472 [00:21<00:00, 27.10it/s, acc=33.2265%, loss=1.0661, lr=0.0003, num_correct=1244]
+
+Epoch 11/25: Train Acc 33.2803%, Train Loss 1.0657, Learning Rate 0.0003
+156it [00:01, 122.32it/s]
+Validation: 16.4384%
+Taining set stats
+[[521 733   0]
+ [545 734   0]
+ [500 738   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.33      0.42      0.37      1254
+           1       0.33      0.57      0.42      1279
+           2       0.00      0.00      0.00      1238
+    accuracy                           0.33      3771
+   macro avg       0.22      0.33      0.26      3771
+weighted avg       0.22      0.33      0.27      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+weighted avg       0.03      0.16      0.05      1241
+
+
+
+
+
+
+
+
+
+Train:  99%|▉| 469/472 [00:21<00:00, 27.58it/s, acc=34.0691%, loss=1.0683, lr=0.0003, num_correct=1281]
+
+Epoch 12/25: Train Acc 34.0493%, Train Loss 1.0685, Learning Rate 0.0003
+156it [00:01, 117.55it/s]
+Validation: 17.6471%
+Taining set stats
+[[747 533   0]
+ [673 537   0]
+ [748 533   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.58      0.43      1280
+           1       0.33      0.44      0.38      1210
+           2       0.00      0.00      0.00      1281
+    accuracy                           0.34      3771
+   macro avg       0.23      0.34      0.27      3771
+weighted avg       0.22      0.34      0.27      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+weighted avg       0.03      0.18      0.05      1241
+
+
+
+
+
+
+
+
+
+Train:  97%|▉| 457/472 [00:20<00:00, 27.78it/s, acc=32.9694%, loss=1.0631, lr=0.0002, num_correct=1208]
+
+Epoch 13/25: Train Acc 33.0947%, Train Loss 1.0622, Learning Rate 0.0002
+143it [00:00, 190.36it/s]
+Validation: 16.4384%
+Taining set stats
+[[768 525   0]
+ [777 480   0]
+ [716 505   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.59      0.43      1293
+           1       0.32      0.38      0.35      1257
+           2       0.00      0.00      0.00      1221
+    accuracy                           0.33      3771
+   macro avg       0.22      0.33      0.26      3771
+weighted avg       0.22      0.33      0.26      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+
+156it [00:01, 120.54it/s]
+
+
+
+
+
+
+
+
+
+Train:  97%|▉| 457/472 [00:20<00:00, 27.17it/s, acc=33.7882%, loss=1.0647, lr=0.0002, num_correct=1238]
+
+Epoch 14/25: Train Acc 33.6250%, Train Loss 1.0650, Learning Rate 0.0002
+146it [00:00, 190.67it/s]
+Validation: 17.6471%
+Taining set stats
+[[447 797   0]
+ [449 821   0]
+ [476 781   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.33      0.36      0.34      1244
+           1       0.34      0.65      0.45      1270
+           2       0.00      0.00      0.00      1257
+    accuracy                           0.34      3771
+   macro avg       0.22      0.34      0.26      3771
+weighted avg       0.22      0.34      0.26      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+156it [00:01, 121.03it/s]
+
+
+
+
+
+
+
+
+
+Train:  97%|▉| 458/472 [00:20<00:00, 27.18it/s, acc=34.5044%, loss=1.0648, lr=0.0002, num_correct=1267]
+
+Epoch 15/25: Train Acc 34.4206%, Train Loss 1.0652, Learning Rate 0.0002
+146it [00:00, 201.22it/s]
+Validation: 17.6471%
+Taining set stats
+[[632 631   0]
+ [589 666   0]
+ [561 692   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.35      0.50      0.42      1263
+           1       0.33      0.53      0.41      1255
+           2       0.00      0.00      0.00      1253
+    accuracy                           0.34      3771
+   macro avg       0.23      0.34      0.28      3771
+weighted avg       0.23      0.34      0.28      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+156it [00:01, 121.92it/s]
+
+
+
+
+
+
+
+
+
+Train: 100%|▉| 471/472 [00:21<00:00, 27.67it/s, acc=33.6864%, loss=1.0553, lr=0.0001, num_correct=1272]
+
+Epoch 16/25: Train Acc 33.7311%, Train Loss 1.0553, Learning Rate 0.0001
+Validation: 16.4384%
+Taining set stats
+[[922 398   0]
+ [918 350   0]
+ [858 325   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.34      0.70      0.46      1320
+           1       0.33      0.28      0.30      1268
+           2       0.00      0.00      0.00      1183
+    accuracy                           0.34      3771
+   macro avg       0.22      0.32      0.25      3771
+weighted avg       0.23      0.34      0.26      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+156it [00:01, 122.11it/s]
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+weighted avg       0.03      0.16      0.05      1241
+
+
+
+
+
+
+
+
+
+Train:  91%|▉| 430/472 [00:19<00:01, 27.87it/s, acc=32.6856%, loss=1.0683, lr=0.0001, num_correct=1127]
+Epoch 17/25: Train Acc 32.8825%, Train Loss 1.0675, Learning Rate 0.0001
+11it [00:00, 105.89it/s]
+Validation: 17.6471%
+Taining set stats
+[[685 576   0]
+ [683 555   0]
+ [694 578   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.33      0.54      0.41      1261
+           1       0.32      0.45      0.38      1238
+           2       0.00      0.00      0.00      1272
+    accuracy                           0.33      3771
+   macro avg       0.22      0.33      0.26      3771
+weighted avg       0.22      0.33      0.26      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+
+156it [00:01, 120.77it/s]
+
+
+
+
+
+
+
+
+
+Train:  91%|▉| 429/472 [00:19<00:01, 27.27it/s, acc=32.4128%, loss=1.0671, lr=0.0001, num_correct=1115]
+Epoch 18/25: Train Acc 32.3787%, Train Loss 1.0659, Learning Rate 0.0001
+24it [00:00, 118.39it/s]
+Validation: 17.6471%
+Taining set stats
+[[713 543   0]
+ [736 508   0]
+ [729 542   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.33      0.57      0.42      1256
+           1       0.32      0.41      0.36      1244
+           2       0.00      0.00      0.00      1271
+    accuracy                           0.32      3771
+   macro avg       0.22      0.33      0.26      3771
+weighted avg       0.21      0.32      0.26      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+156it [00:01, 125.92it/s]
+
+
+
+
+
+
+
+
+
+Train:  97%|▉| 458/472 [00:20<00:00, 28.19it/s, acc=31.4815%, loss=1.0751, lr=0.0001, num_correct=1156]
+
+Epoch 19/25: Train Acc 31.6892%, Train Loss 1.0737, Learning Rate 0.0001
+141it [00:00, 180.87it/s]
+Validation: 17.6471%
+Taining set stats
+[[738 490   0]
+ [751 457   0]
+ [807 528   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.32      0.60      0.42      1228
+           1       0.31      0.38      0.34      1208
+           2       0.00      0.00      0.00      1335
+    accuracy                           0.32      3771
+   macro avg       0.21      0.33      0.25      3771
+weighted avg       0.20      0.32      0.25      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+156it [00:01, 117.41it/s]
+
+
+
+
+
+
+
+
+
+Train: 100%|▉| 471/472 [00:20<00:00, 28.20it/s, acc=33.2892%, loss=1.0627, lr=0.0000, num_correct=1257]
+
+Epoch 20/25: Train Acc 33.3333%, Train Loss 1.0627, Learning Rate 0.0000
+Validation: 16.4384%
+Taining set stats
+156it [00:01, 122.14it/s]
+[[ 210 1022    0]
+ [ 245 1047    0]
+ [ 234 1013    0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.30      0.17      0.22      1232
+           1       0.34      0.81      0.48      1292
+           2       0.00      0.00      0.00      1247
+    accuracy                           0.33      3771
+   macro avg       0.21      0.33      0.23      3771
+weighted avg       0.22      0.33      0.24      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+weighted avg       0.03      0.16      0.05      1241
+
+
+
+
+
+
+
+
+
+Train:  94%|▉| 443/472 [00:19<00:01, 28.19it/s, acc=34.2624%, loss=1.0669, lr=0.0000, num_correct=1217]
+Epoch 21/25: Train Acc 33.8902%, Train Loss 1.0680, Learning Rate 0.0000
+92it [00:00, 166.97it/s]
+Validation: 17.6471%
+Taining set stats
+[[734 535   0]
+ [664 544   0]
+ [701 593   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.35      0.58      0.44      1269
+           1       0.33      0.45      0.38      1208
+           2       0.00      0.00      0.00      1294
+    accuracy                           0.34      3771
+   macro avg       0.23      0.34      0.27      3771
+weighted avg       0.22      0.34      0.27      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+156it [00:01, 115.88it/s]
+
+
+
+
+
+
+
+
+
+Train:  94%|▉| 443/472 [00:20<00:01, 27.50it/s, acc=32.8266%, loss=1.0638, lr=0.0000, num_correct=1166]
+
+Epoch 22/25: Train Acc 32.7499%, Train Loss 1.0632, Learning Rate 0.0000
+93it [00:00, 163.92it/s]
+Validation: 17.6471%
+Taining set stats
+[[1084  186    0]
+ [1097  151    0]
+ [1089  164    0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.33      0.85      0.48      1270
+           1       0.30      0.12      0.17      1248
+           2       0.00      0.00      0.00      1253
+    accuracy                           0.33      3771
+   macro avg       0.21      0.32      0.22      3771
+weighted avg       0.21      0.33      0.22      3771
+Validation set stats
+[[219   0   0]
+ [204   0   0]
+ [818   0   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.18      1.00      0.30       219
+           1       0.00      0.00      0.00       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.18      1241
+   macro avg       0.06      0.33      0.10      1241
+156it [00:01, 115.41it/s]
+
+
+
+
+
+
+
+
+
+Train:  97%|▉| 460/472 [00:20<00:00, 27.08it/s, acc=32.9989%, loss=1.0616, lr=0.0000, num_correct=1217]
+
+Epoch 23/25: Train Acc 32.8560%, Train Loss 1.0621, Learning Rate 0.0000
+145it [00:00, 200.31it/s]
+Validation: 16.4384%
+Taining set stats
+[[954 297   0]
+ [988 285   0]
+ [958 289   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.33      0.76      0.46      1251
+           1       0.33      0.22      0.27      1273
+           2       0.00      0.00      0.00      1247
+    accuracy                           0.33      3771
+   macro avg       0.22      0.33      0.24      3771
+weighted avg       0.22      0.33      0.24      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+156it [00:01, 124.39it/s]
+
+
+
+
+
+
+
+
+
+Train: 100%|▉| 471/472 [00:21<00:00, 27.35it/s, acc=33.9778%, loss=1.0621, lr=0.0000, num_correct=1283]
+
+Epoch 24/25: Train Acc 34.0228%, Train Loss 1.0621, Learning Rate 0.0000
+156it [00:01, 116.17it/s]
+Validation: 16.4384%
+Taining set stats
+[[   5 1226    0]
+ [   9 1278    0]
+ [   7 1246    0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.24      0.00      0.01      1231
+           1       0.34      0.99      0.51      1287
+           2       0.00      0.00      0.00      1253
+    accuracy                           0.34      3771
+   macro avg       0.19      0.33      0.17      3771
+weighted avg       0.19      0.34      0.18      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+weighted avg       0.03      0.16      0.05      1241
+
+
+
+
+
+
+
+
+
+Train: 100%|▉| 470/472 [00:21<00:00, 27.62it/s, acc=32.9883%, loss=1.0589, lr=0.0000, num_correct=1243]
+
+Epoch 25/25: Train Acc 32.9886%, Train Loss 1.0589, Learning Rate 0.0000
+156it [00:01, 120.59it/s]
+Validation: 16.4384%
+Taining set stats
+[[   5 1291    0]
+ [   5 1239    0]
+ [   1 1230    0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.45      0.00      0.01      1296
+           1       0.33      1.00      0.50      1244
+           2       0.00      0.00      0.00      1231
+    accuracy                           0.33      3771
+   macro avg       0.26      0.33      0.17      3771
+weighted avg       0.26      0.33      0.17      3771
+Validation set stats
+[[  0 219   0]
+ [  0 204   0]
+ [  0 818   0]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       219
+           1       0.16      1.00      0.28       204
+           2       0.00      0.00      0.00       818
+    accuracy                           0.16      1241
+   macro avg       0.05      0.33      0.09      1241
+weighted avg       0.03      0.16      0.05      1241
