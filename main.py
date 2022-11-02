@@ -1,5 +1,6 @@
 
 import transformer.DataTransformer as DataTransformer
+from vidaug import augmentors as va
 import yaml
 import numpy as np
 from utils import *
@@ -49,7 +50,7 @@ in the folders
 
 
 def load_config():
-    with open("config.yaml", "r") as configfile:
+    with open("AI_Guide_Dog/config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict)
     return config_dict
@@ -92,9 +93,21 @@ if __name__ == "__main__":
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
 
-    train_transforms = transforms.Compose([transforms.ToTensor()])
+    # https://github.com/okankop/vidaug
+    # train_transforms = transforms.Compose([transforms.ToTensor()])
+    transformations = [va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
+                va.Multiply(0.6), # Makes video less bright
+                va.Multiply(1.4), # Makes video brighter
+                va.Pepper(95), # Makes 5% of video black pixels in each frame
+                va.Salt(95), # Makes 5% of video white pixels in each frame
+                va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
+    ]
+    sometimes = lambda aug: va.Sometimes(0.3, aug) # Used to apply augmentor with 30% probability
+    train_transforms = sometimes(va.SomeOf(transformations, 3, True)) # Picks 3 transformations 30% of the time)
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
+
+    
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
 

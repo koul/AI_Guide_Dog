@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import transforms
 import numpy as np
 # from config import *
 # import ffmpeg
@@ -69,13 +70,14 @@ class SensorDataset(Dataset):
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
 class VideoDataset(Dataset):
-    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, train=False):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len
         self.df_videos = df_videos
         self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
+        self.train = train
         # self.frame_path = frame_path
         self.X_vid = []
         self.X_index = []
@@ -110,19 +112,28 @@ class VideoDataset(Dataset):
 
         video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
         
+        tensor_transform = transforms.ToTensor()
         # for e,filename in enumerate(seq_filename):
         for i in range(vid_idx, vid_idx+self.seq_len): 
             try:
                 # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
                 # frame = (frame - frame.min())/(frame.max() - frame.min())
-                frame = self.transforms(frame)
+                frame = tensor_transform(frame)
 
             except Exception as ex:
                 print(ex)
                 frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
         
             video[i-vid_idx,:,:,:] = frame
+        
+        if self.train == True:
+            np_video = video.numpy()
+            np_video = np.transpose(np_video, (0, 2, 3, 1))
+            np_video = self.transforms(np_video)
+            np_video = np.array(np_video)
+            np_video = np.transpose(np_video, (0, 3, 1, 2))
+            video = torch.tensor(np_video)
           
         # return video
         # return video, torch.LongTensor(self.y[idx])
