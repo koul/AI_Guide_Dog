@@ -6,3 +6,4 @@ ffmpeg-python==0.2.0
 pickle5
 sklearn
 git+https://github.com/okankop/vidaug
+scikit-image
