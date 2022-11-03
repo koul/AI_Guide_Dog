@@ -264,7 +264,7 @@ class LSTMModel(nn.Module):
 
 
 class Bert(nn.Module):
-    def __init__(self, device, vocab_size=30522, hidden_dim=768, num_attr = 3, num_classes = 3, seq_len = 10):
+    def __init__(self, device, github_id, vocab_size=30522, hidden_dim=768, layer_num = 3, num_attr = 3, num_classes = 3, seq_len = 10):
         super(Bert, self).__init__()
         config= BertConfig(vocab_size=vocab_size, 
                             hidden_size=hidden_dim, 
@@ -272,11 +272,12 @@ class Bert(nn.Module):
                             hidden_dropout_prob=0.1, 
                             attention_probs_dropout_prob=0.1,
                             num_attention_heads=2,
-                            num_hidden_layers=3
+                            num_hidden_layers=layer_num
                         )
         print(config)
-        run_name =   "bert_att_head_" + str(config.num_attention_heads) + "_hid_layer_" + str(config.num_hidden_layers)
-        wandb.init(project="bert-guide-dog", entity="rena-jzhang", name = run_name)
+        run_name =   "bert_atth_" + str(config.num_attention_heads) + "_hl_" + str(config.num_hidden_layers) \
+         + "_hd_" + str(config.hidden_size)
+        wandb.init(project="bert-guide-dog", entity = github_id, name = run_name)
 
         self.seq_len = seq_len
         self.bert = BertModel(config, num_attr, seq_len)
@@ -291,7 +292,7 @@ class Bert(nn.Module):
         attention_mask[:, :input_shape[1]] = torch.ones((input_shape[0], input_shape[1])).long().to(device)
 
         # get the embedding for each input token
-        first_tk = self.bert(input_tensor, attention_mask)
+        _, first_tk = self.bert(input_tensor, attention_mask)
         logits = self.linear(first_tk)
 
         return logits

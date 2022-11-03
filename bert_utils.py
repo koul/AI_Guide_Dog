@@ -44,10 +44,10 @@ class BertSelfAttention(nn.Module):
 
     def forward(self, hidden_states, attention_mask):
         """
-    hidden_states: [bs, seq_len, hidden_state]
-    attention_mask: [bs, 1, 1, seq_len]
-    output: [bs, seq_len, hidden_state]
-    """
+        hidden_states: [bs, seq_len, hidden_state]
+        attention_mask: [bs, 1, 1, seq_len]
+        output: [bs, seq_len, hidden_state]
+        """
         # first, we have to generate the key, value, query for each token for multi-head attention w/ transform (more details inside the function)
         # of *_layers are of [bs, num_attention_heads, seq_len, attention_head_size]
         key_layer = self.transform(hidden_states, self.key)
@@ -81,8 +81,6 @@ class BertLayer(nn.Module):
         dense_layer, dropput: the sublayer
         ln_layer: layer norm that takes input+sublayer(output)
         """
-        # todo
-        # sublayer(output)
         output = dense_layer(output)
         output = dropout(output)
         normed_output = ln_layer(input + output)
@@ -156,7 +154,6 @@ class BertModel(nn.Module):
 
         # get word embedding from self.word_embedding
         inputs_embeds = self.convert_embedding(input_tensor)
-            
         input_shape = input_tensor.size()
         seq_length = input_shape[1]
 
