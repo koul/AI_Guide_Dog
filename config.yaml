@@ -26,10 +26,12 @@ trainer:
     layer_norm: 0
     visual: 0
     BATCH: 8
-    lr: 0.01
-    epochs: 2
+    max_lr: 0.01
+    lr: 0.00005
+    epochs: 60
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
+    wandb: true
     model_save_path: "models/"
     model:
         name: "PredRNN"

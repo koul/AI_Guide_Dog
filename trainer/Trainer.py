@@ -6,6 +6,8 @@ from tqdm import tqdm
 from trainer.predrnn import PredRnnModel
 from utils import *
 
+import wandb
+
 class Trainer():
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
@@ -67,7 +69,6 @@ class Trainer():
         weights = [2.0,2.0,1.0]
         class_weights = torch.FloatTensor(weights).to(self.device)
         self.criterion = nn.CrossEntropyLoss(weight=class_weights)
-
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
@@ -80,7 +81,8 @@ class Trainer():
         #     g['weight_decay']= lamda
 
         self.scaler = torch.cuda.amp.GradScaler()
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
+        # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
+        self.scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optimizer, max_lr=config_dict['trainer']['max_lr'], steps_per_epoch=len(self.train_loader), epochs=self.epochs)
 
         print(self.model)
 
@@ -271,6 +273,8 @@ class TrainerPredRNN():
 
         num_correct = 0
         total_loss = 0
+        total_ce_loss = 0
+        total_decouple_loss = 0
         actual = []
         predictions = []
 
@@ -291,14 +295,16 @@ class TrainerPredRNN():
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y)
-            predictions.extend(pred_class)
+            actual.extend(y.cpu())
+            predictions.extend(pred_class.cpu())
 
             num_correct += int((pred_class == y).sum())
             del outputs
             total_loss += float(loss)
-            print(f'Batch ce_loss {CE_loss.item() / len(y)}')
-            print(f'Batch decouple_loss {decouple_loss.item() / len(y)}')
+            total_ce_loss += float(CE_loss)
+            total_decouple_loss += float(decouple_loss)
+            # print(f'Batch ce_loss {CE_loss.item() / len(y)}')
+            # print(f'Batch decouple_loss {decouple_loss.item() / len(y)}')
 
             batch_bar.set_postfix(
                 acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'])),
@@ -321,9 +327,18 @@ class TrainerPredRNN():
             self.epochs,
             acc,
             float(total_loss / len(self.train_loader)),
+            float(total_ce_loss / len(self.train_loader)),
+            float(total_decouple_loss / len(self.train_loader)),
             float(self.optimizer.param_groups[0]['lr'])))
 
-        return actual, predictions
+        # if self.config['trainer']['wandb']:
+        wandb.log({
+            'total_loss': total_loss,
+            'total_ce_loss': total_ce_loss,
+            'total_decouple_loss': total_decouple_loss,
+        })
+
+        return acc, actual, predictions
 
 
     def validate(self):
@@ -343,8 +358,8 @@ class TrainerPredRNN():
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(vy)
-            predictions.extend(pred_class)
+            actual.extend(vy.cpu())
+            predictions.extend(pred_class.cpu())
 
             val_num_correct += int((pred_class == vy).sum())
             del outputs
@@ -354,5 +369,6 @@ class TrainerPredRNN():
         return acc, actual, predictions
 
     def save(self, acc, epoch):
-        save(self.config, self.model, epoch, acc, optim = False)
-        save(self.config, self.optimizer, epoch, acc, optim = True)
+        save(self.config, self.model, epoch, acc, save_type='model')
+        save(self.config, self.optimizer, epoch, acc, save_type='optim')
+        save(self.config, self.scheduler, epoch, acc, save_type='scheduler')

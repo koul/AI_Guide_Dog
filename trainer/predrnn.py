@@ -11,7 +11,7 @@ from trainer.tsne import visualization
 
 class SpatioTemporalLSTMCell(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, bias):
+    def __init__(self, input_dim, hidden_dim, height, width, kernel_size, bias):
         """
         Initialize SpatioTemporalLSTMCell cell.
         Parameters
@@ -34,12 +34,22 @@ class SpatioTemporalLSTMCell(nn.Module):
         self.kernel_size = kernel_size
         self.padding = kernel_size[0] // 2, kernel_size[1] // 2
         self.bias = bias
+        self._forget_bias = 1.0
 
         self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
                               out_channels=7 * self.hidden_dim,
                               kernel_size=self.kernel_size,
                               padding=self.padding,
                               bias=self.bias)
+        # self.conv = nn.Sequential(
+        #     nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
+        #             out_channels=7 * self.hidden_dim,
+        #             kernel_size=self.kernel_size,
+        #             padding=self.padding,
+        #             bias=self.bias),
+        #     nn.LayerNorm([7 * self.hidden_dim, self.kernel_size[0], self.kernel_size[1]])
+        # )
+        self.layernorm = nn.LayerNorm([7 * self.hidden_dim, height, width])
 
         self.conv_memory_to_o = nn.Conv2d(in_channels=self.hidden_dim*2,
                                         out_channels=self.hidden_dim,
@@ -75,14 +85,15 @@ class SpatioTemporalLSTMCell(nn.Module):
 
         # print(f'combined: {combined.shape}')
         combined_conv = self.conv(combined)
-        cc_i, cc_f, cc_g, cc_i_prime, cc_f_prime, cc_g_prime, cc_o = torch.split(combined_conv, self.hidden_dim, dim=1)
+        normalized_conv = self.layernorm(combined_conv)
+        cc_i, cc_f, cc_g, cc_i_prime, cc_f_prime, cc_g_prime, cc_o = torch.split(normalized_conv, self.hidden_dim, dim=1)
         i = torch.sigmoid(cc_i)
-        f = torch.sigmoid(cc_f)
+        f = torch.sigmoid(cc_f + self._forget_bias )
         g = torch.tanh(cc_g)
         # o = torch.sigmoid(cc_o)
 
         i_prime = torch.sigmoid(cc_i_prime)
-        f_prime = torch.sigmoid(cc_f_prime)
+        f_prime = torch.sigmoid(cc_f_prime + self._forget_bias)
         g_prime = torch.tanh(cc_g_prime)
 
         delta_c = i * g
@@ -131,7 +142,7 @@ class PredRNN(nn.Module):
         >> h = last_states[0][0]  # 0 for layer index, 0 for h index
     """
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers,
+    def __init__(self, input_dim, hidden_dim, height, width, kernel_size, num_layers,
                  batch_first=False, bias=True, return_all_layers=False):
         super(PredRNN, self).__init__()
 
@@ -161,6 +172,8 @@ class PredRNN(nn.Module):
 
             cell_list.append(SpatioTemporalLSTMCell(input_dim=cur_input_dim,
                                           hidden_dim=self.hidden_dim[i],
+                                          height=height,
+                                          width=width,
                                           kernel_size=self.kernel_size[i],
                                           bias=self.bias))
 
@@ -297,13 +310,13 @@ class PredRnnModel(nn.Module):
     def __init__(self, input_dim, hidden_dim, kernel_size, num_layers, height, width,
                  batch_first=False, bias=True, return_all_layers=False, num_classes = 3):
         super(PredRnnModel, self).__init__()
-        self.predRNN = PredRNN(input_dim, hidden_dim, kernel_size, num_layers,batch_first, bias, return_all_layers)
+        self.predRNN = PredRNN(input_dim, hidden_dim, height, width, kernel_size, num_layers,batch_first, bias, return_all_layers)
         self.linear = nn.Linear(hidden_dim * height * width, num_classes)
 
     def forward(self, input_tensor, hidden_state=None):
       x, decouple_loss = self.predRNN(input_tensor)
-      print(x.shape)  # torch.Size([8, 8, 128, 128, 128])
       x = torch.flatten(x[:,-1,:,:,:], start_dim=1)
+
       # print(x.shape)  	# torch.Size([2, 8, 8388608])
       x = self.linear(x) #op: [batch, num_classes]
       # print(x.shape)
