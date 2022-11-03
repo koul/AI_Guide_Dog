@@ -1,6 +1,6 @@
 global: 
     root_dir: ""
-    iteration: "seattle_library_intent_weighted_loss_gray_2fps"
+    iteration: "debug"
     enable_preprocessing: false
     seed: 8
     enable_intent: false
@@ -8,20 +8,24 @@ transformer:
     fps: 2
     path: "/data"
     data_save_file: "/data/processed/" #file path without .npz
+    enable_benchmark_test: false
+    test_path: "data/test/Mixed"
+    test_save_file: "data/processed/test/Mixed" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
     CHANNELS: 1
     SEQUENCE_LENGTH: 10
-    VAL_INTENT: "validation_intent.npy"
+    VAL_INTENT: ""
 trainer:
     BATCH: 8
-    lr: 0.0005
+    lr: 0.001
     epochs: 25
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "/data/models/"
     data_type: "sensor"
+
     # model:
     #    name: "ConvLSTM"
     #    convlstm_hidden: "256"
@@ -33,32 +37,25 @@ trainer:
     #      lstm_hidden: 128 #try 128 later
     #      num_lstm_layers: 2 #try 3,4,5 later
     #      dense_frame_input_dim: 1000 #final input is dense_frame_input_dim + sensor_data_dim
-    #      sensor_attr_list:
-    #          - "Gyrometer:Gyrometer - X axis"
-    #          - "Gyrometer:Gyrometer - Y axis"
-    #          - "Gyrometer:Gyrometer - Z axis"
-    #          - "Magnetometer:Magnetometer - X axis"
-    #          - "Magnetometer:Magnetometer - Y axis"
-    #          - "Magnetometer:Magnetometer - Z axis"
-    #          - "Accelerometer:Acceleration - X axis"
-    #          - "Accelerometer:Acceleration - Y axis"
-    #          - "Accelerometer:Acceleration - Z axis"
-    #      pretrained_path: ""
-    #      optimizer_path: ""
     model:
-         name: "bert_sensor"
-         sensor_attr_list:
-            #  - "Gyrometer:Gyrometer - X axis"
-            #  - "Gyrometer:Gyrometer - Y axis"
-            #  - "Gyrometer:Gyrometer - Z axis"
-             - "GPS:Heading (degrees)"
-            #  - "GPS:Gyrometer - Y axis"
-            #  - "GPS:Gyrometer - Z axis"
-            #  - "Magnetometer:Magnetometer - X axis"
-            #  - "Magnetometer:Magnetometer - Y axis"
-            #  - "Magnetometer:Magnetometer - Z axis"
-            #  - "Accelerometer:Acceleration - X axis"
-            #  - "Accelerometer:Acceleration - Y axis"
-            #  - "Accelerometer:Acceleration - Z axis"
-         pretrained_path: ""
-         optimizer_path: ""
+        hidden_dim: 32
+        layer_num: 2
+        name: "bert_sensor"
+        sensor_attr_list:
+            - "Gyrometer:Gyrometer - X axis"
+            - "Gyrometer:Gyrometer - Y axis"
+            - "Gyrometer:Gyrometer - Z axis"
+        #  - "GPS:Heading (degrees)"
+        #  - "GPS:Latitude"
+        #  - "GPS:Longitude"
+        #  - "GPS:Heading accuracy (degrees)"
+            - "Magnetometer:Magnetometer - X axis"
+            - "Magnetometer:Magnetometer - Y axis"
+            - "Magnetometer:Magnetometer - Z axis"
+            - "Accelerometer:Acceleration - X axis"
+            - "Accelerometer:Acceleration - Y axis"
+            - "Accelerometer:Acceleration - Z axis"
+        pretrained_path: ""
+        optimizer_path: ""
+wandb:
+    github_id: 

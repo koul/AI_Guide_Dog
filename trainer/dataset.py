@@ -231,7 +231,7 @@ class IntentVideoDataset(Dataset):
 
         #+1 for intent channels
         video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS']+1, self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
-        
+
         if(self.test):
             intent = self.intent_positions[idx]
         else:
@@ -262,7 +262,6 @@ class IntentVideoDataset(Dataset):
         
             context_frame = torch.cat((frame, intent_tensor), dim = 0) #attach intent as last channel
             video[i-vid_idx,:,:,:] = frame
-
           
         # return video
         # return video, torch.LongTensor(self.y[idx])

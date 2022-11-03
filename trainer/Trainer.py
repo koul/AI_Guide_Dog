@@ -10,7 +10,8 @@ import wandb
 
 class Trainer:
     # initialize a new trainer
-    def __init__(self, config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor):    
+    def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
+                 test_videos = None, test_sensor = None):
         self.cuda = torch.cuda.is_available()
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         print("\nCurrent device is: ", self.device, " \n")
@@ -25,7 +26,7 @@ class Trainer:
         
         if(config_dict['global']['enable_intent']):
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
         else:
             if self.data_type == "multimodal": #If multi_modal training
                 sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list']
@@ -33,18 +34,29 @@ class Trainer:
                 self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name, transforms=train_transforms,
                                                             seq_len = self.seq_len, dense_frame_len = dense_frame_len,
                                                             sensor_attr_list = sensor_attr_list, config_dict=self.config)
-                self.val_dataset = SensorVideoDataset(df_videos, df_sensor, test_files, self.model_name, transforms=val_transforms,
+                self.val_dataset = SensorVideoDataset(df_videos, df_sensor, val_files, self.model_name, transforms=val_transforms,
                                                             seq_len = self.seq_len, dense_frame_len = dense_frame_len,
                                                             sensor_attr_list = sensor_attr_list, config_dict=self.config)
             elif self.data_type == 'sensor':
                 sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list']
                 self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
-                self.val_dataset = SensorDataset(df_videos, df_sensor, test_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
+                self.val_dataset = SensorDataset(df_videos, df_sensor, val_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
             else:
                 self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms,
                                                 seq_len=self.seq_len, config_dict=self.config)
-                self.val_dataset = VideoDataset(df_videos, df_sensor, test_files, transforms=val_transforms,
+                self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms,
                                                 seq_len=self.seq_len, config_dict=self.config) 
+
+                        # TODO: Add test loader with sampler - try with replacement to True and False
+                if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
+                    self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
+                                                    seq_len=self.seq_len, config_dict=self.config)
+                    test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
+                                    drop_last=False) if self.cuda else dict(shuffle=False,
+                                                                            batch_size=config_dict['trainer']['BATCH'],
+                                                                            drop_last=False)
+                    self.test_loader = DataLoader(self.test_dataset, **test_args)
+
         print(len(self.train_dataset))
         print(len(self.val_dataset))
         
@@ -55,7 +67,9 @@ class Trainer:
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.val_loader = DataLoader(self.val_dataset, **val_args)
        
-        self.epochs = config_dict['trainer']['epochs']    
+        self.epochs = config_dict['trainer']['epochs']   
+        self.hidden_dim =  config_dict['trainer']['model']['hidden_dim']   
+        self.layer_num =  config_dict['trainer']['model']['layer_num']   
 
         if self.model_name == "ConvLSTM":
             hidden_dim = [int(k.strip()) for k in config_dict['trainer']['model']['convlstm_hidden'].split(',')]
@@ -72,7 +86,7 @@ class Trainer:
                                    layer_dim = config_dict['trainer']['model']['num_lstm_layers'], hidden_dim = config_dict['trainer']['model']['lstm_hidden'],
                                    num_classes = 3)               
         elif self.model_name == "bert_sensor":
-            self.model = Bert(self.device, num_attr = len(config_dict['trainer']['model']['sensor_attr_list']))
+            self.model = Bert(self.device, github_id = config_dict['wandb']['github_id'], num_attr = len(config_dict['trainer']['model']['sensor_attr_list']), hidden_dim = self.hidden_dim)
 
         else:
             print("Error parsing model name, please reverify model details in config.yaml")
@@ -158,7 +172,7 @@ class Trainer:
             float(loss),
             float(self.optimizer.param_groups[0]['lr'])))
         
-        wandb.log({"loss": loss, "train_acc": acc})
+        wandb.log({"loss": loss, "train_acc": acc, "lr": self.optimizer.param_groups[0]['lr'] })
 
         return actual, predictions
 
@@ -193,6 +207,37 @@ class Trainer:
         print("Validation: {:.04f}%".format(acc))
         wandb.log({"val_acc": acc})
         return acc, actual, predictions
+
+
+    # runs benchmark test at the end (after train and validation)
+    def test(self):
+        self.model.eval()
+        val_num_correct = 0
+
+        actual = []
+        predictions = []
+
+        for i, (vx, vy) in tqdm(enumerate(self.test_loader)):
+            vx = vx.to(self.device)
+            vy = vy.to(self.device)
+
+            with torch.no_grad():
+                outputs = self.model(vx)
+                del vx
+
+            pred_class = torch.argmax(outputs, axis=1)
+
+            actual.extend(vy)
+            predictions.extend(pred_class)
+
+            val_num_correct += int((pred_class == vy).sum())
+            del outputs
+
+        acc = 100 * val_num_correct / (len(self.val_dataset))
+        print("Benchmark test: {:.04f}%".format(acc))
+
+        return acc, actual, predictions
+
 
     def save(self, acc, epoch):
         save(self.config, self.model, epoch, acc, optim = False)
