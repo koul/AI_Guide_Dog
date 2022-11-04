@@ -134,7 +134,7 @@ class VideoDataset(Dataset):
             np_video = np.array(np_video)
             np_video = np.transpose(np_video, (0, 3, 1, 2))
             video = torch.tensor(np_video)
-          
+            
         # return video
         # return video, torch.LongTensor(self.y[idx])
         return video, self.y[idx]
@@ -167,13 +167,14 @@ class FrameDataset(Dataset):
         
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example) along with high-level GPS information.
 class IntentVideoDataset(Dataset):
-    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test=False):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test=False, train=False):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len
         self.df_videos = df_videos
         self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
+        self.train = train
         # self.frame_path = frame_path
         self.X_vid = []
         self.X_index = []
@@ -237,15 +238,16 @@ class IntentVideoDataset(Dataset):
             else:
                 intent = -1 # none (2) intent
 
-
-
+        tensor_transform = transforms.ToTensor()
         # for e,filename in enumerate(seq_filename):
         for i in range(vid_idx, vid_idx+self.seq_len): 
             try:
                 # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
                 # frame = (frame - frame.min())/(frame.max() - frame.min())
-                frame = self.transforms(frame)
+                # frame = self.transforms(frame)
+                frame = tensor_transform(frame)
+
                 if(intent!=-1 and i>=intent and i<intent+self.config['transformer']['fps']):  #pass intent vector for just 1 second
                     intent_tensor = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']), self.y[idx])
                 else:
@@ -259,6 +261,14 @@ class IntentVideoDataset(Dataset):
         
             context_frame = torch.cat((frame, intent_tensor), dim = 0) #attach intent as last channel
             video[i-vid_idx,:,:,:] = frame
+
+        if self.train == True:
+            np_video = video.numpy()
+            np_video = np.transpose(np_video, (0, 2, 3, 1))
+            np_video = self.transforms(np_video)
+            np_video = np.array(np_video)
+            np_video = np.transpose(np_video, (0, 3, 1, 2))
+            video = torch.tensor(np_video)
           
         # return video
         # return video, torch.LongTensor(self.y[idx])

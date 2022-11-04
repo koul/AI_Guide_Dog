@@ -1,9 +1,9 @@
 global: 
     root_dir: ""
-    iteration: "debug"
+    iteration: "aug_convlstm_no_intent"
     enable_preprocessing: false
     seed: 8
-    enable_intent: false
+    enable_intent: true
 transformer:
     fps: 2
     path: "data/Indoor - Seattle Library"
@@ -19,8 +19,8 @@ data:
     VAL_INTENT: ""
 trainer:
     BATCH: 8
-    lr: 0.01
-    epochs: 2
+    lr: 0.0001
+    epochs: 60
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"

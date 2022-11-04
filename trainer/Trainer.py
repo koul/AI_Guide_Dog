@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
+import wandb
 
 class Trainer:
     # initialize a new trainer
@@ -85,6 +86,14 @@ class Trainer:
 
 
     def train(self, epoch):
+        # wandb.init(project="gd", entity="bsukboon")
+        # wandb.config = {
+        #     "learning_rate": 0.0001,
+        #     "epochs": 20,
+        #     "batch_size": 64,
+        #     "dataset": "Indoor - Seattle Library"
+        #     }
+
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
 
         num_correct = 0
@@ -121,6 +130,7 @@ class Trainer:
                 num_correct=num_correct,
                 lr="{:.04f}".format(float(self.optimizer.param_groups[0]['lr'])))
             
+
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer) 
             self.scaler.update()
@@ -128,7 +138,10 @@ class Trainer:
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
       
-
+        # wandb.log({"acc": 100 * num_correct / ((i + 1) * self.config['trainer']['BATCH']),
+        #         "loss": float(total_loss / (i + 1))})
+        # wandb.watch(self.model)
+        
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset))
         print("Epoch {}/{}: Train Acc {:.04f}%, Train Loss {:.04f}, Learning Rate {:.04f}".format(

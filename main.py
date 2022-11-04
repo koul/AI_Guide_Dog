@@ -107,8 +107,6 @@ if __name__ == "__main__":
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
-    
-
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
 
     # if(config_dict['data']['TEST_FILES'] is not None):
@@ -136,6 +134,7 @@ if __name__ == "__main__":
         trainer.save(acc, epoch)
 
     # performs final benchmarking after training
-    if (config_dict['transformer']['enable_benchmark_test'] == True):
-        acc, test_actual, test_predictions = trainer.test()
-        display_test_classification_report(test_actual, test_predictions)
+    # if (config_dict['transformer']['enable_benchmark_test'] == True):
+    #     acc, test_actual, test_predictions = trainer.test()
+    #     # print(f'test_actual length: {len(test_actual)}, test_predictions length: {len(test_predictions)}')
+    #     display_test_classification_report(test_actual, test_predictions)
