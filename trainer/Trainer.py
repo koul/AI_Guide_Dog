@@ -261,7 +261,11 @@ class TrainerPredRNN():
         #     g['weight_decay']= lamda
 
         self.scaler = torch.cuda.amp.GradScaler()
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
+        # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
+                                                                    mode='max',
+                                                                    factor=0.75,
+                                                                    patience=1)
 
         self.decouple_beta = config_dict['trainer']['model']['decouple_beta']
 

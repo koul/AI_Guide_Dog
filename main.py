@@ -122,18 +122,24 @@ if __name__ == "__main__":
     trainer = TrainerPredRNN(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor)
     trainer.save(0, -1)
 
+    max_val_acc = None
+
     epochs = config_dict['trainer']['epochs']
 
     for epoch in range(epochs):
         train_acc, train_actual, train_predictions = trainer.train(epoch)
         val_acc, val_actual, val_predictions = trainer.validate()
+
+        trainer.step(val_acc)
         display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
         # actual_left_pred_left, actual_left_pred_right, actual_left_pred_front, actual_right_pred_left, actual_right_pred_right, actual_right_pred_front, actual_front_pred_left, actual_front_pred_right, actual_front_pred_front = get_confusion_matrix(val_actual, val_predictions)
 
         train_report = get_classification_report(train_actual, train_predictions)
         val_report = get_classification_report(val_actual, val_predictions)
 
-        trainer.save(val_acc, epoch)
+        if max_val_acc is None or val_acc > max_val_acc:
+            trainer.save(val_acc, epoch)
+            max_val_acc = val_acc
 
         wandb.log({
             'train_acc': train_acc,
