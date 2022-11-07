@@ -18,13 +18,15 @@ class FeatureExtractor(nn.Module):
         self.data_type = data_type
         if data_type != 'video':
             self.convert_embedding = nn.Linear(sensor_dim, sensor_vec_dim)
+        self.sensor_dim = sensor_dim
+        self.sensor_vec_dim = sensor_vec_dim
         
     def forward(self, x):
         if self.data_type == 'sensor':
             out = self.convert_embedding(x)
         elif self.data_type == 'multimodal':
-            out = self.convert_embedding(x[:, :, -sensor_dim:])
-            out = torch.cat((x[:, :, :-sensor_dim], out), 1) 
+            out = self.convert_embedding(x[:, :, -self.sensor_dim:])
+            out = torch.cat((x[:, :, :-self.sensor_dim], out), 1)
         else:
             out = x
         return out        
@@ -175,7 +177,7 @@ class BertModel(nn.Module):
 
         seq_length = input_tensor.size()[1]
         if seq_length < self.seq_len :
-            padded_tensor = torch.zeros((input_shape[0], self.seq_len, input_shape[2]))
+            padded_tensor = torch.zeros((input_tensor.size()[0], self.seq_len, input_tensor.size()[2])) #TODO: fix this ...
             padded_tensor[:, :seq_length, :] = input_tensor
             input_tensor = padded_tensor
 

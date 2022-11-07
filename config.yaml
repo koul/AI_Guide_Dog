@@ -1,30 +1,30 @@
-global: 
+global:
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: false
+    enable_preprocessing: true
     seed: 8
     enable_intent: false
 transformer:
     fps: 2
-    path: "/data"
-    data_save_file: "/data/processed/" #file path without .npz
-    enable_benchmark_test: false
-    test_path: "data/test/Mixed"
-    test_save_file: "data/processed/test/Mixed" #file path without .npz
+    path: "data/Indoor - train"
+    data_save_file: "data/processed/Indoor - train" #file path without .npz
+    enable_benchmark_test: true
+    test_path: "data/Indoor - test"
+    test_save_file: "data/processed/Indoor - test" #file path without .npz
 data:
-    HEIGHT: 64
-    WIDTH: 64
-    CHANNELS: 1
-    SEQUENCE_LENGTH: 10
+    HEIGHT: 224 #64
+    WIDTH: 224 #64
+    CHANNELS: 3 #1
+    SEQUENCE_LENGTH: 8
     VAL_INTENT: ""
 trainer:
     BATCH: 8
     lr: 0.001
-    epochs: 25
+    epochs: 2
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
-    model_save_path: "/data/models/"
-    data_type: "sensor"
+    model_save_path: "models/"
+    data_type: "multimodal"
 
     # model:
     #    name: "ConvLSTM"
@@ -73,4 +73,4 @@ trainer:
         pretrained_path: ""
         optimizer_path: ""
 wandb:
-    github_id: 
+    github_id: "divergent"
