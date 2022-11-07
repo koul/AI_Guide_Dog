@@ -335,7 +335,6 @@ class SensorVideoDataset(Dataset):
         vid_file = self.X_vid[idx]
         vid_idx = self.X_index[idx]
 
-
         sensor = torch.FloatTensor(self.seq_len, self.sensor_feat_len)
 
         for i in range(vid_idx, vid_idx + self.seq_len):
@@ -393,4 +392,6 @@ class SensorVideoDataset(Dataset):
         # return video
         # return video, torch.LongTensor(self.y[idx])
         fused_data = torch.cat((video,sensor), 1) # size (seq_len, (dense_video_dim + sensor_dim))
+        
         return fused_data, self.y[idx]
+        # return (video, sensor), self.y[idx]

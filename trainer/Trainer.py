@@ -17,20 +17,21 @@ class Trainer:
         print("\nCurrent device is: ", self.device, " \n")
 
         self.config = config_dict
+        
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
         self.epochs = config_dict['trainer']['epochs']
 
         self.model_name = config_dict['trainer']['model']['name']
         self.data_type = config_dict['trainer']['data_type']
-        
+        model_config = config_dict['trainer']['model']
         
         if(config_dict['global']['enable_intent']):
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
             self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
         else:
             if self.data_type == "multimodal": #If multi_modal training
-                sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list']
-                dense_frame_len = config_dict['trainer']['model']['dense_frame_input_dim']
+                sensor_attr_list = model_config['sensor_attr_list']
+                dense_frame_len = model_config['dense_frame_input_dim']
                 self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name, transforms=train_transforms,
                                                             seq_len = self.seq_len, dense_frame_len = dense_frame_len,
                                                             sensor_attr_list = sensor_attr_list, config_dict=self.config)
@@ -38,7 +39,7 @@ class Trainer:
                                                             seq_len = self.seq_len, dense_frame_len = dense_frame_len,
                                                             sensor_attr_list = sensor_attr_list, config_dict=self.config)
             elif self.data_type == 'sensor':
-                sensor_attr_list = config_dict['trainer']['model']['sensor_attr_list']
+                sensor_attr_list = model_config['sensor_attr_list']
                 self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
                 self.val_dataset = SensorDataset(df_videos, df_sensor, val_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
             else:
@@ -57,8 +58,8 @@ class Trainer:
                                                                             drop_last=False)
                     self.test_loader = DataLoader(self.test_dataset, **test_args)
 
-        print(len(self.train_dataset))
-        print(len(self.val_dataset))
+        print('len train set: ', len(self.train_dataset))
+        print('len val set: ',len(self.val_dataset))
         
         sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
@@ -68,31 +69,36 @@ class Trainer:
         self.val_loader = DataLoader(self.val_dataset, **val_args)
        
         self.epochs = config_dict['trainer']['epochs']   
-        self.hidden_dim =  config_dict['trainer']['model']['hidden_dim']   
-        self.layer_num =  config_dict['trainer']['model']['layer_num']   
+        self.hidden_dim =  model_config['sensor_hidden_dim']   
+        self.layer_num =  model_config['layer_num']   
 
         if self.model_name == "ConvLSTM":
-            hidden_dim = [int(k.strip()) for k in config_dict['trainer']['model']['convlstm_hidden'].split(',')]
+            hidden_dim = [int(k.strip()) for k in model_config['convlstm_hidden'].split(',')]
             channels = config_dict['data']['CHANNELS']
 
             if(config_dict['global']['enable_intent']):
                 channels = channels + 1
             
             self.model = ConvLSTMModel(channels, hidden_dim, (3,3),
-                                       config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],
+                                       model_config['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],
                                        config_dict['data']['WIDTH'],True)
         elif self.model_name == "LSTM_Multimodal":
-            self.model = LSTMModel(input_dim = config_dict['trainer']['model']['dense_frame_input_dim'] + len(config_dict['trainer']['model']['sensor_attr_list']),
-                                   layer_dim = config_dict['trainer']['model']['num_lstm_layers'], hidden_dim = config_dict['trainer']['model']['lstm_hidden'],
+            self.model = LSTMModel(input_dim = model_config['dense_frame_input_dim'] + len(model_config['sensor_attr_list']),
+                                   layer_dim = model_config['num_lstm_layers'], hidden_dim = model_config['lstm_hidden'],
                                    num_classes = 3)               
-        elif self.model_name == "bert_sensor":
-            self.model = Bert(self.device, github_id = config_dict['wandb']['github_id'], num_attr = len(config_dict['trainer']['model']['sensor_attr_list']), hidden_dim = self.hidden_dim)
-
+        elif self.model_name == "bert":
+            self.model = Bert(self.device, 
+                                github_id = config_dict['wandb']['github_id'], 
+                                num_attr = len(model_config['sensor_attr_list']), 
+                                hidden_dim = self.hidden_dim,
+                                data_type = self.data_type,
+                                layer_num = self.layer_num
+                                )
         else:
             print("Error parsing model name, please reverify model details in config.yaml")
 
-        if(config_dict['trainer']['model']['pretrained_path'] != ""):
-            self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
+        if(model_config['pretrained_path'] != ""):
+            self.model.load_state_dict(torch.load(model_config['pretained_path']))
         
         self.model = self.model.to(self.device)
 
@@ -105,8 +111,8 @@ class Trainer:
         
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
         
-        if(config_dict['trainer']['model']['optimizer_path'] != ""):
-            self.optimizer.load_state_dict(torch.load(config_dict['trainer']['model']['optimizer_path']))
+        if(model_config['optimizer_path'] != ""):
+            self.optimizer.load_state_dict(torch.load(model_config['optimizer_path']))
 
         # for g in optimizer.param_groups:
         #     g['lr'] = lr

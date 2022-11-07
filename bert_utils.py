@@ -3,6 +3,32 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils import *
 
+def get_extended_attention_mask(attention_mask):
+  # attention_mask [batch_size, seq_length]
+  assert attention_mask.dim() == 2
+  # [batch_size, 1, 1, seq_length] for multi-head attention
+  extended_attention_mask = attention_mask[:, None, None, :]
+  extended_attention_mask = extended_attention_mask # fp16 compatibility
+  extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+  return extended_attention_mask
+
+class FeatureExtractor(nn.Module):
+    def __init__(self, data_type, sensor_dim, sensor_vec_dim):
+        super().__init__()
+        self.data_type = data_type
+        if data_type != 'video':
+            self.convert_embedding = nn.Linear(sensor_dim, sensor_vec_dim)
+        
+    def forward(self, x):
+        if self.data_type == 'sensor':
+            out = self.convert_embedding(x)
+        elif self.data_type == 'multimodal':
+            out = self.convert_embedding(x[:, :, -sensor_dim:])
+            out = torch.cat((x[:, :, :-sensor_dim], out), 1) 
+        else:
+            out = x
+        return out        
+
 class BertSelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -121,13 +147,14 @@ class BertModel(nn.Module):
     2. a stack of n bert layers (used in self.encode)
     3. a linear transformation layer for [CLS] token (used in self.forward, as given)
     """
-    def __init__(self, config, input_vec_size, seq_len):
+    def __init__(self, config, input_vec_size, seq_len, data_type):
         super().__init__()
         self.config = config
         self.seq_len = seq_len
 
         # embedding
-        self.convert_embedding = nn.Linear(input_vec_size, config.hidden_size)
+        # self.convert_embedding = nn.Linear(input_vec_size, config.hidden_size)
+        self.feature_extractor = FeatureExtractor(data_type, input_vec_size, config.hidden_size)
         self.pos_embedding = nn.Embedding(config.max_position_embeddings, config.hidden_size)
         self.embed_layer_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.embed_dropout = nn.Dropout(config.hidden_dropout_prob)
@@ -153,7 +180,8 @@ class BertModel(nn.Module):
             input_tensor = padded_tensor
 
         # get word embedding from self.word_embedding
-        inputs_embeds = self.convert_embedding(input_tensor)
+        # inputs_embeds = self.convert_embedding(input_tensor)
+        inputs_embeds = self.feature_extractor(input_tensor)
         input_shape = input_tensor.size()
         seq_length = input_shape[1]
 
