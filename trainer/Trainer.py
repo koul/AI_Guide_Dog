@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
-import wandb
+# import wandb
 
 class Trainer:
     # initialize a new trainer
