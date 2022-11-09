@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
-# import wandb
+import wandb
 
 class Trainer:
     # initialize a new trainer
@@ -20,7 +20,7 @@ class Trainer:
         
         if(config_dict['global']['enable_intent']):
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config, train=True)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test=True)
         else:
             self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config, train=True)
             self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
@@ -55,6 +55,7 @@ class Trainer:
         channels = config_dict['data']['CHANNELS']
         if(config_dict['global']['enable_intent']):
             channels = channels + 1
+            print("WE NEED channels", channels)
             
         self.model = ConvLSTMModel(channels, hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
@@ -86,13 +87,14 @@ class Trainer:
 
 
     def train(self, epoch):
-        # wandb.init(project="gd", entity="bsukboon")
-        # wandb.config = {
-        #     "learning_rate": 0.0001,
-        #     "epochs": 20,
-        #     "batch_size": 64,
-        #     "dataset": "Indoor - Seattle Library"
-        #     }
+        if (self.config['global']['enable_wandb']):
+            wandb.init(project="gd", entity="bsukboon")
+            wandb.config = {
+                "learning_rate": 0.0001,
+                "epochs": 20,
+                "batch_size": 64,
+                "dataset": "Indoor - Seattle Library"
+                }
 
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
 
@@ -137,10 +139,12 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
-      
-        # wandb.log({"acc": 100 * num_correct / ((i + 1) * self.config['trainer']['BATCH']),
-        #         "loss": float(total_loss / (i + 1))})
-        # wandb.watch(self.model)
+            break
+
+        if (self.config['global']['enable_wandb']):
+            wandb.log({"acc": 100 * num_correct / ((i + 1) * self.config['trainer']['BATCH']),
+                    "loss": float(total_loss / (i + 1))})
+            wandb.watch(self.model)
         
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset))

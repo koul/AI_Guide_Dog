@@ -4,6 +4,7 @@ global:
     enable_preprocessing: false
     seed: 8
     enable_intent: true
+    enable_wandb: false
 transformer:
     fps: 2
     path: "data/Indoor - train"

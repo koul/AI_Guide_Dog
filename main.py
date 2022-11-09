@@ -95,10 +95,10 @@ if __name__ == "__main__":
     # https://github.com/okankop/vidaug
     # train_transforms = transforms.Compose([transforms.ToTensor()])
     transformations = [va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
-                va.Multiply(0.6), # Makes video less bright
-                va.Multiply(1.4), # Makes video brighter
-                va.Pepper(95), # Makes 5% of video black pixels in each frame
-                va.Salt(95), # Makes 5% of video white pixels in each frame
+                # va.Multiply(0.6), # Makes video less bright
+                # va.Multiply(1.4), # Makes video brighter
+                # va.Pepper(95), # Makes 5% of video black pixels in each frame
+                # va.Salt(95), # Makes 5% of video white pixels in each frame
                 # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
     ]
     # transformations = [va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
@@ -106,8 +106,8 @@ if __name__ == "__main__":
                 # va.Multiply(1.4), # Makes video brighter
                 # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
     # ]
-    sometimes = lambda aug: va.Sometimes(1, aug) # Used to apply augmentor with 30% probability
-    train_transforms = sometimes(va.SomeOf(transformations, 3, True)) # Picks 3 transformations 30% of the time)
+    sometimes = lambda aug: va.Sometimes(0.3, aug) # Used to apply augmentor with 30% probability
+    train_transforms = sometimes(va.SomeOf(transformations, 1, True)) # Picks 3 transformations 30% of the time)
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
@@ -132,7 +132,9 @@ if __name__ == "__main__":
     epochs = config_dict['trainer']['epochs']
 
     for epoch in range(epochs):
+        print("TRAIN")
         train_actual, train_predictions = trainer.train(epoch)
+        print("VALIDATE")
         acc, val_actual, val_predictions = trainer.validate()
         display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
         trainer.save(acc, epoch)

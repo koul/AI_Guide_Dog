@@ -273,10 +273,7 @@ class IntentVideoDataset(Dataset):
         # for e,filename in enumerate(seq_filename):
         for i in range(vid_idx, vid_idx+self.seq_len): 
             try:
-                # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
-                # frame = (frame - frame.min())/(frame.max() - frame.min())
-                # frame = self.transforms(frame)
                 frame = tensor_transform(frame)
 
                 if(intent!=-1 and i>=intent and i<intent+self.config['transformer']['fps']):  #pass intent vector for just 1 second
