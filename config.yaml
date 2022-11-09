@@ -6,8 +6,8 @@ global:
     enable_intent: true
 transformer:
     fps: 2
-    path: "data/Indoor - test"
-    data_save_file: "data/processed/Indoor - test" #file path without .npz
+    path: "data/Indoor - train"
+    data_save_file: "data/processed/Indoor - train" #file path without .npz
     enable_benchmark_test: true
     test_path: "data/Indoor - test"
     test_save_file: "data/processed/Indoor - test" #file path without .npz

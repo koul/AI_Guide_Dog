@@ -12,6 +12,7 @@ import os.path as osp
 from utils import *
 import pdb
 import scipy.stats as ss
+import cv2
 
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of sensor data as a single training example).
@@ -105,7 +106,6 @@ class VideoDataset(Dataset):
     
     def __getitem__(self, idx):
         # vid = self.df_videos['sample'][idx:idx+self.seq_len]
-        # print(vid.shape)
         # seq_filename = self.X[idx]
         vid_file = self.X_vid[idx]
         vid_idx = self.X_index[idx]
@@ -116,11 +116,9 @@ class VideoDataset(Dataset):
         # for e,filename in enumerate(seq_filename):
         for i in range(vid_idx, vid_idx+self.seq_len): 
             try:
-                # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
-                # frame = (frame - frame.min())/(frame.max() - frame.min())
                 frame = tensor_transform(frame)
-
+                
             except Exception as ex:
                 print(ex)
                 frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
@@ -129,12 +127,45 @@ class VideoDataset(Dataset):
         
         if self.train == True:
             np_video = video.numpy()
+            np_video = np_video * 255
+
+            out = cv2.VideoWriter('before_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            for i in range(np_video.shape[0]): # Saves video before augmentation
+                data = np.squeeze(np_video[i])
+                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+                out.write(data)
+            out.release()
+
+
             np_video = np.transpose(np_video, (0, 2, 3, 1))
             np_video = self.transforms(np_video)
             np_video = np.array(np_video)
-            np_video = np.transpose(np_video, (0, 3, 1, 2))
-            video = torch.tensor(np_video)
+            if len(np_video.shape) == 3:
+                np_video = np.expand_dims(np_video, axis=1) # adds dim because of BW, output doesn't have the 1 channel
+            if np_video.shape[1] != 1:
+                np_video = np.transpose(np_video, (0, 3, 1, 2))
+            np_video = np.uint8(np_video)
+
+            out = cv2.VideoWriter('after_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            for i in range(np_video.shape[0]): # Saves video after augmentation
+                data = np.squeeze(np_video[i])
+                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+                out.write(data)
+            out.release()
+
+            for i in range(vid_idx, vid_idx+self.seq_len): # convert it back
+                try:
+                    frame = np_video[i-vid_idx]
+                    frame = np.transpose(frame, (1, 2, 0))
+                    frame = tensor_transform(frame)
+                    # print(frame)
+                    
+                except Exception as ex:
+                    print(ex)
+                    frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
             
+                video[i-vid_idx,:,:,:] = frame
+        
         # return video
         # return video, torch.LongTensor(self.y[idx])
         return video, self.y[idx]
@@ -264,12 +295,43 @@ class IntentVideoDataset(Dataset):
 
         if self.train == True:
             np_video = video.numpy()
+            np_video = np_video * 255
+
+            out = cv2.VideoWriter('before_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            for i in range(np_video.shape[0]):
+                data = np.squeeze(np_video[i])
+                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+                out.write(data)
+            out.release()
+
+
             np_video = np.transpose(np_video, (0, 2, 3, 1))
             np_video = self.transforms(np_video)
             np_video = np.array(np_video)
-            np_video = np.transpose(np_video, (0, 3, 1, 2))
-            video = torch.tensor(np_video)
+            if len(np_video.shape) == 3:
+                np_video = np.expand_dims(np_video, axis=1) # adds dim because of BW, output doesn't have the 1 channel
+            if np_video.shape[1] != 1:
+                np_video = np.transpose(np_video, (0, 3, 1, 2))
+            np_video = np.uint8(np_video)
+
+            out = cv2.VideoWriter('after_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            for i in range(np_video.shape[0]):
+                data = np.squeeze(np_video[i])
+                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+                out.write(data)
+            out.release()
+
+            for i in range(vid_idx, vid_idx+self.seq_len): # convert it back
+                try:
+                    frame = np_video[i-vid_idx]
+                    frame = np.transpose(frame, (1, 2, 0))
+                    frame = tensor_transform(frame)
+                    # print(frame)
+                    
+                except Exception as ex:
+                    print(ex)
+                    frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
+            
+                video[i-vid_idx,:,:,:] = frame
           
-        # return video
-        # return video, torch.LongTensor(self.y[idx])
         return video, self.y[idx]

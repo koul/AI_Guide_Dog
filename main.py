@@ -87,8 +87,7 @@ if __name__ == "__main__":
         df_sensor = pickle.load(handle)
     
     # pdb.set_trace()
-    # print(df_sensor['sample']['direction_label']['direction'])
-    
+
     # Training setup begins
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
@@ -100,9 +99,14 @@ if __name__ == "__main__":
                 va.Multiply(1.4), # Makes video brighter
                 va.Pepper(95), # Makes 5% of video black pixels in each frame
                 va.Salt(95), # Makes 5% of video white pixels in each frame
-                va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
+                # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
     ]
-    sometimes = lambda aug: va.Sometimes(0.3, aug) # Used to apply augmentor with 30% probability
+    # transformations = [va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
+    # transformations = [va.Multiply(0.6), # Makes video less bright
+                # va.Multiply(1.4), # Makes video brighter
+                # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
+    # ]
+    sometimes = lambda aug: va.Sometimes(1, aug) # Used to apply augmentor with 30% probability
     train_transforms = sometimes(va.SomeOf(transformations, 3, True)) # Picks 3 transformations 30% of the time)
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
