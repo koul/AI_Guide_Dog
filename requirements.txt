@@ -9,4 +9,6 @@ torch
 torchvision
 torchaudio
 tqdm
+sklearn
+transformers
 wandb

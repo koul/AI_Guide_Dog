@@ -9,6 +9,7 @@ import pdb
 import torch
 import warnings
 warnings.filterwarnings("ignore")
+import wandb
 
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
@@ -41,21 +42,44 @@ def transform(data_file_path, fps, data_save_file, resolution, channels):
     # exit()
     save_data(video_data, sensor_data, data_save_file)
 
+def train(config_dict, 
+            train_transforms, 
+            val_transforms, 
+            train_files, 
+            val_files, 
+            df_videos, 
+            df_sensor, 
+            test_videos,
+            test_sensor):
+
+    # Start training
+    trainer = Trainer(config_dict, 
+                    train_transforms, 
+                    val_transforms, 
+                    train_files, 
+                    val_files, 
+                    df_videos, 
+                    df_sensor, 
+                    test_videos,
+                    test_sensor)
+    trainer.save(0, -1)
+    
+    epochs = config_dict['trainer']['epochs']
+    for epoch in range(epochs):
+        train_actual, train_predictions = trainer.train(epoch)
+        acc, val_actual, val_predictions = trainer.validate()
+        display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
+        trainer.save(acc, epoch)
+    return trainer
 
 '''
 After calling transform, train model on the dumped data
 in the folders
 '''
-#def train_model():
-
-
 def load_config():
     with open("config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
-    # print(config_dict)
-    print(config_dict['trainer']['model']['sensor_attr_list'])
     return config_dict
-
 
 '''
 TODO: full pipeline
@@ -65,40 +89,36 @@ if __name__ == "__main__":
     torch.multiprocessing.set_start_method('spawn')
 
     config_dict = load_config()
-
+    transformer_config = config_dict['transformer']
+    data_config = config_dict['data']
+    benchmark_enabled = transformer_config['enable_benchmark_test']
 
     # avoid running transform if .nz has already been generated
     if (config_dict['global']['enable_preprocessing'] == True):
-        transform(config_dict['transformer']['path'], config_dict['transformer']['fps'],
-                  config_dict['transformer']['data_save_file'],
-                  [config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']],
-                  config_dict['data']['CHANNELS'])
-        if (config_dict['transformer']['enable_benchmark_test'] == True): transform(
-            config_dict['transformer']['test_path'], config_dict['transformer']['fps'],
-            config_dict['transformer']['test_save_file'], [config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']],
-            config_dict['data']['CHANNELS'])
+        transform(transformer_config['path'], transformer_config['fps'],
+                  transformer_config['data_save_file'],
+                  [data_config['HEIGHT'], data_config['WIDTH']],
+                  data_config['CHANNELS'])
+        if (benchmark_enabled == True): transform(
+            transformer_config['test_path'], transformer_config['fps'],
+            transformer_config['test_save_file'], [data_config['HEIGHT'], data_config['WIDTH']],
+            data_config['CHANNELS'])
 
-    df_videos = dict(np.load(config_dict['transformer']['data_save_file'] + '_video.npz', allow_pickle=True))
-    print(df_videos.keys())
-
-    if (config_dict['transformer']['enable_benchmark_test'] == True):
-        test_videos = dict(np.load(config_dict['transformer']['test_save_file'] + '_video.npz', allow_pickle=True))
-    with open(config_dict['transformer']['test_save_file'] + '_sensor.pickle', 'rb') as handle:
-        test_sensor = pickle.load(handle)
+    df_videos = dict(np.load(transformer_config['data_save_file'] + '_video.npz', allow_pickle=True))
+    # print(df_videos.keys())
 
     # need video and sensor data separately
-    with open(config_dict['transformer']['data_save_file'] + '_sensor.pickle', 'rb') as handle:
+    with open(transformer_config['data_save_file'] + '_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
-    
-    # pdb.set_trace()
-    # print(df_sensor['sample']['direction_label']['direction'])
-    
-    # Training setup begins
+        # tmp = df_sensor['2022-07-12T16-34-07']
+        # for key, dic in tmp.items():
+        #     for k, v in dic.items():
+        #         print("- \"" + ":".join([key,k]) + '\"')
+
+    # Data transformations
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
-    # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
-
+    # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((data_config['HEIGHT'], data_config['WIDTH']))])
     train_transforms = transforms.Compose([transforms.ToTensor()])
-
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
@@ -113,25 +133,41 @@ if __name__ == "__main__":
     #             train_files.append(f)
     # else:
     train_files, val_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
-
-    
     print("Train Files:", train_files)
     print("Val Files:", val_files)
-    
 
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor)
     trainer.save(0, -1)
     
     epochs = config_dict['trainer']['epochs']
 
-    for epoch in range(epochs):
-        train_actual, train_predictions = trainer.train(epoch)
-        acc, val_actual, val_predictions = trainer.validate()
-        display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
-        trainer.save(acc, epoch)
+
+    test_videos = None
+    test_sensor = None
+    if (benchmark_enabled == True):
+        test_videos = dict(np.load(transformer_config['test_save_file'] + '_video.npz', allow_pickle=True))
+        with open(transformer_config['test_save_file'] + '_sensor.pickle', 'rb') as handle:
+            test_sensor = pickle.load(handle)
+
+    num_hid_layer_l = [2, 3]
+    num_att_head_l = [2, 3, 6]
+
+    for num_hid_layer in num_hid_layer_l:
+        config_dict['trainer']['model']['layer_num'] = num_hid_layer
+        trainer = train(config_dict, 
+                train_transforms, 
+                val_transforms, 
+                train_files, 
+                val_files, 
+                df_videos, 
+                df_sensor, 
+                test_videos,
+                test_sensor)
+        wandb.finish()
 
     print("Completed Training!!")
     # performs final benchmarking after training
+
     if (config_dict['transformer']['enable_benchmark_test'] == True):
         print("Starting benchmark testing!!")
         acc, test_actual, test_predictions = trainer.test()

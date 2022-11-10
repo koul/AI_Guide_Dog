@@ -2,7 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
-# from config import *
+from transformers import BertConfig
+from utils import *
+import math
+import wandb
+from bert_utils import *
 
 class ConvLSTMCell(nn.Module):
 
@@ -257,3 +261,50 @@ class LSTMModel(nn.Module):
         # Convert the final state to our desired output shape (batch_size, output_dim)
         out = self.fc(out)
         return out
+
+
+class Bert(nn.Module):
+    def __init__(self, device, 
+                    github_id, 
+                    data_type = 'sensor',
+                    vocab_size=30522, 
+                    hidden_dim=768, 
+                    layer_num = 3,
+                    num_attr = 3, 
+                    num_classes = 3, 
+                    seq_len = 10):
+        super(Bert, self).__init__()
+        config= BertConfig(vocab_size=vocab_size, 
+                            hidden_size=hidden_dim, 
+                            hidden_act='relu', 
+                            hidden_dropout_prob=0.1, 
+                            attention_probs_dropout_prob=0.1,
+                            num_attention_heads=2,
+                            num_hidden_layers=layer_num
+                        )
+        run_name =   "bert_atth_" + str(config.num_attention_heads) + "_hl_" + str(config.num_hidden_layers) \
+         + "_hd_" + str(config.hidden_size)
+        wandb.init(project="bert-guide-dog", entity = github_id, name = run_name)
+
+        self.seq_len = seq_len
+        self.bert = BertModel(config, num_attr, seq_len, data_type)
+        # attention_mask: same size as input_ids, 1 represents non-padding tokens, 0 represents padding tokens
+
+        self.linear = nn.Linear(hidden_dim, num_classes)
+
+    def forward(self, input_tensor):
+        device = input_tensor.device
+        input_shape = input_tensor.size()
+        attention_mask = torch.zeros((input_shape[0], self.seq_len)).long().to(device)
+        attention_mask[:, :input_shape[1]] = torch.ones((input_shape[0], input_shape[1])).long().to(device)
+
+        # get the embedding for each input token
+        _, first_tk = self.bert(input_tensor, attention_mask)
+        logits = self.linear(first_tk)
+
+        return logits
+
+
+
+      
+

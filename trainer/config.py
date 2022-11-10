@@ -11,3 +11,4 @@ SEQUENCE_LENGTH = 10
 HEIGHT = 224 #128 - changing height and width to 224 for VIT to work
 WIDTH = 224 #128
 CHANNELS = 3
+

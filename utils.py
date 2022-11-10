@@ -11,6 +11,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 import numpy as np
 import scipy.stats as ss
+import torch.nn as nn
+import math
 
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
@@ -30,19 +32,22 @@ def convert_to_dataframe(d):
     df.columns = ['frame_index', 'timestamp', 'directions']
     return df
 
+
 def make_tt_split(files, seed):
     random.Random(seed).shuffle(files)
     ts = int(len(files) * 0.25)
     test_files = files[:ts]
     train_files = files[ts:]
-    print("Test files ",test_files)
+    print("Test files ", test_files)
     return train_files, test_files
+
 
 def labelCount(label, n_classes):
     label_count = [0]*(n_classes)
     for lab in label:
         label_count[lab] += 1
     return label_count
+
 
 def sampler_(dataset_labels, n_classes):
     dataset_counts = labelCount(dataset_labels, n_classes)
@@ -54,6 +59,7 @@ def sampler_(dataset_labels, n_classes):
     weights = [class_weights[y] for y in dataset_labels]
     sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
     return sampler
+
 
 def get_gps_probabilities(gps_range) :
     mid = (gps_range[0]+gps_range[1])/2
@@ -206,3 +212,13 @@ def prep_video_test(filename):
     y = y.to_numpy()
     
     return X, y, df
+
+class ConvertEmbedding(nn.Module):
+    def __init__(self, inp_size,model_dim):
+        super(ConvertEmbedding, self).__init__()
+        self.linear_layer = nn.Linear(inp_size, model_dim)
+        self.model_dim = model_dim
+
+    def forward(self, x):
+        return self.linear_layer(x) * math.sqrt(self.model_dim)
+

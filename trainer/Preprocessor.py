@@ -63,7 +63,6 @@ class Preprocessor:
             if(video_filename not in os.listdir(VID_PATH)):
                 ffmpeg.input(fl).filter('fps', fps=10, round='up').output(VID_PATH+video_filename).run() 
 
-
     def preprocessing_pipeline(video_ids):
         process_raw_videos(video_ids)
         preprocess(video_ids)

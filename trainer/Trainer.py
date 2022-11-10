@@ -1,9 +1,11 @@
 import torch
-from trainer.dataset import SensorVideoDataset,VideoDataset,IntentVideoDataset
+from trainer.dataset import SensorVideoDataset,VideoDataset,IntentVideoDataset, SensorDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
+import wandb
+
 
 from AI_Guide_Dog.trainer.dataset import SensorDataset
 
@@ -13,19 +15,17 @@ class Trainer:
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
                  test_videos = None, test_sensor = None):
         self.cuda = torch.cuda.is_available()
-        print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
         print("\nCurrent device is: ", self.device, " \n")
 
         self.config = config_dict
+        
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
         self.epochs = config_dict['trainer']['epochs']
 
         self.model_name = config_dict['trainer']['model']['name']
         self.data_type = config_dict['trainer']['data_type']
         model_config = config_dict['trainer']['model']
-
 
 
         if (config_dict['global']['enable_intent']):
@@ -69,12 +69,17 @@ class Trainer:
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler=sampler, num_workers=2, pin_memory=True,
                           drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'],
                                                                   sampler=sampler, drop_last=False)
+
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.val_loader = DataLoader(self.val_dataset, **val_args)
+       
+        self.epochs = config_dict['trainer']['epochs']   
+        self.hidden_dim =  model_config['sensor_hidden_dim']   
+        self.layer_num =  model_config['layer_num']   
 
-        self.epochs = config_dict['trainer']['epochs']
+
 
 
         #please note that channel need to be 3 for LSTM_Multimodal
@@ -140,6 +145,8 @@ class Trainer:
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
+
+
         
         self.model = self.model.to(self.device)
 
@@ -152,8 +159,8 @@ class Trainer:
         
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
         
-        if(config_dict['trainer']['model']['optimizer_path'] != ""):
-            self.optimizer.load_state_dict(torch.load(config_dict['trainer']['model']['optimizer_path']))
+        if(model_config['optimizer_path'] != ""):
+            self.optimizer.load_state_dict(torch.load(model_config['optimizer_path']))
 
         # for g in optimizer.param_groups:
         #     g['lr'] = lr
@@ -162,7 +169,7 @@ class Trainer:
         self.scaler = torch.cuda.amp.GradScaler()
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
 
-        print(self.model)
+        # print(self.model)
 
 
     def train(self, epoch):
@@ -183,19 +190,19 @@ class Trainer:
             
             
             with torch.cuda.amp.autocast():
+
                 outputs = self.model(x)
                 del x
                 loss = self.criterion(outputs, y.long())
-
             pred_class = torch.argmax(outputs, axis=1)
 
             actual.extend(y.detach().cpu())
             predictions.extend(pred_class.detach().cpu())
 
+
             num_correct += int((pred_class == y).sum())
             del outputs
             total_loss += float(loss)
-
             batch_bar.set_postfix(
                 acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'])),
                 loss="{:.04f}".format(float(total_loss / (i + 1))),
@@ -208,16 +215,18 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
-      
 
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset))
+        loss = total_loss / len(self.train_loader)
         print("Epoch {}/{}: Train Acc {:.04f}%, Train Loss {:.04f}, Learning Rate {:.04f}".format(
             epoch + 1,
             self.epochs,
             acc,
-            float(total_loss / len(self.train_loader)),
+            float(loss),
             float(self.optimizer.param_groups[0]['lr'])))
+        
+        wandb.log({"loss": loss, "train_acc": acc, "lr": self.optimizer.param_groups[0]['lr'] })
 
         return actual, predictions
 
@@ -248,10 +257,9 @@ class Trainer:
             del outputs
          
             
-
         acc = 100 * val_num_correct / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
-        
+        wandb.log({"val_acc": acc})
         return acc, actual, predictions
 
 
