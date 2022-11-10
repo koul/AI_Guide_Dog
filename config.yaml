@@ -3,7 +3,7 @@ global:
     iteration: "debug"
     enable_preprocessing: true
     seed: 8
-    enable_intent: true
+    enable_intent: false
 transformer:
     fps: 2
     path: "data/Indoor - train"

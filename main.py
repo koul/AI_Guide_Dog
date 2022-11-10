@@ -103,6 +103,7 @@ if __name__ == "__main__":
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
 
+
     # if(config_dict['data']['TEST_FILES'] is not None):
     #     test_files = config_dict['data']['TEST_FILES']
     #     test_files = [t.strip() for t in test_files.split(',')]
@@ -112,10 +113,12 @@ if __name__ == "__main__":
     #             train_files.append(f)
     # else:
     train_files, val_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
+
     
     print("Train Files:", train_files)
     print("Val Files:", val_files)
     
+
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor)
     trainer.save(0, -1)
     
