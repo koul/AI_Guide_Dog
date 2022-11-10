@@ -164,9 +164,6 @@ if __name__ == "__main__":
         trainer.save(acc, epoch)
         print("Ending epoch: ", epoch," !!!")
 
-        #TODO: Remove this later
-        break
-
     print("Completed Training!!")
     # performs final benchmarking after training
     if (config_dict['transformer']['enable_benchmark_test'] == True):
