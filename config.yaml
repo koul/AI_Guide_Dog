@@ -1,27 +1,35 @@
 global: 
     root_dir: ""
-    iteration: "seattle_library_intent_weighted_loss_2_layers"
-    enable_preprocessing: false
+    iteration: "intent_indoor_baseline_2"
+    description: "intent_indoor_baseline full run changed run params"
+    enable_preprocessing: False
     seed: 8
+    enable_intent: True
+    enable_wandb: True
 transformer:
-    fps: 4
-    path: "data/library"
-    data_save_file: "data/processed/seattle_library_4fps" #file path without .npz
+    fps: 2
+    path: "data/"
+    data_save_file: "data/train" #file path without .npz
+    enable_benchmark_test: False
+    test_path: "data/"
+    test_save_file: "data/train" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
-    CHANNELS: 3
-    SEQUENCE_LENGTH: 20
+    CHANNELS: 1
+    SEQUENCE_LENGTH: 10
+    VAL_INTENT: ""
+    BENCHMARK_TEST_INTENT: ""
 trainer:
-    BATCH: 4
-    lr: 0.01
-    epochs: 20
-    lambda: 0.001  #L2 regularization #changed from 1e-4
+    BATCH: 64
+    lr: 0.0001
+    epochs: 25
+    lambda: 0.01  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
     model:
         name: "ConvLSTM"
-        convlstm_hidden: "512"
+        convlstm_hidden: "256"
         num_conv_lstm_layers: 1
         pretrained_path: ""
         optimizer_path: ""

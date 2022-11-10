@@ -8,7 +8,9 @@ import torch
 from torch.utils.data import WeightedRandomSampler
 # import seaborn as sns
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, precision_recall_fscore_support
+import numpy as np
+import scipy.stats as ss
 
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
@@ -45,8 +47,10 @@ def labelCount(label, n_classes):
 def sampler_(dataset_labels, n_classes):
     dataset_counts = labelCount(dataset_labels, n_classes)
     print("Label counts before balancing: ", dataset_counts)
-    num_samples = sum(dataset_counts)
-    class_weights = [num_samples/i for i in dataset_counts]
+
+    num_samples = sum(dataset_counts) + n_classes
+    class_weights = [num_samples/(i+1) for i in dataset_counts] #Adding +1 to avoid division by zero
+
     weights = [class_weights[y] for y in dataset_labels]
     sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
     return sampler
@@ -91,7 +95,7 @@ def get_all_files_from_dir(directory, vids = False):
     except Exception as e:
         print(e)
 
-def dcr_helper(actual, predictions):
+def dcr_helper(actual, predictions, wandb = False):
     cm = confusion_matrix(actual, predictions)
     print(cm)
     # cm_df = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
@@ -105,6 +109,13 @@ def display_classification_report(train_actual, train_predictions, val_actual, v
 
     print('\nValidation set stats\n')
     dcr_helper(val_actual, val_predictions)
+    return precision_recall_fscore_support(val_actual, val_predictions)
+
+
+def display_test_classification_report(test_actual, test_predictions):
+    print('\nTest set stats\n')
+    dcr_helper(test_actual, test_predictions)
+    return precision_recall_fscore_support(test_actual, test_predictions)
 
 # Function for processing the videos and labels to get labels at the frame level
 # def process_video(video_file, labels):

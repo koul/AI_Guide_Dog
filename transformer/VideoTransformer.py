@@ -4,9 +4,10 @@ from multiprocessing import Pool
 import ffmpeg
 
 class VideoTransformer(object):
-    def __init__(self, fps = 10, resolution = [512,512]):
+    def __init__(self, fps = 10, resolution = [512,512], channels = 3):
         self.fps = fps
         self.resolution = resolution
+        self.channels =channels
 
     def _getVideo(self, filename):
         video_stream = ffmpeg.input(filename)
@@ -21,13 +22,20 @@ class VideoTransformer(object):
         return videoCapture
 
     def _convertToNumpy(self, frames):
+        pix_format = 'rgb24'
+        if self.channels == 1:
+            pix_format = 'gray'
+        elif self.channels == 3:
+            pix_format = 'rgb24'
+        else:
+            print("Incorrect number of channels")
         out, err = (
             frames
-            .output('pipe:', format='rawvideo', pix_fmt='rgb24')
+            .output('pipe:', format='rawvideo', pix_fmt=pix_format)
             .run(capture_stdout=True)
         )
         print("Error: ", err)
-        video = np.frombuffer(out, np.uint8).reshape([-1, self.resolution[0], self.resolution[1], 3])[1:,:,:,:]
+        video = np.frombuffer(out, np.uint8).reshape([-1, self.resolution[0], self.resolution[1], self.channels])[1:,:,:,:]
         return video
 
     def transform(self, filename, ref_time=-1, secs_in_past = -1, secs_in_future=-1):
@@ -40,6 +48,8 @@ class VideoTransformer(object):
         directories = [f for f in os.listdir(path)]
         file_list = []
         for directory in directories:
+            if directory.startswith("."):  # to ignore the temp files that get created like ".DS_Store"
+                continue
             dir_path = os.path.join(path, directory)
             video_files = [f for f in os.listdir(dir_path) if f.endswith('.mp4')]
             print(video_files)
@@ -56,5 +66,7 @@ class VideoTransformer(object):
             output = results[idx]
             name = file_list[idx].split('/')[-1].split('.')[0]
             result_dict[name] = output
+            # import cv2
+            # cv2.imwrite('myImage.png', output[0])
 
         return result_dict

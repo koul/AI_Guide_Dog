@@ -156,7 +156,7 @@ class FrameDataset(Dataset):
         
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example) along with high-level GPS information.
 class IntentVideoDataset(Dataset):
-    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test='train'):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len
@@ -174,6 +174,7 @@ class IntentVideoDataset(Dataset):
         self.gps_range = (0, seq_len - self.config['transformer']['fps'])
         self.prob_gps = get_gps_probabilities(self.gps_range) # (0, 20-4 = 16)
 
+        
         for f in files:
             df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
             df_processed = preprocess_labels(df) # assign 1 sec forward labels
@@ -189,8 +190,38 @@ class IntentVideoDataset(Dataset):
               
         # self.X = np.stack(X, axis = 0)
         self.y = np.array(y)
+        self.test = test
         
-        
+        if(test == 'benchmark_test'):
+            print("Getting Intent Data for: ", test)
+            if(config_dict['data']['BENCHMARK_TEST_INTENT'] == ""):
+                self.intent_positions = self.create_intent_postions()                
+                np.save('benchmark_test_intent.npy', np.array(self.intent_positions))
+            else:
+                self.intent_positions = list(np.load(config_dict['data']['BENCHMARK_TEST_INTENT']))
+
+        elif(test == 'validation'):
+            print("Getting Intent Data for: ", test)
+            if(config_dict['data']['VAL_INTENT'] == ""):
+                self.intent_positions = self.create_intent_postions()                
+                np.save('validation_intent.npy', np.array(self.intent_positions))
+            else:
+                self.intent_positions = list(np.load(config_dict['data']['VAL_INTENT']))
+
+        else:
+            print("Randomly assigning intent for training.")
+    
+    
+    def create_intent_postions(self):
+        intent_positions = []
+        for i in self.y:
+            if(i!=2):
+                intent_positions.append(np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.prob_gps)) #intent start position
+            else:
+                intent_positions.append(-1)
+        return intent_positions
+
+
     def __len__(self):
         return len(self.y)
         # return 1
@@ -204,11 +235,15 @@ class IntentVideoDataset(Dataset):
 
         #+1 for intent channels
         video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS']+1, self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
-        
-        if(self.y[idx] != 2): # it is not front label
-            intent = np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.gps_prob) #intent start position
+
+        if(self.test!='train'): # pick predefined intent positions for testing and validation
+            intent = self.intent_positions[idx]
         else:
-            intent = -1 # none (2) intent
+            # picking randomly for training
+            if(self.y[idx] != 2): # it is not front label
+                intent = np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.prob_gps) #intent start position
+            else:
+                intent = -1 # none (2) intent
 
 
 
@@ -232,7 +267,6 @@ class IntentVideoDataset(Dataset):
         
             context_frame = torch.cat((frame, intent_tensor), dim = 0) #attach intent as last channel
             video[i-vid_idx,:,:,:] = frame
-
           
         # return video
         # return video, torch.LongTensor(self.y[idx])
