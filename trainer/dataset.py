@@ -129,12 +129,12 @@ class VideoDataset(Dataset):
             np_video = video.numpy()
             np_video = np_video * 255
 
-            out = cv2.VideoWriter('before_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
-            for i in range(np_video.shape[0]): # Saves video before augmentation
-                data = np.squeeze(np_video[i])
-                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
-                out.write(data)
-            out.release()
+            # out = cv2.VideoWriter('before_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            # for i in range(np_video.shape[0]): # Saves video before augmentation
+            #     data = np.squeeze(np_video[i])
+            #     data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+            #     out.write(data)
+            # out.release()
 
 
             np_video = np.transpose(np_video, (0, 2, 3, 1))
@@ -146,12 +146,12 @@ class VideoDataset(Dataset):
                 np_video = np.transpose(np_video, (0, 3, 1, 2))
             np_video = np.uint8(np_video)
 
-            out = cv2.VideoWriter('after_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
-            for i in range(np_video.shape[0]): # Saves video after augmentation
-                data = np.squeeze(np_video[i])
-                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
-                out.write(data)
-            out.release()
+            # out = cv2.VideoWriter('after_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            # for i in range(np_video.shape[0]): # Saves video after augmentation
+            #     data = np.squeeze(np_video[i])
+            #     data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+            #     out.write(data)
+            # out.release()
 
             for i in range(vid_idx, vid_idx+self.seq_len): # convert it back
                 try:

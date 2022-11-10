@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     # https://github.com/okankop/vidaug
     # train_transforms = transforms.Compose([transforms.ToTensor()])
-    transformations = [va.RandomTranslate(x=15, y=15), # Translates by 5 pixels
+    transformations = [va.RandomTranslate(x=0, y=0), # Translates by 5 pixels
                 # va.Multiply(0.6), # Makes video less bright
                 # va.Multiply(1.4), # Makes video brighter
                 # va.Pepper(95), # Makes 5% of video black pixels in each frame
@@ -106,7 +106,7 @@ if __name__ == "__main__":
                 # va.Multiply(1.4), # Makes video brighter
                 # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
     # ]
-    sometimes = lambda aug: va.Sometimes(0.3, aug) # Used to apply augmentor with 30% probability
+    sometimes = lambda aug: va.Sometimes(0, aug) # Used to apply augmentor with 30% probability
     train_transforms = sometimes(va.SomeOf(transformations, 1, True)) # Picks 3 transformations 30% of the time)
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
