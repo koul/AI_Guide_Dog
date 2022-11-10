@@ -3,8 +3,8 @@ global:
     iteration: "video_augmentation"
     enable_preprocessing: false
     seed: 8
-    enable_intent: true
-    enable_wandb: false
+    enable_intent: false
+    enable_wandb: true
 transformer:
     fps: 2
     path: "data/Indoor - train"
@@ -21,7 +21,7 @@ data:
 trainer:
     BATCH: 8
     lr: 0.0001
-    epochs: 2
+    epochs: 20
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"

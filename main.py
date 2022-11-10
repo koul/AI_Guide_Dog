@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     # https://github.com/okankop/vidaug
     # train_transforms = transforms.Compose([transforms.ToTensor()])
-    transformations = [va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
+    transformations = [va.RandomTranslate(x=15, y=15), # Translates by 5 pixels
                 # va.Multiply(0.6), # Makes video less bright
                 # va.Multiply(1.4), # Makes video brighter
                 # va.Pepper(95), # Makes 5% of video black pixels in each frame
@@ -132,9 +132,9 @@ if __name__ == "__main__":
     epochs = config_dict['trainer']['epochs']
 
     for epoch in range(epochs):
-        print("TRAIN")
+        # print("TRAIN")
         train_actual, train_predictions = trainer.train(epoch)
-        print("VALIDATE")
+        # print("VALIDATE")
         acc, val_actual, val_predictions = trainer.validate()
         display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
         trainer.save(acc, epoch)
