@@ -1,6 +1,6 @@
 global:
     root_dir: ""
-    iteration: "debug"
+    iteration: "intent_benchmark_indoor_test"
     enable_preprocessing: false
     seed: 8
     enable_intent: true
@@ -17,6 +17,7 @@ data:
     CHANNELS: 1
     SEQUENCE_LENGTH: 10
     VAL_INTENT: ""
+    BENCHMARK_TEST_INTENT: ""
 trainer:
     patch_size: 4
     img_channel: 1
