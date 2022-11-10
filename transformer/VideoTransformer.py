@@ -22,9 +22,16 @@ class VideoTransformer(object):
         return videoCapture
 
     def _convertToNumpy(self, frames):
+        pix_format = 'rgb24'
+        if self.channels == 1:
+            pix_format = 'gray'
+        elif self.channels == 3:
+            pix_format = 'rgb24'
+        else:
+            print("Incorrect number of channels")
         out, err = (
             frames
-            .output('pipe:', format='rawvideo', pix_fmt='gray')
+            .output('pipe:', format='rawvideo', pix_fmt=pix_format)
             .run(capture_stdout=True)
         )
         print("Error: ", err)
