@@ -3,14 +3,14 @@ global:
     iteration: "debug"
     enable_preprocessing: false
     seed: 8
-    enable_intent: false
+    enable_intent: true
 transformer:
     fps: 2
     path: "data/Indoor - Seattle Library"
-    data_save_file: "data/processed/Indoor - Seattle Library" #file path without .npz
+    data_save_file: "/content/data/Indoor - train" #file path without .npz
     enable_benchmark_test: true
     test_path: "data/test/Mixed"
-    test_save_file: "data/processed/test/Mixed" #file path without .npz
+    test_save_file: "/content/data/Indoor - test" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
@@ -28,7 +28,7 @@ trainer:
     BATCH: 8
     max_lr: 0.01
     lr: 0.00005
-    epochs: 60
+    epochs: 50
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     wandb: true
@@ -38,5 +38,6 @@ trainer:
         convlstm_hidden: 128
         num_conv_lstm_layers: 1
         decouple_beta: 0.1
-        pretrained_path: ""
-        optimizer_path: ""
+        pretrained_path: "/content/drive/MyDrive/AI_Guide_Dog/models/debug/PredRNN_model_params_epoch_00000006_acc_67.80465747230387.pth"
+        optimizer_path: "/content/drive/MyDrive/AI_Guide_Dog/models/debug/PredRNN_optimizer_params_epoch_00000006_acc_67.80465747230387.pth"
+        scheduler_path: "/content/drive/MyDrive/AI_Guide_Dog/models/debug/PredRNN_scheduler_params_epoch_00000006_acc_67.80465747230387.pth"

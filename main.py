@@ -82,8 +82,8 @@ if __name__ == "__main__":
 
     if (config_dict['transformer']['enable_benchmark_test'] == True):
         test_videos = dict(np.load(config_dict['transformer']['test_save_file'] + '_video.npz', allow_pickle=True))
-    with open(config_dict['transformer']['test_save_file'] + '_sensor.pickle', 'rb') as handle:
-        test_sensor = pickle.load(handle)
+        with open(config_dict['transformer']['test_save_file'] + '_sensor.pickle', 'rb') as handle:
+            test_sensor = pickle.load(handle)
 
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file'] + '_sensor.pickle', 'rb') as handle:
@@ -119,20 +119,38 @@ if __name__ == "__main__":
     # if config_dict['trainer']['wandb']:
     wandb.init(project='AI_Guide_Dog')
 
-    trainer = TrainerPredRNN(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor)
+    trainer = TrainerPredRNN(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos=test_videos, test_sensor=test_sensor)
     trainer.save(0, -1)
 
     max_val_acc = None
 
     epochs = config_dict['trainer']['epochs']
 
+    if (config_dict['transformer']['enable_benchmark_test'] == True):
+            test_acc, test_actual, test_predictions = trainer.test()
+
+            test_report = get_classification_report(test_actual, test_predictions)
+            wandb.log({
+                'test_acc': test_acc,
+
+                "test_left_precision": test_report['left']['precision'],
+                "test_left_recall": test_report['left']['recall'],
+                "test_left_f1": test_report['left']['f1-score'],
+
+                "test_right_precision": test_report['right']['precision'],
+                "test_right_recall": test_report['right']['recall'],
+                "test_right_f1": test_report['right']['f1-score'],
+
+                "test_front_precision": test_report['front']['precision'],
+                "test_front_recall": test_report['front']['recall'],
+                "test_front_f1": test_report['front']['f1-score'],
+            })
+    '''
     for epoch in range(epochs):
         train_acc, train_actual, train_predictions = trainer.train(epoch)
-        val_acc, val_actual, val_predictions = trainer.validate()
+        avg_val_loss, val_acc, val_actual, val_predictions = trainer.validate()
 
-        trainer.step(val_acc)
         display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
-        # actual_left_pred_left, actual_left_pred_right, actual_left_pred_front, actual_right_pred_left, actual_right_pred_right, actual_right_pred_front, actual_front_pred_left, actual_front_pred_right, actual_front_pred_front = get_confusion_matrix(val_actual, val_predictions)
 
         train_report = get_classification_report(train_actual, train_predictions)
         val_report = get_classification_report(val_actual, val_predictions)
@@ -144,6 +162,7 @@ if __name__ == "__main__":
         wandb.log({
             'train_acc': train_acc,
             'val_acc': val_acc,
+            'avg_val_loss': avg_val_loss,
             'lr': trainer.optimizer.param_groups[0]['lr'],
 
             "train_left_precision": train_report['left']['precision'],
@@ -170,3 +189,9 @@ if __name__ == "__main__":
             "val_front_recall": val_report['front']['recall'],
             "val_front_f1": val_report['front']['f1-score'],
         })
+    '''
+        # if (config_dict['transformer']['enable_benchmark_test'] == True):
+        #     test_acc, test_actual, test_predictions = trainer.test()
+        #     wandb.log({
+        #         'test_acc': test_acc,
+        #     })
