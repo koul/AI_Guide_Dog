@@ -31,5 +31,4 @@ trainer:
         num_conv_lstm_layers: 1
         pretrained_path: ""
         optimizer_path: ""
-
         
