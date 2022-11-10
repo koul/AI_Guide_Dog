@@ -1,47 +1,49 @@
-global: 
+global:
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: false
+    enable_preprocessing: true
+    seed: 8
+    enable_intent: true
 transformer:
-    fps: 5
-    path: "data/seattlelibrary"
-    data_save_file: "data/processed/seattlelibrary" #file path without .npz
+    fps: 2
+    path: "data/Indoor - train"
+    data_save_file: "data/processed/Indoor - train" #file path without .npz
+    enable_benchmark_test: true
+    test_path: "data/Indoor - test"
+    test_save_file: "data/processed/Indoor - test" #file path without .npz
 data:
-    HEIGHT: 224 #128
-    WIDTH: 224 #128
-    CHANNELS: 3
+    HEIGHT: 224
+    WIDTH: 224
+    CHANNELS: 1
     SEQUENCE_LENGTH: 8
+    VAL_INTENT: ""
+    BENCHMARK_TEST_INTENT: ""
 trainer:
     BATCH: 8
-    lr: 0.01
-    epochs: 20
+    lr: 0.0001
+    epochs: 2
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
-    #model:
-    #    name: "ConvLSTM"
-    #    convlstm_hidden: 256
-    #    num_conv_lstm_layers: 1
-    #    pretrained_path: ""
-    #    optimizer_path: ""
+    data_type: "multimodal"
     model:
-         name: "LSTM_Multimodal"
-         lstm_hidden: 128 #try 128 later
-         num_lstm_layers: 2 #try 3,4,5 later
-         dense_frame_input_dim: 1000 #final input is dense_frame_input_dim + sensor_data_dim
-         train_with_sensor: True
-         sensor_attr_list:
-             - "Gyrometer:Gyrometer - X axis"
-             - "Gyrometer:Gyrometer - Y axis"
-             - "Gyrometer:Gyrometer - Z axis"
-             - "Magnetometer:Magnetometer - X axis"
-             - "Magnetometer:Magnetometer - Y axis"
-             - "Magnetometer:Magnetometer - Z axis"
-             - "Magnetometer:Magnetometer - X axis"
-             - "Magnetometer:Magnetometer - Y axis"
-             - "Magnetometer:Magnetometer - Z axis"
-             - "Accelerometer:Acceleration - X axis"
-             - "Accelerometer:Acceleration - Y axis"
-             - "Accelerometer:Acceleration - Z axis"
-         pretrained_path: ""
-         optimizer_path: ""
+      name: "LSTM_Multimodal"
+        lstm_hidden: 128 #try 128 later
+        num_lstm_layers: 2 #try 3,4,5 later
+        dense_frame_input_dim: 1000 #final input is dense_frame_input_dim + sensor_data_dim
+        train_with_sensor: True
+        sensor_attr_list:
+          - "Gyrometer:Gyrometer - X axis"
+          - "Gyrometer:Gyrometer - Y axis"
+          - "Gyrometer:Gyrometer - Z axis"
+          - "Magnetometer:Magnetometer - X axis"
+          - "Magnetometer:Magnetometer - Y axis"
+          - "Magnetometer:Magnetometer - Z axis"
+          - "Magnetometer:Magnetometer - X axis"
+          - "Magnetometer:Magnetometer - Y axis"
+          - "Magnetometer:Magnetometer - Z axis"
+          - "Accelerometer:Acceleration - X axis"
+          - "Accelerometer:Acceleration - Y axis"
+          - "Accelerometer:Acceleration - Z axis"
+        pretrained_path: ""
+        optimizer_path: ""

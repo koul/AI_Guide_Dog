@@ -2,10 +2,15 @@ import os
 import cv2
 import pandas as pd
 # from config import *
-from random import shuffle
+import random
 import os.path as osp
 import torch
 from torch.utils.data import WeightedRandomSampler
+# import seaborn as sns
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+import numpy as np
+import scipy.stats as ss
 
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
@@ -25,9 +30,9 @@ def convert_to_dataframe(d):
     df.columns = ['frame_index', 'timestamp', 'directions']
     return df
 
-def make_tt_split(files):
-    shuffle(files)
-    ts = int(len(files) * 0.25) # change this back to 0.25 later
+def make_tt_split(files, seed):
+    random.Random(seed).shuffle(files)
+    ts = int(len(files) * 0.25)
     test_files = files[:ts]
     train_files = files[ts:]
     print("Test files ",test_files)
@@ -42,11 +47,22 @@ def labelCount(label, n_classes):
 def sampler_(dataset_labels, n_classes):
     dataset_counts = labelCount(dataset_labels, n_classes)
     print("Label counts before balancing: ", dataset_counts)
-    num_samples = sum(dataset_counts)
-    class_weights = [num_samples/i for i in dataset_counts]
+
+    num_samples = sum(dataset_counts) + n_classes
+    class_weights = [num_samples/(i+1) for i in dataset_counts] #Adding +1 to avoid division by zero
+
     weights = [class_weights[y] for y in dataset_labels]
     sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
     return sampler
+
+def get_gps_probabilities(gps_range) :
+    mid = (gps_range[0]+gps_range[1])/2
+    x = np.arange(-mid, mid)
+    xU, xL = x + 0.5, x - 0.5 
+    prob = ss.norm.cdf(xU, scale = 3) - ss.norm.cdf(xL, scale = 3)
+    prob = prob / prob.sum() # normalize the probabilities so their sum is 1
+    return prob
+
 
 def save(config, model, index, acc, optim = False):
     save_path = os.path.join(config['global']['root_dir'],config['trainer']['model_save_path'], str(config['global']['iteration']))
@@ -78,7 +94,26 @@ def get_all_files_from_dir(directory, vids = False):
         return sorted(file_paths)
     except Exception as e:
         print(e)
-    
+
+def dcr_helper(actual, predictions):
+    cm = confusion_matrix(actual, predictions)
+    print(cm)
+    # cm_df = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
+    # print(cm_df)
+    print('\nClassification Report\n')
+    print(classification_report(actual, predictions))
+
+def display_classification_report(train_actual, train_predictions, val_actual, val_predictions):
+    print('\nTaining set stats\n')
+    dcr_helper(train_actual, train_predictions)
+
+    print('\nValidation set stats\n')
+    dcr_helper(val_actual, val_predictions)
+
+def display_test_classification_report(test_actual, test_predictions):
+    print('\nTest set stats\n')
+    dcr_helper(test_actual, test_predictions)
+
 # Function for processing the videos and labels to get labels at the frame level
 # def process_video(video_file, labels):
 #     video_filename = video_file.split('/')[-1].split('.')[0]

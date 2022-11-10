@@ -1,0 +1,29 @@
+global: 
+    root_dir: ""
+    iteration: "library_seattle"
+    enable_preprocessing: false
+    seed: 8
+    enable_intent: false
+transformer:
+    fps: 2
+    path: "data/library"
+    data_save_file: "data/processed/seattle_library" #file path without .npz
+data:
+    HEIGHT: 64
+    WIDTH: 64
+    CHANNELS: 3
+    SEQUENCE_LENGTH: 10
+    VAL_INTENT: ""
+trainer:
+    BATCH: 8
+    lr: 0.01
+    epochs: 25
+    lambda: 0.001  #L2 regularization #changed from 1e-4
+    num_classes: 3
+    model_save_path: "models/"
+    model:
+        name: "ConvLSTM"
+        convlstm_hidden: "256"
+        num_conv_lstm_layers: 1
+        pretrained_path: ""
+        optimizer_path: ""
