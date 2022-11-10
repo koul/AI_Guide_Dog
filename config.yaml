@@ -17,6 +17,7 @@ data:
     CHANNELS: 1
     SEQUENCE_LENGTH: 10
     VAL_INTENT: ""
+    BENCHMARK_TEST_INTENT: ""
 trainer:
     BATCH: 8
     lr: 0.01

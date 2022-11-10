@@ -19,7 +19,7 @@ class Trainer:
         
         if(config_dict['global']['enable_intent']):
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'validation')
         else:
             self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
             self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
@@ -28,18 +28,17 @@ class Trainer:
         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
-
-
-        self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
-
-
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.val_loader = DataLoader(self.val_dataset, **val_args)
 
         # TODO: Add test loader with sampler - try with replacement to True and False
         if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
-            self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
+            if(config_dict['global']['enable_intent']):
+                self.test_dataset = IntentVideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'benchmark_test')
+            else:
+                self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
                                             seq_len=self.seq_len, config_dict=self.config)
+
             test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
                             drop_last=False) if self.cuda else dict(shuffle=False,
                                                                     batch_size=config_dict['trainer']['BATCH'],
