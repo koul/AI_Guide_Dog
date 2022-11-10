@@ -139,7 +139,6 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
-            break
 
         if (self.config['global']['enable_wandb']):
             wandb.log({"acc": 100 * num_correct / ((i + 1) * self.config['trainer']['BATCH']),
