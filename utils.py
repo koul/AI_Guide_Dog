@@ -47,8 +47,10 @@ def labelCount(label, n_classes):
 def sampler_(dataset_labels, n_classes):
     dataset_counts = labelCount(dataset_labels, n_classes)
     print("Label counts before balancing: ", dataset_counts)
-    num_samples = sum(dataset_counts)
-    class_weights = [num_samples/i for i in dataset_counts]
+
+    num_samples = sum(dataset_counts) + n_classes
+    class_weights = [num_samples/(i+1) for i in dataset_counts] #Adding +1 to avoid division by zero
+
     weights = [class_weights[y] for y in dataset_labels]
     sampler = WeightedRandomSampler(torch.DoubleTensor(weights), int(num_samples))
     return sampler

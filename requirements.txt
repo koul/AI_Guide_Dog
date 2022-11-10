@@ -7,3 +7,8 @@ pickle5
 sklearn
 git+https://github.com/okankop/vidaug
 scikit-image
+scikit-learn
+torch
+torchvision
+torchaudio
+tqdm
