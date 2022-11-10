@@ -1,7 +1,7 @@
 global:
     root_dir: ""
     iteration: "debug"
-    enable_preprocessing: true
+    enable_preprocessing: false
     seed: 8
     enable_intent: false
 transformer:
@@ -69,3 +69,4 @@ trainer:
         optimizer_path: ""
 wandb:
     github_id: "divergent"
+    run_name: "testing_multimodal_bench_projection"

@@ -75,9 +75,8 @@ class Trainer:
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.val_loader = DataLoader(self.val_dataset, **val_args)
        
-        self.epochs = config_dict['trainer']['epochs']   
-        self.hidden_dim =  model_config['sensor_hidden_dim']   
-        self.layer_num =  model_config['layer_num']   
+        self.epochs = config_dict['trainer']['epochs']
+
 
 
 
@@ -97,10 +96,12 @@ class Trainer:
                                        config_dict['data']['WIDTH'], True)
 
         elif self.model_name == "LSTM_Multimodal":
-            self.model = LSTMModel(input_dim = config_dict['trainer']['model']['dense_frame_input_dim'] + len(config_dict['trainer']['model']['sensor_attr_list']),
+            self.model = LSTMModel(input_dim = [config_dict['trainer']['model']['dense_frame_input_dim'], len(config_dict['trainer']['model']['sensor_attr_list'])],
                                    layer_dim = config_dict['trainer']['model']['num_lstm_layers'], hidden_dim = config_dict['trainer']['model']['lstm_hidden'],
                                    num_classes = 3)
-            elif self.model_name == "bert":
+        elif self.model_name == "bert":
+            self.hidden_dim = model_config['sensor_hidden_dim']
+            self.layer_num = model_config['layer_num']
             self.model = Bert(self.device,
                               github_id=config_dict['wandb']['github_id'],
                               num_attr=len(model_config['sensor_attr_list']),
@@ -121,9 +122,13 @@ class Trainer:
             elif self.data_type == "multimodal":
                 sensor_attr_list = model_config['sensor_attr_list']
                 dense_frame_len = model_config['dense_frame_input_dim']
+
+
                 self.test_dataset = SensorVideoDataset(test_videos, test_sensor, list(test_videos.keys()),
-                                                 transforms=val_transforms,
-                                                 seq_len=self.seq_len, config_dict=self.config)
+                                                   self.model_name, transforms=val_transforms,
+                                                   seq_len=self.seq_len, dense_frame_len=dense_frame_len,
+                                                   sensor_attr_list=sensor_attr_list, config_dict=self.config)
+
             elif self.data_type == 'sensor':
                 sensor_attr_list = model_config['sensor_attr_list']
                 self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len,
@@ -184,15 +189,18 @@ class Trainer:
         
             self.model.train()
             self.optimizer.zero_grad()
-            
-            x = x.float().to(self.device)
+
+            x1, x2 = x
+            x1 = x1.float().to(self.device)
+            x2 = x2.float().to(self.device)
             y = y.to(self.device)
             
             
             with torch.cuda.amp.autocast():
 
-                outputs = self.model(x)
-                del x
+                outputs = self.model((x1,x2))
+                del x1
+                del x2
                 loss = self.criterion(outputs, y.long())
             pred_class = torch.argmax(outputs, axis=1)
 
@@ -240,13 +248,16 @@ class Trainer:
 
         
         for i, (vx, vy) in tqdm(enumerate(self.val_loader)):
-        
-            vx = vx.to(self.device)
+
+            vx1, vx2 = vx
+            vx1 = vx1.to(self.device)
+            vx2 = vx2.to(self.device)
             vy = vy.to(self.device)
 
             with torch.no_grad():
-                outputs = self.model(vx)
-                del vx
+                outputs = self.model((vx1, vx2))
+                del vx1
+                del vx2
 
             pred_class = torch.argmax(outputs, axis=1)
 
@@ -272,12 +283,15 @@ class Trainer:
         predictions = []
 
         for i, (vx, vy) in tqdm(enumerate(self.test_loader)):
-            vx = vx.to(self.device)
+            vx1, vx2 = vx
+            vx1 = vx1.to(self.device)
+            vx2 = vx2.to(self.device)
             vy = vy.to(self.device)
 
             with torch.no_grad():
-                outputs = self.model(vx)
-                del vx
+                outputs = self.model((vx1, vx2))
+                del vx1
+                del vx2
 
             pred_class = torch.argmax(outputs, axis=1)
 

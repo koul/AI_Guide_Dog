@@ -411,7 +411,8 @@ class SensorVideoDataset(Dataset):
 
         # return video
         # return video, torch.LongTensor(self.y[idx])
-        fused_data = torch.cat((video,sensor), 1) # size (seq_len, (dense_video_dim + sensor_dim))
+        #Wednesdays code
+        #fused_data = torch.cat((video,sensor), 1) # size (seq_len, (dense_video_dim + sensor_dim))
         
-        return fused_data, self.y[idx]
+        return (video,sensor), self.y[idx]
         # return (video, sensor), self.y[idx]

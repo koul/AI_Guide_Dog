@@ -136,10 +136,7 @@ if __name__ == "__main__":
     print("Train Files:", train_files)
     print("Val Files:", val_files)
 
-    trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor)
-    trainer.save(0, -1)
-    
-    epochs = config_dict['trainer']['epochs']
+
 
 
     test_videos = None
@@ -149,28 +146,32 @@ if __name__ == "__main__":
         with open(transformer_config['test_save_file'] + '_sensor.pickle', 'rb') as handle:
             test_sensor = pickle.load(handle)
 
-    num_hid_layer_l = [2, 3]
-    num_att_head_l = [2, 3, 6]
+    trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
+                      test_videos, test_sensor)
+    trainer.save(0, -1)
 
-    for num_hid_layer in num_hid_layer_l:
-        config_dict['trainer']['model']['layer_num'] = num_hid_layer
-        trainer = train(config_dict, 
-                train_transforms, 
-                val_transforms, 
-                train_files, 
-                val_files, 
-                df_videos, 
-                df_sensor, 
-                test_videos,
-                test_sensor)
-        wandb.finish()
+    epochs = config_dict['trainer']['epochs']
+
+    github_id = config_dict['wandb']['github_id']
+    run_name = config_dict['wandb']['run_name']
+    wandb.init(project="bert-guide-dog", entity = github_id, name = run_name)
+
+    for epoch in range(epochs):
+        print("Starting epoch: ", epoch," !!!")
+        train_actual, train_predictions = trainer.train(epoch)
+        acc, val_actual, val_predictions = trainer.validate()
+        display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
+        trainer.save(acc, epoch)
+        print("Ending epoch: ", epoch," !!!")
+
+        #TODO: Remove this later
+        break
 
     print("Completed Training!!")
     # performs final benchmarking after training
-
     if (config_dict['transformer']['enable_benchmark_test'] == True):
         print("Starting benchmark testing!!")
         acc, test_actual, test_predictions = trainer.test()
         display_test_classification_report(test_actual, test_predictions)
-    
+
     print("Done!")
