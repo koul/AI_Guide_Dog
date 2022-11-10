@@ -20,17 +20,17 @@ data:
     BENCHMARK_TEST_INTENT: ""
 trainer:
     BATCH: 8
-    lr: 0.00005
+    lr: 0.0005
     epochs: 20
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
-    data_type: "multimodal"
+    data_type: "multimodal" # switch back to multimodal later on
     model:
         name: "LSTM_Multimodal"
         lstm_hidden: 128 #try 128 later
         num_lstm_layers: 2 #try 3,4,5 later
-        dense_frame_input_dim: 1000 #final input is dense_frame_input_dim + sensor_data_dim
+        dense_frame_input_dim: 0 #final input is dense_frame_input_dim + sensor_data_dim #set this to 0 if you just want sensor during multimodal -- set this back to 1000 later
         train_with_sensor: True
     # model:
     #    sensor_hidden_dim: 64
@@ -40,9 +40,9 @@ trainer:
             - "Gyrometer:Gyrometer - X axis"
             - "Gyrometer:Gyrometer - Y axis"
             - "Gyrometer:Gyrometer - Z axis"
-            # - "Magnetometer:Magnetometer - X axis"
-            # - "Magnetometer:Magnetometer - Y axis"
-            # - "Magnetometer:Magnetometer - Z axis"
+            - "Magnetometer:Magnetometer - X axis"
+            - "Magnetometer:Magnetometer - Y axis"
+            - "Magnetometer:Magnetometer - Z axis"
             - "Accelerometer:Acceleration - X axis"
             - "Accelerometer:Acceleration - Y axis"
             - "Accelerometer:Acceleration - Z axis"
@@ -69,4 +69,4 @@ trainer:
         optimizer_path: ""
 wandb:
     github_id: "divergent"
-    run_name: "testing_multimodal_bench_projection"
+    run_name: "Multimodal_Sensor_All_3_No_Video"

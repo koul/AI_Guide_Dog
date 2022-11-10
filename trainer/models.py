@@ -220,8 +220,17 @@ class LSTMModel(nn.Module):
     def __init__(self, input_dim, layer_dim, hidden_dim = 64, num_classes = 3, data_type = 'sensor'):
         super(LSTMModel, self).__init__()
 
-        self.feature_extractor = FeatureExtractor(data_type, input_dim[1], input_dim[0])
+
+        if input_dim[0] == 0:
+            self.includeVideo = False
+            outputdim = 1000
+        else:
+            self.includeVideo = True
+            outputdim = input_dim[0]*2
+
+        self.feature_extractor = FeatureExtractor(data_type, input_dim[1], 1000)
         # feature extractor projects from input_dim[1] to input_dim[0] which is 1000
+
 
         # Defining the number of layers and the nodes in each layer
         self.hidden_dim = hidden_dim
@@ -232,7 +241,7 @@ class LSTMModel(nn.Module):
         # LSTM layers
         # can consider adding dropout probability later on
         self.lstm = nn.LSTM(
-            input_dim[0]*2, hidden_dim, self.layer_dim, batch_first=True
+            outputdim, hidden_dim, self.layer_dim, batch_first=True
         )
 
         # Fully connected layer
@@ -253,8 +262,12 @@ class LSTMModel(nn.Module):
         video, sensor = x #verify if this is correct
         projected_sensor = self.feature_extractor(sensor)
         # fuse sensor and video
-        fused_data = torch.cat((video, projected_sensor), 2) # size (seq_len, (dense_video_dim + sensor_dim))
-        x = fused_data
+
+        if self.includeVideo == True:
+            fused_data = torch.cat((video, projected_sensor), 2) # size (seq_len, (dense_video_dim + sensor_dim))
+            x = fused_data
+        else:
+            x = projected_sensor
 
         h0 = torch.zeros(self.layer_dim, x.size(0), self.hidden_dim).to(self.device).requires_grad_()
 

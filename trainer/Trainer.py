@@ -99,6 +99,7 @@ class Trainer:
             self.model = LSTMModel(input_dim = [config_dict['trainer']['model']['dense_frame_input_dim'], len(config_dict['trainer']['model']['sensor_attr_list'])],
                                    layer_dim = config_dict['trainer']['model']['num_lstm_layers'], hidden_dim = config_dict['trainer']['model']['lstm_hidden'],
                                    num_classes = 3)
+
         elif self.model_name == "bert":
             self.hidden_dim = model_config['sensor_hidden_dim']
             self.layer_num = model_config['layer_num']
@@ -133,7 +134,7 @@ class Trainer:
                 sensor_attr_list = model_config['sensor_attr_list']
                 self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len,
                                                    sensor_attr_list=sensor_attr_list,
-                                                   seq_len=self.seq_len, config_dict=self.config)
+                                                   config_dict=self.config)
 
             else:
                 self.train_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()),

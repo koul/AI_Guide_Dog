@@ -367,7 +367,11 @@ class SensorVideoDataset(Dataset):
             sensor[i - vid_idx, :] = frame_sensor # tensor of seq_len * attr_list
 
 
-        video = torch.FloatTensor(self.seq_len, self.dense_frame_len)
+        if self.dense_frame_len == 0: #when we only want sensor and ignore video
+            video = torch.FloatTensor(self.seq_len, 1000)
+        else:
+            video = torch.FloatTensor(self.seq_len, self.dense_frame_len)
+
         # 1000 is size od dense data representation, change it accordingly later on
 
         # TODO: later apply normalization for the entire dataframe in SensorTransformer coz this sees only 8 instances of values
