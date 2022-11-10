@@ -122,7 +122,11 @@ if __name__ == "__main__":
         display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
         trainer.save(acc, epoch)
 
+    print("Completed Training!!")
     # performs final benchmarking after training
     if (config_dict['transformer']['enable_benchmark_test'] == True):
+        print("Starting benchmark testing!!")
         acc, test_actual, test_predictions = trainer.test()
         display_test_classification_report(test_actual, test_predictions)
+    
+    print("Done!")

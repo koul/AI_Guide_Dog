@@ -1,16 +1,16 @@
 global: 
     root_dir: ""
-    iteration: "debug"
+    iteration: "intent_benchmark_indoor_test"
     enable_preprocessing: false
     seed: 8
-    enable_intent: false
+    enable_intent: true
 transformer:
     fps: 2
-    path: "data/Indoor - Seattle Library"
-    data_save_file: "data/processed/Indoor - Seattle Library" #file path without .npz
+    path: "data/"
+    data_save_file: "data/train" #file path without .npz
     enable_benchmark_test: true
-    test_path: "data/test/Mixed"
-    test_save_file: "data/processed/test/Mixed" #file path without .npz
+    test_path: "data/"
+    test_save_file: "data/test" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
@@ -31,4 +31,3 @@ trainer:
         num_conv_lstm_layers: 1
         pretrained_path: ""
         optimizer_path: ""
-        
