@@ -8,8 +8,6 @@ import math
 import wandb
 from bert_utils import *
 
-from AI_Guide_Dog.bert_utils import FeatureExtractor
-
 
 class ConvLSTMCell(nn.Module):
 

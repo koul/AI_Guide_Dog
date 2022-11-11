@@ -7,9 +7,6 @@ from utils import *
 import wandb
 
 
-from AI_Guide_Dog.trainer.dataset import SensorDataset
-
-
 class Trainer:
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
