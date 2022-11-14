@@ -12,3 +12,5 @@ torch
 torchvision
 torchaudio
 tqdm
+wandb
+protobuf==3.20.*

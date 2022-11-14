@@ -1,9 +1,10 @@
 global: 
     root_dir: ""
-    iteration: "video_augmentation"
+    iteration: "video_augmentation_base"
+    description: "intent_indoor_baseline full run changed run params"
     enable_preprocessing: false
     seed: 8
-    enable_intent: false
+    enable_intent: true
     enable_wandb: true
 transformer:
     fps: 2
@@ -22,8 +23,8 @@ data:
 trainer:
     BATCH: 8
     lr: 0.0001
-    epochs: 20
-    lambda: 0.001  #L2 regularization #changed from 1e-4
+    epochs: 25
+    lambda: 0.01  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
     model:

@@ -198,7 +198,7 @@ class FrameDataset(Dataset):
         
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example) along with high-level GPS information.
 class IntentVideoDataset(Dataset):
-    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test=False, train=False):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test='train', train=False):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len

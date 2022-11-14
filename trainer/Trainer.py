@@ -9,7 +9,7 @@ import wandb
 class Trainer:
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
-                 test_videos = None, test_sensor = None):
+                 test_videos = None, test_sensor = None, wandb = None):
         self.cuda = torch.cuda.is_available()
         print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -54,7 +54,6 @@ class Trainer:
         channels = config_dict['data']['CHANNELS']
         if(config_dict['global']['enable_intent']):
             channels = channels + 1
-            print("WE NEED channels", channels)
             
         self.model = ConvLSTMModel(channels, hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
@@ -81,24 +80,20 @@ class Trainer:
             
         self.scaler = torch.cuda.amp.GradScaler()
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
+    
+        if(wandb is not None):
+            self.wandb = wandb
+            self.wandb.watch(self.model)
 
         print(self.model)
 
 
     def train(self, epoch):
-        if (self.config['global']['enable_wandb']):
-            wandb.init(project="gd", entity="bsukboon")
-            wandb.config = {
-                "learning_rate": 0.0001,
-                "epochs": 20,
-                "batch_size": 64,
-                "dataset": "Indoor - Seattle Library"
-                }
-
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
 
-        num_correct = 0
-        total_loss = 0
+        num_correct = 0.0
+        total_loss = 0.0
+        y_cnt = 0.0
         actual = []
         predictions = []
         
@@ -123,11 +118,12 @@ class Trainer:
 
             num_correct += int((pred_class == y).sum())
             del outputs
-            total_loss += float(loss)
+            total_loss += (float(loss)*len(y))
+            y_cnt += len(y)
 
             batch_bar.set_postfix(
-                acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'])),
-                loss="{:.04f}".format(float(total_loss / (i + 1))),
+                acc="{:.04f}%".format(100 * float(num_correct) / y_cnt),
+                loss="{:.04f}".format(float(total_loss) / y_cnt),
                 num_correct=num_correct,
                 lr="{:.04f}".format(float(self.optimizer.param_groups[0]['lr'])))
             
@@ -138,20 +134,20 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
-
-        if (self.config['global']['enable_wandb']):
-            wandb.log({"acc": 100 * num_correct / ((i + 1) * self.config['trainer']['BATCH']),
-                    "loss": float(total_loss / (i + 1))})
-            wandb.watch(self.model)
-        
+    
         batch_bar.close()
-        acc = 100 * num_correct / (len(self.train_dataset))
+        total_loss = float(total_loss) / len(self.train_dataset)
+        acc = 100 * float(num_correct) / (len(self.train_dataset))
         print("Epoch {}/{}: Train Acc {:.04f}%, Train Loss {:.04f}, Learning Rate {:.04f}".format(
             epoch + 1,
             self.epochs,
             acc,
-            float(total_loss / len(self.train_loader)),
+            float(total_loss),
             float(self.optimizer.param_groups[0]['lr'])))
+
+        if(self.wandb is not None):
+            self.wandb.log({"Train Loss": total_loss, "Train Accuracy": acc, "Learning Rate": float(self.optimizer.param_groups[0]['lr'])})
+
 
         return actual, predictions
 
@@ -179,12 +175,15 @@ class Trainer:
             predictions.extend(pred_class.detach().cpu())
 
             val_num_correct += int((pred_class == vy).sum())
-            del outputs
          
+            del outputs
             
 
-        acc = 100 * val_num_correct / (len(self.val_dataset))
+        acc = 100 * float(val_num_correct) / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
+
+        if(self.wandb is not None):
+            self.wandb.log({"Validation Accuracy": acc})
         
         return acc, actual, predictions
 
@@ -212,8 +211,8 @@ class Trainer:
 
             val_num_correct += int((pred_class == vy).sum())
             del outputs
-
-        acc = 100 * val_num_correct / (len(self.val_dataset))
+           
+        acc = 100 * float(val_num_correct) / (len(self.val_dataset))
         print("Benchmark test: {:.04f}%".format(acc))
 
         return acc, actual, predictions
