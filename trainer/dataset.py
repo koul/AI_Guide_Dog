@@ -420,3 +420,130 @@ class SensorVideoDataset(Dataset):
         
         return (video,sensor), self.y[idx]
         # return (video, sensor), self.y[idx]
+
+# this class return multi modal dataset with sensor + video fused together channel wise
+# For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
+class SensorVideoFusedDataset(Dataset):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len,
+                 sensor_attr_list, config_dict=None):
+
+        self.transforms = transforms
+        self.files = files
+        self.seq_len = seq_len
+        self.sensor_feat_len = len(sensor_attr_list)
+        self.df_videos = df_videos
+        self.df_sensor = df_sensor  # df_sensor['sample']['direction_label']['direction']
+        self.config = config_dict
+        self.attr_list = sensor_attr_list
+        # self.frame_path = frame_path
+        self.X_vid = []
+        self.X_index = []
+        self.X_sensor_timestamp = []
+        if len(self.attr_list) == 0:
+            self.ignoreSensor = True
+        else:
+            self.ignoreSensor = False
+
+        if self.config['trainer']['model']['train_with_sensor_only'] == True:
+            self.ignoreVideo = True
+        else:
+            self.ignoreVideo = False
+
+        y = []
+
+        for f in files:
+            df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
+            df_processed = preprocess_labels(df)  # assign 1 sec forward labels
+            # pdb.set_trace()
+
+            # Generate training sequences
+            # for each time stamp in df_processed
+            for i in range(len(df_processed) - self.seq_len):
+                self.X_vid.append(f)
+                self.X_index.append(df_processed['frame_index'][i])
+                self.X_sensor_timestamp.append(df_processed['timestamp'][i])
+
+                # Picking the label of the last element of the sequence
+                y.append(label_map(df_processed['labels'][i + self.seq_len - 1]))
+
+        # self.X = np.stack(X, axis = 0)
+        self.y = np.array(y)
+
+        # normalize sensor data set for multimodal fusion
+        # create a new df with just the sensor values that are need with timestamp as index
+        # normalize it using sklearn.preprocessing.minmaxscaler
+
+        # TODO: later apply normalization for the entire dataframe in SensorTransformer coz this sees only 8 instances of values
+        # normalize feature
+        # sensor = (sensor - sensor.min()) / (sensor.max() - sensor.min())
+
+    def __len__(self):
+        return len(self.y)
+        # return 1
+
+    def __getitem__(self, idx):
+        # vid = self.df_videos['sample'][idx:idx+self.seq_len]
+        # print(vid.shape)
+        # seq_filename = self.X[idx]
+        vid_file = self.X_vid[idx]
+        vid_idx = self.X_index[idx]
+
+
+
+        if self.ignoreSensor == False:
+            sensor = torch.FloatTensor(self.seq_len, self.sensor_feat_len)
+
+            for i in range(vid_idx, vid_idx + self.seq_len):
+                try:
+                    frame_sensor = torch.FloatTensor([self.df_sensor[vid_file][str(attr).split(':')[0]][
+                                                          str(attr).split(':')[1]][self.X_sensor_timestamp[i]] for attr
+                                                      in self.attr_list])
+                except Exception as ex:
+                    print(ex)
+                    frame_sensor = torch.zeros(len(self.attr_list))
+
+                sensor[i - vid_idx, :] = frame_sensor  # tensor of seq_len * attr_list
+            sensor = (sensor - sensor.min(axis=1).values.reshape(-1, 1)) / (
+                        sensor.max(axis=1).values.reshape(-1, 1) - sensor.min(axis=1).values.reshape(-1, 1))
+
+        video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS'] + len(self.attr_list), self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
+
+
+        # TODO: inspect what this sensor object contains
+
+        # for e,filename in enumerate(seq_filename):
+        for i in range(vid_idx, vid_idx + self.seq_len):
+            if self.ignoreVideo == False: # if train with video or video + sensor
+                try:
+                    frame = self.df_videos[vid_file][i]
+                    frame = self.transforms(frame)
+                except Exception as ex:
+                    print(ex)
+                    frame = torch.zeros(
+                        (self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
+
+                if self.ignoreSensor == False:
+                    # fuse sensor into video channel 1 by 1
+                    for sensor_idx in range(len(self.attr_list )): #total number of sensor channels to add
+                        curr_sensor_frame = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']),
+                                                   sensor[i - vid_idx][sensor_idx])
+                        frame = torch.cat((frame, curr_sensor_frame), dim=0)
+                else:
+                    # eventually # of channels has to be (3/1) + len(attr_list)
+                    video[i - vid_idx, :] = frame  # here we instead want 8*1000
+            else: # implies ignore video
+                frame = None
+                for sensor_idx in range(len(self.attr_list )): #total number of sensor channels to add
+                    curr_sensor_frame = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']),
+                                               sensor[i - vid_idx][sensor_idx])
+                    if frame is None: #no concatenation for the first frame
+                        frame = curr_sensor_frame
+                    else:
+                        frame = torch.cat((frame, curr_sensor_frame), dim=0)
+                video[i - vid_idx, :] = frame  # here we instead want 8*1000
+
+
+        return video, self.y[idx]
+        # return (video, sensor), self.y[idx]
+
+

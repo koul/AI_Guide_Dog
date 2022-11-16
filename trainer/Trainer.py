@@ -1,13 +1,10 @@
 import torch
-from trainer.dataset import SensorVideoDataset,VideoDataset,IntentVideoDataset, SensorDataset
+from trainer.dataset import SensorVideoDataset,VideoDataset,IntentVideoDataset, SensorDataset, SensorVideoFusedDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
 import wandb
-
-
-from AI_Guide_Dog.trainer.dataset import SensorDataset
 
 
 class Trainer:
@@ -27,6 +24,10 @@ class Trainer:
         self.data_type = config_dict['trainer']['data_type']
         model_config = config_dict['trainer']['model']
 
+        sensor_attr_list = model_config['sensor_attr_list']
+        if sensor_attr_list is None:  # if the list is empty
+            sensor_attr_list = []
+
 
         if (config_dict['global']['enable_intent']):
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms,
@@ -35,18 +36,13 @@ class Trainer:
                                                   seq_len=self.seq_len, config_dict=self.config, test='validation')
         else: # PS: multiple and enable_intent are complimentary
             if self.data_type == "multimodal":  # If multi_modal training
-                sensor_attr_list = model_config['sensor_attr_list']
-                dense_frame_len = model_config['dense_frame_input_dim']
-                self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name,
-                                                        transforms=train_transforms,
-                                                        seq_len=self.seq_len, dense_frame_len=dense_frame_len,
+                self.train_dataset = SensorVideoFusedDataset(df_videos, df_sensor, train_files,
+                                                        transforms=train_transforms, seq_len=self.seq_len,
                                                         sensor_attr_list=sensor_attr_list, config_dict=self.config)
-                self.val_dataset = SensorVideoDataset(df_videos, df_sensor, val_files, self.model_name,
-                                                      transforms=val_transforms,
-                                                      seq_len=self.seq_len, dense_frame_len=dense_frame_len,
+                self.val_dataset = SensorVideoFusedDataset(df_videos, df_sensor, val_files,
+                                                      transforms=val_transforms, seq_len=self.seq_len,
                                                       sensor_attr_list=sensor_attr_list, config_dict=self.config)
             elif self.data_type == 'sensor':
-                sensor_attr_list = model_config['sensor_attr_list']
                 self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len,
                                                    sensor_attr_list=sensor_attr_list, config_dict=self.config)
                 self.val_dataset = SensorDataset(df_videos, df_sensor, val_files, self.seq_len,
@@ -90,6 +86,8 @@ class Trainer:
             channels = config_dict['data']['CHANNELS']
             if (config_dict['global']['enable_intent']):
                 channels = channels + 1
+            if self.data_type == "multimodal": #adding extra channels for sensor
+                channels = channels + len(sensor_attr_list)
 
             self.model = ConvLSTMModel(channels, hidden_dim, (3,3),
                                        config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],
@@ -121,17 +119,11 @@ class Trainer:
                                                        transforms=val_transforms, seq_len=self.seq_len,
                                                        config_dict=self.config, test='benchmark_test')
             elif self.data_type == "multimodal":
-                sensor_attr_list = model_config['sensor_attr_list']
-                dense_frame_len = model_config['dense_frame_input_dim']
-
-
-                self.test_dataset = SensorVideoDataset(test_videos, test_sensor, list(test_videos.keys()),
-                                                   self.model_name, transforms=val_transforms,
-                                                   seq_len=self.seq_len, dense_frame_len=dense_frame_len,
+                self.test_dataset = SensorVideoFusedDataset(test_videos, test_sensor, list(test_videos.keys()),
+                                                   transforms=val_transforms, seq_len=self.seq_len,
                                                    sensor_attr_list=sensor_attr_list, config_dict=self.config)
 
             elif self.data_type == 'sensor':
-                sensor_attr_list = model_config['sensor_attr_list']
                 self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len,
                                                    sensor_attr_list=sensor_attr_list,
                                                    config_dict=self.config)
@@ -191,17 +183,14 @@ class Trainer:
             self.model.train()
             self.optimizer.zero_grad()
 
-            x1, x2 = x
-            x1 = x1.float().to(self.device)
-            x2 = x2.float().to(self.device)
+            x = x.float().to(self.device)
             y = y.to(self.device)
             
             
             with torch.cuda.amp.autocast():
 
-                outputs = self.model((x1,x2))
-                del x1
-                del x2
+                outputs = self.model(x)
+                del x
                 loss = self.criterion(outputs, y.long())
             pred_class = torch.argmax(outputs, axis=1)
 
@@ -250,15 +239,13 @@ class Trainer:
         
         for i, (vx, vy) in tqdm(enumerate(self.val_loader)):
 
-            vx1, vx2 = vx
-            vx1 = vx1.to(self.device)
-            vx2 = vx2.to(self.device)
+
+            vx = vx.to(self.device)
             vy = vy.to(self.device)
 
             with torch.no_grad():
-                outputs = self.model((vx1, vx2))
-                del vx1
-                del vx2
+                outputs = self.model(vx)
+                del vx
 
             pred_class = torch.argmax(outputs, axis=1)
 
@@ -284,15 +271,13 @@ class Trainer:
         predictions = []
 
         for i, (vx, vy) in tqdm(enumerate(self.test_loader)):
-            vx1, vx2 = vx
-            vx1 = vx1.to(self.device)
-            vx2 = vx2.to(self.device)
+
+            vx = vx.to(self.device)
             vy = vy.to(self.device)
 
             with torch.no_grad():
-                outputs = self.model((vx1, vx2))
-                del vx1
-                del vx2
+                outputs = self.model(vx)
+                del vx
 
             pred_class = torch.argmax(outputs, axis=1)
 
