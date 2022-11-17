@@ -83,6 +83,8 @@ class Trainer:
         if(wandb is not None):
             self.wandb = wandb
             self.wandb.watch(self.model)
+        else:
+            self.wandb = None
 
         print(self.model)
 

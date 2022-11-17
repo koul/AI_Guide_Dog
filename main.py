@@ -71,6 +71,7 @@ if __name__ == "__main__":
     else:
         wandb = None
 
+    print(config_dict)
     # avoid running transform if .nz has already been generated
     if (config_dict['global']['enable_preprocessing'] == True):
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'],
