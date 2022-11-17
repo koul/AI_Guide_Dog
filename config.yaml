@@ -14,15 +14,15 @@ transformer:
 data:
     HEIGHT: 64 #64
     WIDTH: 64 #64
-    CHANNELS: 0 #1
-    SEQUENCE_LENGTH: 8
+    CHANNELS: 1 #1
+    SEQUENCE_LENGTH: 10
     VAL_INTENT: ""
     BENCHMARK_TEST_INTENT: ""
 trainer:
     BATCH: 8
-    lr: 0.0005
+    lr: 0.00001
     epochs: 20
-    lambda: 0.001  #L2 regularization #changed from 1e-4
+    lambda: 0.002  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
     data_type: "multimodal" # switch back to multimodal later on
@@ -34,21 +34,21 @@ trainer:
         #lstm_hidden: 128 #try 128 later
         #num_lstm_layers: 2 #try 3,4,5 later
         #dense_frame_input_dim: 0 #final input is dense_frame_input_dim + sensor_data_dim #set this to 0 if you just want sensor during multimodal -- set this back to 1000 later
-        train_with_sensor_only: True
+        train_with_sensor_only: False
     # model:
     #    sensor_hidden_dim: 64
     #    layer_num: 2
     #    name: "bert"
         sensor_attr_list:
-            - "Gyrometer:Gyrometer - X axis"
-            - "Gyrometer:Gyrometer - Y axis"
-            - "Gyrometer:Gyrometer - Z axis"
-            #- "Magnetometer:Magnetometer - X axis"
-            #- "Magnetometer:Magnetometer - Y axis"
-            #- "Magnetometer:Magnetometer - Z axis"
-            #- "Accelerometer:Acceleration - X axis"
-            #- "Accelerometer:Acceleration - Y axis"
-            #- "Accelerometer:Acceleration - Z axis"
+            #- "Gyrometer:Gyrometer - X axis"
+            #- "Gyrometer:Gyrometer - Y axis"
+            #- "Gyrometer:Gyrometer - Z axis"
+            - "Magnetometer:Magnetometer - X axis"
+            - "Magnetometer:Magnetometer - Y axis"
+            - "Magnetometer:Magnetometer - Z axis"
+            - "Accelerometer:Acceleration - X axis"
+            - "Accelerometer:Acceleration - Y axis"
+            - "Accelerometer:Acceleration - Z axis"
             # - "Accelerometer:User acceleration - X axis"
             # - "Accelerometer:User acceleration - Y axis"
             # - "Accelerometer:User acceleration - Z axis"
@@ -72,4 +72,4 @@ trainer:
         optimizer_path: ""
 wandb:
     github_id: "divergent"
-    run_name: "Testing new fusing technique"
+    run_name: "ChannelLevelFuse:Video+Sensor(Acce+Magneto)"

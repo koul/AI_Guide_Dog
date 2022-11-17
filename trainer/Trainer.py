@@ -173,8 +173,9 @@ class Trainer:
     def train(self, epoch):
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
 
-        num_correct = 0
+        num_correct = 0.0
         total_loss = 0
+        y_cnt = 0.0
         actual = []
         predictions = []
         
@@ -192,6 +193,7 @@ class Trainer:
                 outputs = self.model(x)
                 del x
                 loss = self.criterion(outputs, y.long())
+
             pred_class = torch.argmax(outputs, axis=1)
 
             actual.extend(y.detach().cpu())
@@ -200,10 +202,14 @@ class Trainer:
 
             num_correct += int((pred_class == y).sum())
             del outputs
-            total_loss += float(loss)
+            total_loss += (float(loss)*len(y))
+            y_cnt += len(y)
+
+
+
             batch_bar.set_postfix(
-                acc="{:.04f}%".format(100 * num_correct / ((i + 1) * self.config['trainer']['BATCH'])),
-                loss="{:.04f}".format(float(total_loss / (i + 1))),
+                acc="{:.04f}%".format(100 * float(num_correct) / y_cnt),
+                loss="{:.04f}".format(float(total_loss) / y_cnt),
                 num_correct=num_correct,
                 lr="{:.04f}".format(float(self.optimizer.param_groups[0]['lr'])))
             
@@ -213,6 +219,7 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
+
 
         batch_bar.close()
         acc = 100 * num_correct / (len(self.train_dataset))

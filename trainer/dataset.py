@@ -503,8 +503,10 @@ class SensorVideoFusedDataset(Dataset):
                     frame_sensor = torch.zeros(len(self.attr_list))
 
                 sensor[i - vid_idx, :] = frame_sensor  # tensor of seq_len * attr_list
+
             sensor = (sensor - sensor.min(axis=1).values.reshape(-1, 1)) / (
                         sensor.max(axis=1).values.reshape(-1, 1) - sensor.min(axis=1).values.reshape(-1, 1))
+            sensor[sensor != sensor] = 0 # replaces all NANs that might've been introduced with 0
 
         video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS'] + len(self.attr_list), self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
 
@@ -528,9 +530,8 @@ class SensorVideoFusedDataset(Dataset):
                         curr_sensor_frame = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']),
                                                    sensor[i - vid_idx][sensor_idx])
                         frame = torch.cat((frame, curr_sensor_frame), dim=0)
-                else:
-                    # eventually # of channels has to be (3/1) + len(attr_list)
-                    video[i - vid_idx, :] = frame  # here we instead want 8*1000
+                # eventually # of channels has to be (3/1) + len(attr_list)
+                video[i - vid_idx, :] = frame 
             else: # implies ignore video
                 frame = None
                 for sensor_idx in range(len(self.attr_list )): #total number of sensor channels to add
