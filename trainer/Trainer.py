@@ -77,12 +77,14 @@ class Trainer:
         #     g['lr'] = lr
         #     g['weight_decay']= lamda
             
-        self.scaler = torch.cuda.amp.GradScaler()
+        # self.scaler = torch.cuda.amp.GradScaler()
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
-    
+        # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min',factor=0.75, patience=1)
         if(wandb is not None):
             self.wandb = wandb
             self.wandb.watch(self.model)
+        else:
+            self.wandb = None
 
         print(self.model)
 
@@ -126,9 +128,12 @@ class Trainer:
                 num_correct=num_correct,
                 lr="{:.04f}".format(float(self.optimizer.param_groups[0]['lr'])))
             
-            self.scaler.scale(loss).backward()
-            self.scaler.step(self.optimizer) 
-            self.scaler.update()
+            # self.scaler.scale(loss).backward()
+            # self.scaler.step(self.optimizer) 
+            # self.scaler.update()
+
+            loss.backward()
+            self.optimizer.step()
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar
@@ -175,7 +180,7 @@ class Trainer:
             val_num_correct += int((pred_class == vy).sum())
          
             del outputs
-            
+           
 
         acc = 100 * float(val_num_correct) / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
