@@ -1,4 +1,5 @@
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np
@@ -61,7 +62,7 @@ TODO: full pipeline
 '''
 if __name__ == "__main__":
     config_dict = load_config()
-
+    
     if(config_dict['global']['enable_wandb']):
         import wandb
         wandb.init(name=config_dict['global']['iteration'], 
@@ -71,6 +72,7 @@ if __name__ == "__main__":
     else:
         wandb = None
 
+    print(config_dict)
     # avoid running transform if .nz has already been generated
     if (config_dict['global']['enable_preprocessing'] == True):
         transform(config_dict['transformer']['path'], config_dict['transformer']['fps'],
@@ -115,7 +117,7 @@ if __name__ == "__main__":
     print("Val Files:", val_files)
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor, wandb=wandb)
-    
+  
     trainer.save(0, -1)
     
     epochs = config_dict['trainer']['epochs']

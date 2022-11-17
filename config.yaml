@@ -1,7 +1,7 @@
 global: 
     root_dir: ""
-    iteration: "intent_indoor_baseline_2"
-    description: "intent_indoor_baseline full run changed run params"
+    iteration: "intent_indoor_SMOTE_no_grad_clip"
+    description: "intent_indoor_baseline full run SMOTE oversampling, no grad clipping"
     enable_preprocessing: False
     seed: 8
     enable_intent: True
@@ -18,7 +18,7 @@ data:
     WIDTH: 64
     CHANNELS: 1
     SEQUENCE_LENGTH: 10
-    VAL_INTENT: ""
+    VAL_INTENT: "/home/anjadhav/AIGD/AI_Guide_Dog/validation_intent.npy"
     BENCHMARK_TEST_INTENT: ""
 trainer:
     BATCH: 64
