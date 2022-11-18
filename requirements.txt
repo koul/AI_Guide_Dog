@@ -12,3 +12,4 @@ tqdm
 sklearn
 transformers
 wandb
+protobuf==3.20.*

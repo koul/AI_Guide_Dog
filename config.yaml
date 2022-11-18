@@ -1,9 +1,12 @@
 global:
     root_dir: ""
-    iteration: "debug"
+    iteration: "Testing_All_Metrics"
+    description: "Multimodal Channel level fusion: Testing"
+    enable_wandb: true
     enable_preprocessing: false
     seed: 8
     enable_intent: false
+enable_wandb: True
 transformer:
     fps: 2
     path: "data/Indoor - train"
@@ -19,9 +22,9 @@ data:
     VAL_INTENT: ""
     BENCHMARK_TEST_INTENT: ""
 trainer:
-    BATCH: 8
+    BATCH: 8 # change this to 64 later
     lr: 0.00001
-    epochs: 20
+    epochs: 1 # change this to 25 later
     lambda: 0.002  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
@@ -70,6 +73,3 @@ trainer:
             # - "Altimeter:Attitude Yaw"
         pretrained_path: ""
         optimizer_path: ""
-wandb:
-    github_id: "divergent"
-    run_name: "ChannelLevelFuse:Video+Sensor(Acce+Magneto)"
