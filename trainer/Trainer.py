@@ -5,6 +5,7 @@ from trainer.models import *
 from tqdm import tqdm
 from trainer.predrnn import PredRnnModel
 from utils import *
+from trainer.loss import get_focal_loss, get_inverse_class_freq
 
 import wandb
 
@@ -225,13 +226,14 @@ class TrainerPredRNN():
 
         if(config_dict['global']['enable_intent']):
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test='validation')
         else:
             self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
             self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
 
-        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])
-        train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+        # sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])
+        # train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+        train_args = dict(batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
         # self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
@@ -242,8 +244,12 @@ class TrainerPredRNN():
 
         # TODO: Add test loader with sampler - try with replacement to True and False
         if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
-            self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
+            if(config_dict['global']['enable_intent']):
+                self.test_dataset = IntentVideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'benchmark_test')
+            else:
+                self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
                                             seq_len=self.seq_len, config_dict=self.config)
+
             test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
                             drop_last=False) if self.cuda else dict(shuffle=False,
                                                                     batch_size=config_dict['trainer']['BATCH'],
@@ -254,7 +260,7 @@ class TrainerPredRNN():
         if(config_dict['global']['enable_intent']):
             channels = channels + 1
 
-        self.model = PredRnnModel(channels, config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
+        self.model = PredRnnModel(channels, config_dict['trainer']['model']['convlstm_hidden'],(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True, conv_dropout=config_dict['trainer']['model']['conv_dropout'])
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretrained_path']))
@@ -262,15 +268,24 @@ class TrainerPredRNN():
 
         self.model = self.model.to(self.device)
 
-        weights = [2.0,2.0,1.0]
-        class_weights = torch.FloatTensor(weights).to(self.device)
-        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+        # weights = [2.0,2.0,1.0]
+        # class_weights = torch.FloatTensor(weights).to(self.device)
+        # self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+
+        # Focal Loss #
+        alpha_weights = get_inverse_class_freq(self.train_dataset.y, config_dict['trainer']['num_classes'])
+        self.criterion = get_focal_loss(alpha=alpha_weights, gamma=config_dict['trainer']['model']['focal_loss_gamma'], device=self.device)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=config_dict['trainer']['lr'], weight_decay=config_dict['trainer']['lambda'])
 
         if(config_dict['trainer']['model']['optimizer_path'] != ""):
             self.optimizer.load_state_dict(torch.load(config_dict['trainer']['model']['optimizer_path']))
             print('Loaded Optimizer state')
+            if config_dict['trainer']['model']['lr_after_load'] != "":
+                for g in self.optimizer.param_groups:
+                    g['lr'] = config_dict['trainer']['model']['lr_after_load']
+
+                print(f"LR set to {config_dict['trainer']['model']['lr_after_load']}")
 
         # for g in optimizer.param_groups:
         #     g['lr'] = lr
@@ -319,10 +334,12 @@ class TrainerPredRNN():
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(y.cpu())
-            predictions.extend(pred_class.cpu())
+            y_cpu = y.cpu()
+            pred_class_cpu = pred_class.cpu()
+            actual.extend(y_cpu)
+            predictions.extend(pred_class_cpu)
 
-            num_correct += int((pred_class == y).sum())
+            num_correct += int((pred_class_cpu == y_cpu).sum())
             del outputs
             total_loss += float(loss)
             total_ce_loss += float(CE_loss)
@@ -355,13 +372,6 @@ class TrainerPredRNN():
             float(total_decouple_loss / len(self.train_loader)),
             float(self.optimizer.param_groups[0]['lr'])))
 
-        # if self.config['trainer']['wandb']:
-        wandb.log({
-            'total_loss': total_loss,
-            'total_ce_loss': total_ce_loss,
-            'total_decouple_loss': total_decouple_loss,
-        })
-
         return acc, actual, predictions
 
 
@@ -388,13 +398,16 @@ class TrainerPredRNN():
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(vy.cpu())
-            predictions.extend(pred_class.cpu())
+            vy_cpu = vy.cpu()
+            pred_class_cpu = pred_class.cpu()
+
+            actual.extend(vy_cpu)
+            predictions.extend(pred_class_cpu)
 
             total_loss += float(loss)
             total_ce_loss += float(CE_loss)
             total_decouple_loss += float(decouple_loss)
-            val_num_correct += int((pred_class == vy).sum())
+            val_num_correct += int((pred_class_cpu == vy_cpu).sum())
             del outputs
 
         acc = 100 * val_num_correct / (len(self.val_dataset))
@@ -422,13 +435,13 @@ class TrainerPredRNN():
             vy = vy.to(self.device)
 
             with torch.no_grad():
-                outputs = self.model(vx)
+                outputs, _ = self.model(vx)
                 del vx
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(vy)
-            predictions.extend(pred_class)
+            actual.extend(vy.cpu())
+            predictions.extend(pred_class.cpu())
 
             test_num_correct += int((pred_class == vy).sum())
             del outputs

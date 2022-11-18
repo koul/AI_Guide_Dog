@@ -249,6 +249,9 @@ class IntentVideoDataset(Dataset):
 
         # for e,filename in enumerate(seq_filename):
         for i in range(vid_idx, vid_idx+self.seq_len):
+            if i >= len(self.df_videos[vid_file]):
+                print(f'IntentVideoDataset i:{i} is out of range len(self.df_videos[vid_file]): {len(self.df_videos[vid_file])}')
+                # break
             try:
                 # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
@@ -267,6 +270,7 @@ class IntentVideoDataset(Dataset):
 
             context_frame = torch.cat((frame, intent_tensor), dim = 0) #attach intent as last channel
             video[i-vid_idx,:,:,:] = frame
+
         # return video
         # return video, torch.LongTensor(self.y[idx])
         return video, self.y[idx]

@@ -84,6 +84,9 @@ if __name__ == "__main__":
         test_videos = dict(np.load(config_dict['transformer']['test_save_file'] + '_video.npz', allow_pickle=True))
         with open(config_dict['transformer']['test_save_file'] + '_sensor.pickle', 'rb') as handle:
             test_sensor = pickle.load(handle)
+    else:
+        test_videos = None
+        test_sensor = None
 
     # need video and sensor data separately
     with open(config_dict['transformer']['data_save_file'] + '_sensor.pickle', 'rb') as handle:
@@ -120,32 +123,13 @@ if __name__ == "__main__":
     wandb.init(project='AI_Guide_Dog')
 
     trainer = TrainerPredRNN(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos=test_videos, test_sensor=test_sensor)
+
     trainer.save(0, -1)
 
     max_val_acc = None
 
     epochs = config_dict['trainer']['epochs']
 
-    if (config_dict['transformer']['enable_benchmark_test'] == True):
-            test_acc, test_actual, test_predictions = trainer.test()
-
-            test_report = get_classification_report(test_actual, test_predictions)
-            wandb.log({
-                'test_acc': test_acc,
-
-                "test_left_precision": test_report['left']['precision'],
-                "test_left_recall": test_report['left']['recall'],
-                "test_left_f1": test_report['left']['f1-score'],
-
-                "test_right_precision": test_report['right']['precision'],
-                "test_right_recall": test_report['right']['recall'],
-                "test_right_f1": test_report['right']['f1-score'],
-
-                "test_front_precision": test_report['front']['precision'],
-                "test_front_recall": test_report['front']['recall'],
-                "test_front_f1": test_report['front']['f1-score'],
-            })
-    '''
     for epoch in range(epochs):
         train_acc, train_actual, train_predictions = trainer.train(epoch)
         avg_val_loss, val_acc, val_actual, val_predictions = trainer.validate()
@@ -189,9 +173,23 @@ if __name__ == "__main__":
             "val_front_recall": val_report['front']['recall'],
             "val_front_f1": val_report['front']['f1-score'],
         })
-    '''
-        # if (config_dict['transformer']['enable_benchmark_test'] == True):
-        #     test_acc, test_actual, test_predictions = trainer.test()
-        #     wandb.log({
-        #         'test_acc': test_acc,
-        #     })
+
+        if (config_dict['transformer']['enable_benchmark_test'] == True):
+            test_acc, test_actual, test_predictions = trainer.test()
+
+            test_report = get_classification_report(test_actual, test_predictions)
+            wandb.log({
+                'test_acc': test_acc,
+
+                "test_left_precision": test_report['left']['precision'],
+                "test_left_recall": test_report['left']['recall'],
+                "test_left_f1": test_report['left']['f1-score'],
+
+                "test_right_precision": test_report['right']['precision'],
+                "test_right_recall": test_report['right']['recall'],
+                "test_right_f1": test_report['right']['f1-score'],
+
+                "test_front_precision": test_report['front']['precision'],
+                "test_front_recall": test_report['front']['recall'],
+                "test_front_f1": test_report['front']['f1-score'],
+            })

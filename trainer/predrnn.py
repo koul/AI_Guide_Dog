@@ -11,7 +11,7 @@ from trainer.tsne import visualization
 
 class SpatioTemporalLSTMCell(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, height, width, kernel_size, bias):
+    def __init__(self, input_dim, hidden_dim, height, width, kernel_size, bias, conv_dropout):
         """
         Initialize SpatioTemporalLSTMCell cell.
         Parameters
@@ -49,6 +49,14 @@ class SpatioTemporalLSTMCell(nn.Module):
         #             bias=self.bias),
         #     nn.LayerNorm([7 * self.hidden_dim, self.kernel_size[0], self.kernel_size[1]])
         # )
+
+        # self.conv_dropout = nn.Dropout(p=conv_dropout) if conv_dropout > 0.0 else None
+        if conv_dropout > 0:
+            print(f'Applying Conv Dropout of {conv_dropout} to cell')
+            self.conv_dropout = nn.Dropout(p=conv_dropout)
+        else:
+            self.conv_dropout = None
+
         self.layernorm = nn.LayerNorm([7 * self.hidden_dim, height, width])
 
         self.conv_memory_to_o = nn.Conv2d(in_channels=self.hidden_dim*2,
@@ -85,6 +93,10 @@ class SpatioTemporalLSTMCell(nn.Module):
 
         # print(f'combined: {combined.shape}')
         combined_conv = self.conv(combined)
+
+        if self.conv_dropout is not None:  # Added conv dropout
+            combined_conv = self.conv_dropout(combined_conv)
+
         normalized_conv = self.layernorm(combined_conv)
         cc_i, cc_f, cc_g, cc_i_prime, cc_f_prime, cc_g_prime, cc_o = torch.split(normalized_conv, self.hidden_dim, dim=1)
         i = torch.sigmoid(cc_i)
@@ -143,7 +155,7 @@ class PredRNN(nn.Module):
     """
 
     def __init__(self, input_dim, hidden_dim, height, width, kernel_size, num_layers,
-                 batch_first=False, bias=True, return_all_layers=False):
+                 batch_first=False, bias=True, conv_dropout=0.0, return_all_layers=False):
         super(PredRNN, self).__init__()
 
         self._check_kernel_size_consistency(kernel_size)
@@ -175,7 +187,8 @@ class PredRNN(nn.Module):
                                           height=height,
                                           width=width,
                                           kernel_size=self.kernel_size[i],
-                                          bias=self.bias))
+                                          bias=self.bias,
+                                          conv_dropout=conv_dropout))
 
         self.cell_list = nn.ModuleList(cell_list)
         ### Predrnn extra attrs ###
@@ -308,9 +321,9 @@ class PredRNN(nn.Module):
 class PredRnnModel(nn.Module):
 
     def __init__(self, input_dim, hidden_dim, kernel_size, num_layers, height, width,
-                 batch_first=False, bias=True, return_all_layers=False, num_classes = 3):
+                 batch_first=False, bias=True, conv_dropout=0.0, return_all_layers=False, num_classes = 3):
         super(PredRnnModel, self).__init__()
-        self.predRNN = PredRNN(input_dim, hidden_dim, height, width, kernel_size, num_layers,batch_first, bias, return_all_layers)
+        self.predRNN = PredRNN(input_dim, hidden_dim, height, width, kernel_size, num_layers,batch_first, bias, conv_dropout, return_all_layers)
         self.linear = nn.Linear(hidden_dim * height * width, num_classes)
 
     def forward(self, input_tensor, hidden_state=None):

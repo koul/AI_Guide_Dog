@@ -1,6 +1,6 @@
 global:
     root_dir: ""
-    iteration: "intent_benchmark_indoor_test"
+    iteration: "intent_Predrnn_focal_dropout"
     enable_preprocessing: false
     seed: 8
     enable_intent: true
@@ -8,7 +8,7 @@ transformer:
     fps: 2
     path: "data/Indoor - Seattle Library"
     data_save_file: "/content/data/Indoor - train" #file path without .npz
-    enable_benchmark_test: true
+    enable_benchmark_test: false
     test_path: "data/test/Mixed"
     test_save_file: "/content/data/Indoor - test" #file path without .npz
 data:
@@ -36,9 +36,13 @@ trainer:
     model_save_path: "models/"
     model:
         name: "PredRNN"
+        focal_loss_gamma: 1
         convlstm_hidden: 128
         num_conv_lstm_layers: 1
+        conv_dropout: 0.2
         decouple_beta: 0.1
-        pretrained_path: "/content/drive/MyDrive/AI_Guide_Dog/models/debug/PredRNN_model_params_epoch_00000006_acc_67.80465747230387.pth"
-        optimizer_path: "/content/drive/MyDrive/AI_Guide_Dog/models/debug/PredRNN_optimizer_params_epoch_00000006_acc_67.80465747230387.pth"
-        scheduler_path: "/content/drive/MyDrive/AI_Guide_Dog/models/debug/PredRNN_scheduler_params_epoch_00000006_acc_67.80465747230387.pth"
+        pretrained_path: ""
+        optimizer_path: ""
+        scheduler_path: ""
+        lr_after_load: ""
+
