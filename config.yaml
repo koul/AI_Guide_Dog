@@ -22,9 +22,9 @@ data:
     VAL_INTENT: ""
     BENCHMARK_TEST_INTENT: ""
 trainer:
-    BATCH: 8 # change this to 64 later
+    BATCH: 64
     lr: 0.00001
-    epochs: 1 # change this to 25 later
+    epochs: 25
     lambda: 0.002  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"

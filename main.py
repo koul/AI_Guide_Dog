@@ -177,10 +177,8 @@ if __name__ == "__main__":
             test_precision, test_recall, test_f1, _ = display_test_classification_report(test_actual,
                                                                                          test_predictions)
             if (config_dict['global']['enable_wandb']):
-                wandb.log({"Test Precision 0": test_precision[0], "Test Precision 1": test_precision[1],
-                           "Test Precision 2": test_precision[2]})
-                wandb.log({"Test Recall 0": test_recall[0], "Test Recall 1": test_recall[1],
-                           "Test Recall 2": test_recall[2]})
+                wandb.log({"Test Precision 0": test_precision[0], "Test Precision 1": test_precision[1], "Test Precision 2": test_precision[2]})
+                wandb.log({"Test Recall 0": test_recall[0], "Test Recall 1": test_recall[1], "Test Recall 2": test_recall[2]})
                 wandb.log({"Test F1 0": test_f1[0], "Test F1 1": test_f1[1], "Test F1 2": test_f1[2]})
 
             print("Done!")
