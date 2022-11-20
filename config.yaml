@@ -1,6 +1,6 @@
 global: 
     root_dir: ""
-    iteration: "video_augmentation_base"
+    iteration: "trans5mult0.7and1.2pick2"
     description: "intent_indoor_baseline full run changed run params"
     enable_preprocessing: false
     seed: 8
