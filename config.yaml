@@ -1,7 +1,7 @@
 global: 
     root_dir: ""
-    iteration: "intent_indoor_SMOTE_no_grad_clip"
-    description: "intent_indoor_baseline full run SMOTE oversampling, no grad clipping"
+    iteration: "intent_indoor_undersamp_no_grad_clip_corrected"
+    description: "intent_indoor_baseline full run undersampling(x1), no grad clipping, corrected to include context"
     enable_preprocessing: False
     seed: 8
     enable_intent: True
@@ -10,21 +10,20 @@ transformer:
     fps: 2
     path: "data/"
     data_save_file: "data/train" #file path without .npz
-    enable_benchmark_test: False
+    enable_benchmark_test: True
     test_path: "data/"
-    test_save_file: "data/train" #file path without .npz
+    test_save_file: "data/test" #file path without .npz
 data:
     HEIGHT: 64
     WIDTH: 64
     CHANNELS: 1
     SEQUENCE_LENGTH: 10
-    VAL_INTENT: "/home/anjadhav/AIGD/AI_Guide_Dog/validation_intent.npy"
     BENCHMARK_TEST_INTENT: ""
 trainer:
-    BATCH: 64
+    BATCH: 32
     lr: 0.0001
-    epochs: 25
-    lambda: 0.01  #L2 regularization #changed from 1e-4
+    epochs: 20
+    lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
     model_save_path: "models/"
     model:

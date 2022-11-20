@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="5"
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np
@@ -85,19 +85,23 @@ if __name__ == "__main__":
             config_dict['data']['CHANNELS'])
 
     df_videos = dict(np.load(config_dict['transformer']['data_save_file'] + '_video.npz', allow_pickle=True))
-    print(df_videos.keys())
+    print("Videos in the training file: ", df_videos.keys())
+
+    # need video and sensor data separately
+    with open(config_dict['transformer']['data_save_file'] + '_sensor.pickle', 'rb') as handle:
+        df_sensor = pickle.load(handle)
 
     if (config_dict['transformer']['enable_benchmark_test'] == True):
         test_videos = dict(np.load(config_dict['transformer']['test_save_file'] + '_video.npz', allow_pickle=True))
         with open(config_dict['transformer']['test_save_file'] + '_sensor.pickle', 'rb') as handle:
             test_sensor = pickle.load(handle)
+        print("Test Files: ", test_videos.keys())
+
     else:
         test_videos = None
         test_sensor = None
 
-    # need video and sensor data separately
-    with open(config_dict['transformer']['data_save_file'] + '_sensor.pickle', 'rb') as handle:
-        df_sensor = pickle.load(handle)
+    
     
     # pdb.set_trace()
     # print(df_sensor['sample']['direction_label']['direction'])
@@ -113,8 +117,8 @@ if __name__ == "__main__":
     # following functions returns a list of file paths (relative paths to video csvs) for train and val sets
     train_files, val_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
     
-    print("Train Files:", train_files)
-    print("Val Files:", val_files)
+    # print("Train Files:", train_files)
+    # print("Val Files:", val_files)
     
     trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos,test_sensor, wandb=wandb)
   
@@ -133,6 +137,7 @@ if __name__ == "__main__":
             wandb.log({"Val F1 0": val_f1[0], "Val F1 1": val_f1[1], "Val F1 2": val_f1[2]})
 
         trainer.save(acc, epoch)
+        
 
     print("Completed Training!!")
     # performs final benchmarking after training

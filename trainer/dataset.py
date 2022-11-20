@@ -10,8 +10,43 @@ import os
 import os.path as osp
 from utils import *
 import pdb
+from torch.utils.data import Sampler
+from collections import Counter
 import scipy.stats as ss
+import random
 
+class CustomSampler(Sampler):
+    def __init__(self, dataset, majority_percent = 1.5):  
+        self.imp_cnt = dataset.lefts + dataset.rights   
+        
+        self.indices = list(range(self.imp_cnt))
+        self.indices_front = list(range(self.imp_cnt, len(dataset.items)))
+        
+        self.pick_majority = int(max(dataset.lefts, dataset.rights) * majority_percent)
+        print("Count of max class: ", self.pick_majority)
+
+        self.num_samples = self.imp_cnt + self.pick_majority
+        print("Examples to yield per epoch: ", self.num_samples)
+        
+    def __iter__(self):
+        # print("New Epoch Sampling")
+        count = 0
+        index = self.indices.copy()
+        index.extend(random.sample(self.indices_front, self.pick_majority)) # sample randomly from front indices and add to list of left and right indices
+        # we pick all left and right examples and sample a len(max left or right count) * majority_percent of the front examples.
+        
+        # print(index)
+        random.shuffle(index)
+        # print(Counter(index))
+        # print(index)
+        # print(len(index))
+        while count < self.num_samples:
+            # print("Yield called: ", index[count])
+            yield index[count]
+            count += 1
+    
+    def __len__(self):
+        return self.num_samples
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of sensor data as a single training example).
 class SensorDataset(Dataset):
@@ -77,9 +112,12 @@ class VideoDataset(Dataset):
         self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
         # self.frame_path = frame_path
-        self.X_vid = []
-        self.X_index = []
-        y = []
+        
+        self.items = []
+        self.lefts = 0
+        self.rights = 0
+        self.fronts = 0
+
         for f in files:
             df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
             df_processed = preprocess_labels(df) # assign 1 sec forward labels
@@ -87,26 +125,35 @@ class VideoDataset(Dataset):
 
             # Generate training sequences
             for i in range(len(df_processed)-self.seq_len):
-                self.X_vid.append(f)
-                self.X_index.append(df_processed['frame_index'][i])
-
+                index_item = df_processed['frame_index'][i]
                 # Picking the label of the last element of the sequence
-                y.append(label_map(df_processed['labels'][i+self.seq_len-1]))
-              
+                y = label_map(df_processed['labels'][i+self.seq_len-1])
+
+                self.items.append((y, f, index_item))
+                if(y==0):
+                    self.lefts += 1
+                elif(y==1):
+                    self.rights += 1
+                else:
+                    self.fronts += 1
+        print(self.lefts)
+        print(self.rights)
+        print(self.fronts)
         # self.X = np.stack(X, axis = 0)
-        self.y = np.array(y)
-        
+        self.items = sorted(self.items, key=lambda x: x[0]) # sort by label 0, 1, 2 
+        # print(self.items)
         
     def __len__(self):
-        return len(self.y)
+        return len(self.items)
         # return 1
     
     def __getitem__(self, idx):
         # vid = self.df_videos['sample'][idx:idx+self.seq_len]
         # print(vid.shape)
         # seq_filename = self.X[idx]
-        vid_file = self.X_vid[idx]
-        vid_idx = self.X_index[idx]
+        
+        vid_file = self.items[idx][1]
+        vid_idx = self.items[idx][2]
 
         video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
         
@@ -126,7 +173,7 @@ class VideoDataset(Dataset):
           
         # return video
         # return video, torch.LongTensor(self.y[idx])
-        return video, self.y[idx]
+        return video, self.items[idx][0]
         
 # For CNN model
 class FrameDataset(Dataset):
@@ -158,16 +205,18 @@ class FrameDataset(Dataset):
 class IntentVideoDataset(Dataset):
     def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test='train'):
         self.transforms = transforms
-        self.files = files
+        print(test, ":  ", files)
+        self.files = files # files sorted by names
         self.seq_len = seq_len
         self.df_videos = df_videos
         self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
         # self.frame_path = frame_path
-        self.X_vid = []
-        self.X_index = []
-        y = []
-
+        self.items = []
+        self.lefts = 0
+        self.rights = 0
+        self.fronts = 0
+        
         # input sequence of seq_len frames at config_dict['transformer']['fps'] fps
         #label is 1-second future direction
         #we can have a gps signal where between 2 to 6 seconds (inclusive) before the actual turn (1-5 seconds before the label timestamp) with probabilities that are normally distributed.
@@ -176,62 +225,75 @@ class IntentVideoDataset(Dataset):
 
         
         for f in files:
-            df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
-            df_processed = preprocess_labels(df) # assign 1 sec forward labels
+            df_processed = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction']) # assign 1 sec forward labels
+            # df_processed = preprocess_labels(df)
             # pdb.set_trace()
 
             # Generate training sequences
             for i in range(len(df_processed)-self.seq_len):
-                self.X_vid.append(f)
-                self.X_index.append(df_processed['frame_index'][i])
-
+                index_item = df_processed['frame_index'][i]
                 # Picking the label of the last element of the sequence
-                y.append(label_map(df_processed['labels'][i+self.seq_len-1]))
-              
+                y = label_map(df_processed['labels'][i+self.seq_len-1])
+
+                self.items.append((y, f, index_item))
+                if(y==0):
+                    self.lefts += 1
+                elif(y==1):
+                    self.rights += 1
+                else:
+                    self.fronts += 1
+
+
+        print(self.lefts)
+        print(self.rights)
+        print(self.fronts)
+   
         # self.X = np.stack(X, axis = 0)
-        self.y = np.array(y)
+        self.items = sorted(self.items, key=lambda x: str(x[0])+ str(x[1])+str(x[2])) # sort by label 0, 1, 2 
+
+        
         self.test = test
         
         if(test == 'benchmark_test'):
+           
             print("Getting Intent Data for: ", test)
             if(config_dict['data']['BENCHMARK_TEST_INTENT'] == ""):
                 self.intent_positions = self.create_intent_postions()                
                 np.save('benchmark_test_intent.npy', np.array(self.intent_positions))
             else:
-                self.intent_positions = list(np.load(config_dict['data']['BENCHMARK_TEST_INTENT']))
+                self.intent_positions = list(np.load(config_dict['data']['BENCHMARK_TEST_INTENT']))  # you want to have consistently test results across runs. The items array should be same across runs.
 
         elif(test == 'validation'):
-            print("Getting Intent Data for: ", test)
-            if(config_dict['data']['VAL_INTENT'] == ""):
-                self.intent_positions = self.create_intent_postions()                
-                np.save('validation_intent.npy', np.array(self.intent_positions))
-            else:
-                self.intent_positions = list(np.load(config_dict['data']['VAL_INTENT']))
+            print("Creating Intent Data for: ", test)
+            self.intent_positions = self.create_intent_postions()    # create a new intent vecotr for each run since the validation set is a random split from the test set            
+            np.save('validation_intent.npy', np.array(self.intent_positions)) #save for safety
 
         else:
             print("Randomly assigning intent for training.")
     
     
+    
     def create_intent_postions(self):
         intent_positions = []
-        for i in self.y:
+        for i, _, _ in self.items:
             if(i!=2):
                 intent_positions.append(np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.prob_gps)) #intent start position
             else:
                 intent_positions.append(-1)
+        assert(len(intent_positions) == len(self.items))
         return intent_positions
 
 
     def __len__(self):
-        return len(self.y)
+        return len(self.items)
         # return 1
     
     def __getitem__(self, idx):
         # vid = self.df_videos['sample'][idx:idx+self.seq_len]
         # print(vid.shape)
         # seq_filename = self.X[idx]
-        vid_file = self.X_vid[idx]
-        vid_idx = self.X_index[idx]
+        vid_file = self.items[idx][1]
+        vid_idx = self.items[idx][2]
 
         #+1 for intent channels
         video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS']+1, self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
@@ -240,24 +302,26 @@ class IntentVideoDataset(Dataset):
             intent = self.intent_positions[idx]
         else:
             # picking randomly for training
-            if(self.y[idx] != 2): # it is not front label
+            if(self.items[idx][0] != 2): # it is not front label
                 intent = np.random.choice(np.arange(self.gps_range[0], self.gps_range[1]), p = self.prob_gps) #intent start position
+                
             else:
                 intent = -1 # none (2) intent
 
 
 
         # for e,filename in enumerate(seq_filename):
-        for i in range(vid_idx, vid_idx+self.seq_len): 
+        for it in range(self.seq_len): 
             try:
                 # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
-                frame = self.df_videos[vid_file][i]
+                frame = self.df_videos[vid_file][it + vid_idx]
                 # frame = (frame - frame.min())/(frame.max() - frame.min())
                 frame = self.transforms(frame)
-                if(intent!=-1 and i>=intent and i<intent+self.config['transformer']['fps']):  #pass intent vector for just 1 second
-                    intent_tensor = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']), self.y[idx])
+                   
+                if(intent!=-1 and it>=intent and it<intent+(2*self.config['transformer']['fps'])):  #pass intent vector for 2 second
+                    intent_tensor = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']), self.items[idx][0])
                 else:
-                    intent_tensor = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']), 2)  # no context, just go straight/front
+                    intent_tensor = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']), 2)  # no context signal
 
 
             except Exception as ex:
@@ -266,8 +330,10 @@ class IntentVideoDataset(Dataset):
                 intent_tensor = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']), 2)
         
             context_frame = torch.cat((frame, intent_tensor), dim = 0) #attach intent as last channel
-            video[i-vid_idx,:,:,:] = frame
-          
+            # print(context_frame.shape)
+            video[it,:,:,:] = context_frame
+            
+        
         # return video
         # return video, torch.LongTensor(self.y[idx])
-        return video, self.y[idx]
+        return video, self.items[idx][0]

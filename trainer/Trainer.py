@@ -1,5 +1,5 @@
 import torch
-from trainer.dataset import VideoDataset,IntentVideoDataset
+from trainer.dataset import VideoDataset,IntentVideoDataset, CustomSampler
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
@@ -9,6 +9,7 @@ class Trainer:
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
                  test_videos = None, test_sensor = None, wandb = None):
+                 
         self.cuda = torch.cuda.is_available()
         print(self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -18,14 +19,15 @@ class Trainer:
         self.epochs = config_dict['trainer']['epochs']
         
         if(config_dict['global']['enable_intent']):
-            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'validation')
+            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, sorted(train_files), transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, sorted(val_files), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'validation')
         else:
             self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
             self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
-      
-        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
-        train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+        
+        sampler = CustomSampler(self.train_dataset, majority_percent=1)
+       
+        train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
@@ -34,7 +36,7 @@ class Trainer:
         # TODO: Add test loader with sampler - try with replacement to True and False
         if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
             if(config_dict['global']['enable_intent']):
-                self.test_dataset = IntentVideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'benchmark_test')
+                self.test_dataset = IntentVideoDataset(test_videos, test_sensor, sorted(list(test_videos.keys())), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'benchmark_test')
             else:
                 self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
                                             seq_len=self.seq_len, config_dict=self.config)
@@ -90,8 +92,9 @@ class Trainer:
 
 
     def train(self, epoch):
+        
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
-
+       
         num_correct = 0.0
         total_loss = 0.0
         y_cnt = 0.0
@@ -99,10 +102,11 @@ class Trainer:
         predictions = []
         
         for i, (x, y) in enumerate(self.train_loader):
-        
             self.model.train()
             self.optimizer.zero_grad()
             
+            # print(x.shape)
+            # print(y.shape)
             x = x.float().to(self.device)
             y = y.to(self.device)
             
@@ -136,7 +140,7 @@ class Trainer:
             self.optimizer.step()
 
             self.scheduler.step()
-            batch_bar.update() # Update tqdm bar
+            batch_bar.update() # Update tqdm bar  
     
         batch_bar.close()
         total_loss = float(total_loss) / len(self.train_dataset)
@@ -180,7 +184,6 @@ class Trainer:
             val_num_correct += int((pred_class == vy).sum())
          
             del outputs
-           
 
         acc = 100 * float(val_num_correct) / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
@@ -215,7 +218,7 @@ class Trainer:
             val_num_correct += int((pred_class == vy).sum())
             del outputs
            
-        acc = 100 * float(val_num_correct) / (len(self.val_dataset))
+        acc = 100 * float(val_num_correct) / (len(self.test_dataset))
         print("Benchmark test: {:.04f}%".format(acc))
 
         return acc, actual, predictions

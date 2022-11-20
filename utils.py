@@ -1,3 +1,4 @@
+import pdb
 import os
 import cv2
 import pandas as pd
@@ -15,27 +16,30 @@ import scipy.stats as ss
 # df is pandas dataframe of the form: frame_path, direction, timestamp
 # direction is the current direction at the timestamp of the frame.
 # We use the following function to create label: direction 1 sec ahead 
-def preprocess_labels(df):
-    label_indices = df['timestamp'].searchsorted(df['timestamp']+1000)
-    viable_indices = label_indices[label_indices!=len(df)]
-    df_new = df[label_indices != len(df)].reset_index(drop = True)
-    df_new['labels'] = df['directions'][viable_indices].reset_index(drop = True)
-    return df_new
-
-
+# def preprocess_labels(df):
+#     label_indices = df['timestamp'].searchsorted(df['timestamp']+1000)
+#     viable_indices = label_indices[label_indices!=len(df)]
+#     df_new = df[label_indices != len(df)].reset_index(drop = True)
+#     df_new['labels'] = df['directions'][viable_indices].reset_index(drop = True)
+#     return df_new
 def convert_to_dataframe(d):
     df = pd.DataFrame.from_dict(d, orient ='index') 
     df.sort_index(inplace = True)
     df = df.reset_index(drop = False).reset_index(drop = False)
     df.columns = ['frame_index', 'timestamp', 'directions']
-    return df
+
+    label_indices = df['timestamp'].searchsorted(df['timestamp']+1000)
+    viable_indices = label_indices[label_indices!=len(df)]
+    
+    df_new = df[label_indices != len(df)].reset_index(drop = True)
+    df_new['labels'] = df['directions'][viable_indices].reset_index(drop = True)
+    return df_new
 
 def make_tt_split(files, seed):
     random.Random(seed).shuffle(files)
     ts = int(len(files) * 0.25)
     test_files = files[:ts]
     train_files = files[ts:]
-    print("Test files ",test_files)
     return train_files, test_files
 
 def labelCount(label, n_classes):
