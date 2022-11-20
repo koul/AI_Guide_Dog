@@ -22,8 +22,8 @@ class Trainer:
             self.train_dataset = IntentVideoDataset(df_videos, df_sensor, sorted(train_files), transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
             self.val_dataset = IntentVideoDataset(df_videos, df_sensor, sorted(val_files), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'validation')
         else:
-            self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.train_dataset = VideoDataset(df_videos, df_sensor, sorted(train_files), transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = VideoDataset(df_videos, df_sensor, sorted(val_files), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
         
         sampler = CustomSampler(self.train_dataset, majority_percent=1)
        
@@ -33,12 +33,15 @@ class Trainer:
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.val_loader = DataLoader(self.val_dataset, **val_args)
 
+        print("Length of val set: ", len(self.val_dataset))
+        print("Length of train set: ", len(self.train_dataset))
+
         # TODO: Add test loader with sampler - try with replacement to True and False
         if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
             if(config_dict['global']['enable_intent']):
                 self.test_dataset = IntentVideoDataset(test_videos, test_sensor, sorted(list(test_videos.keys())), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'benchmark_test')
             else:
-                self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
+                self.test_dataset = VideoDataset(test_videos, test_sensor, sorted(list(test_videos.keys())), transforms=val_transforms,
                                             seq_len=self.seq_len, config_dict=self.config)
 
             test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
@@ -46,6 +49,7 @@ class Trainer:
                                                                     batch_size=config_dict['trainer']['BATCH'],
                                                                     drop_last=False)
             self.test_loader = DataLoader(self.test_dataset, **test_args)
+            print("Length of test set: ", len(self.test_dataset))
 
 
        
@@ -141,6 +145,7 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar  
+            
     
         batch_bar.close()
         total_loss = float(total_loss) / len(self.train_dataset)
@@ -184,6 +189,7 @@ class Trainer:
             val_num_correct += int((pred_class == vy).sum())
          
             del outputs
+            
 
         acc = 100 * float(val_num_correct) / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))

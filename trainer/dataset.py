@@ -106,21 +106,21 @@ class SensorDataset(Dataset):
 class VideoDataset(Dataset):
     def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None):
         self.transforms = transforms
-        self.files = files
+        # print(test, ":  ", files)
+        self.files = files # files sorted by names
         self.seq_len = seq_len
         self.df_videos = df_videos
         self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
         # self.frame_path = frame_path
-        
         self.items = []
         self.lefts = 0
         self.rights = 0
         self.fronts = 0
 
         for f in files:
-            df = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction'])
-            df_processed = preprocess_labels(df) # assign 1 sec forward labels
+            df_processed = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction']) # assign 1 sec forward labels
+            # df_processed = preprocess_labels(df)
             # pdb.set_trace()
 
             # Generate training sequences
@@ -136,11 +136,13 @@ class VideoDataset(Dataset):
                     self.rights += 1
                 else:
                     self.fronts += 1
+
+
         print(self.lefts)
         print(self.rights)
         print(self.fronts)
         # self.X = np.stack(X, axis = 0)
-        self.items = sorted(self.items, key=lambda x: x[0]) # sort by label 0, 1, 2 
+        self.items = sorted(self.items, key=lambda x: str(x[0])+ str(x[1])+str(x[2])) # sort by label 0, 1, 2 
         # print(self.items)
         
     def __len__(self):
