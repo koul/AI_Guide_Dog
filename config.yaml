@@ -1,53 +1,54 @@
 global:
     root_dir: ""
-    iteration: "debug"
-    enable_preprocessing: true
+    iteration: "" # TO SET !!
+    description: "" 
+    enable_preprocessing: false
     seed: 8
     enable_intent: false
+    enable_wandb: True
+    enable_sample: false # TO SET !!
+
+
 transformer:
     fps: 2
     path: "data/Indoor - train"
     data_save_file: "data/processed/Indoor - train" #file path without .npz
-    enable_benchmark_test: true
+    enable_benchmark_test: false #   TO SET!!
     test_path: "data/Indoor - test"
     test_save_file: "data/processed/Indoor - test" #file path without .npz
 data:
-    HEIGHT: 224 #64
-    WIDTH: 224 #64
-    CHANNELS: 3 #1
-    SEQUENCE_LENGTH: 8
+    HEIGHT: 224 
+    WIDTH: 224 
+    CHANNELS: 3 
+    SEQUENCE_LENGTH: 10
     VAL_INTENT: ""
 trainer:
-    BATCH: 8
-    lr: 0.001
-    epochs: 2
-    lambda: 0.001  #L2 regularization #changed from 1e-4
+    BATCH: 256
+    lr: 0.0005937 # TO SET !!
+    epochs: 12 # TO SET !!
+    lambda: 0.001  
     num_classes: 3
     model_save_path: "models/"
-    data_type: "multimodal"
+    data_type: "multimodal" # TO SET !!
 
-    # model:
-    #    name: "ConvLSTM"
-    #    convlstm_hidden: "256"
-    #    num_conv_lstm_layers: 1
-    #    pretrained_path: ""
-    #    optimizer_path: ""   
     model:
         # name: "LSTM_Multimodal"
         # lstm_hidden: 128 #try 128 later
         # num_lstm_layers: 2 #try 3,4,5 later
-        dense_frame_input_dim: 1000 #final input is dense_frame_input_dim + sensor_data_dim
-    # model:
-        sensor_hidden_dim: 64
-        layer_num: 2
+
+        # === bert model setting===
+        # name: "simple"
         name: "bert"
+        dense_frame_input_dim: 1000 
+        sensor_hidden_dim: 256 # TO SET !!
+        layer_num: 2 # TO SET !!
         sensor_attr_list:
             - "Gyrometer:Gyrometer - X axis"
             - "Gyrometer:Gyrometer - Y axis"
             - "Gyrometer:Gyrometer - Z axis"
-            # - "Magnetometer:Magnetometer - X axis"
-            # - "Magnetometer:Magnetometer - Y axis"
-            # - "Magnetometer:Magnetometer - Z axis"
+            - "Magnetometer:Magnetometer - X axis"
+            - "Magnetometer:Magnetometer - Y axis"
+            - "Magnetometer:Magnetometer - Z axis"
             - "Accelerometer:Acceleration - X axis"
             - "Accelerometer:Acceleration - Y axis"
             - "Accelerometer:Acceleration - Z axis"
@@ -64,13 +65,15 @@ trainer:
             # - "Device Motion:Rotation Rate - Z axis"
             # - "GPS:Latitude"
             # - "GPS:Longitude"
+            # - "GPS:Heading (degrees)"
+
             # - "Altimeter:Altitude"
             # - "Altimeter:Relative Altitude (m)"
             # - "Altimeter:Pressure (kPa)"
             # - "Altimeter:Attitude Pitch"
             # - "Altimeter:Attitude Roll"
             # - "Altimeter:Attitude Yaw"
-        pretrained_path: ""
-        optimizer_path: ""
+        pretrained_path: "models/bert_model_params_epoch_00000008_acc_61.375291375291376.pth"
+        optimizer_path: "models/bert_optimizer_params_epoch_00000008_acc_61.375291375291376.pth"
 wandb:
-    github_id: "divergent"
+    github_id: 

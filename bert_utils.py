@@ -16,19 +16,26 @@ class FeatureExtractor(nn.Module):
     def __init__(self, data_type, sensor_dim, sensor_vec_dim):
         super().__init__()
         self.data_type = data_type
-        if data_type != 'video':
-            self.convert_embedding = nn.Linear(sensor_dim, sensor_vec_dim)
+        
+        input_dim = sensor_dim
+        if data_type == 'multimodal':
+            input_dim += 1000
+        elif data_type == 'video':
+            input_dim = 1000
+        self.convert_embedding = nn.Linear(input_dim, sensor_vec_dim)
         self.sensor_dim = sensor_dim
         self.sensor_vec_dim = sensor_vec_dim
         
     def forward(self, x):
-        if self.data_type == 'sensor':
-            out = self.convert_embedding(x)
-        elif self.data_type == 'multimodal':
-            out = self.convert_embedding(x[:, :, -self.sensor_dim:])
-            out = torch.cat((x[:, :, :-self.sensor_dim], out), 1)
-        else:
-            out = x
+        # if self.data_type == 'sensor':
+        #     out = self.convert_embedding(x)
+        # elif self.data_type == 'multimodal':
+        #     # out = self.convert_embedding(x[:, :, -self.sensor_dim:])
+        #     # out = torch.cat((x[:, :, :-self.sensor_dim], out), 2)
+        #     out = self.convert_embedding(x)
+        # else:
+        #     out = x
+        out = self.convert_embedding(x)
         return out        
 
 class BertSelfAttention(nn.Module):

@@ -1,14 +1,12 @@
 import os
 import cv2
 import pandas as pd
-# from config import *
 import random
 import os.path as osp
 import torch
 from torch.utils.data import WeightedRandomSampler
-# import seaborn as sns
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, precision_recall_fscore_support
 import numpy as np
 import scipy.stats as ss
 import torch.nn as nn
@@ -34,11 +32,10 @@ def convert_to_dataframe(d):
 
 def make_tt_split(files, seed):
     random.Random(seed).shuffle(files)
-    split_ratio = 0.4
+    split_ratio = 0.25
     ts = int(len(files) * split_ratio)
     test_files = files[:ts]
     train_files = files[ts:]
-    print("Test files ",test_files)
     return train_files, test_files
 
 def labelCount(label, n_classes):
@@ -96,13 +93,12 @@ def get_all_files_from_dir(directory, vids = False):
     except Exception as e:
         print(e)
 
-def dcr_helper(actual, predictions):
+def dcr_helper(actual, predictions, wandb = False):
     cm = confusion_matrix(actual, predictions)
     print(cm)
-    # cm_df = pd.DataFrame(cm, index = ['0','1','2'], columns = ['0','1','2'])
-    # print(cm_df)
     print('\nClassification Report\n')
     print(classification_report(actual, predictions))
+    return cm
 
 def display_classification_report(train_actual, train_predictions, val_actual, val_predictions):
     print('\nTaining set stats\n')
@@ -110,85 +106,14 @@ def display_classification_report(train_actual, train_predictions, val_actual, v
 
     print('\nValidation set stats\n')
     dcr_helper(val_actual, val_predictions)
+    return precision_recall_fscore_support(val_actual, val_predictions)
 
 def display_test_classification_report(test_actual, test_predictions):
     print('\nTest set stats\n')
-    dcr_helper(test_actual, test_predictions)
-
-# Function for processing the videos and labels to get labels at the frame level
-# def process_video(video_file, labels):
-#     video_filename = video_file.split('/')[-1].split('.')[0]
-#     vidcap = cv2.VideoCapture(video_file)
-
-#     ctr = 0
-#     video_frames = []
-#     video_labels = []
-#     frame_ts = []
+    cm = dcr_helper(test_actual, test_predictions)
+    test_precision, test_recall, test_f1, _ = precision_recall_fscore_support(test_actual, test_predictions)
+    return cm, test_precision, test_recall, test_f1
     
-#     # read each frame
-#     hasFrames,image = vidcap.read()
-
-#     while (hasFrames):
-        
-#         # Process the frame and save it to the processed_frames folder
-#         save_file_name = video_filename + "_" + str(ctr) + ".npy"
-#         image = cv2.resize(image, (WIDTH, HEIGHT), interpolation = cv2.INTER_AREA)
-#         np.save(osp.join(config_dict['data']['processed_frames'], save_file_name), image)  
-
-#         # Get label corresponding to tht timestamp of the frame in the video
-#         label_ts = vidcap.get(cv2.CAP_PROP_POS_MSEC)
-#         label_ts = label_ts - (label_ts%100) # adjusting timestamp acc to the 100ms intervals created by the transformer
-#         frame_ts.append(label_ts)
-
-#         if(label_ts not in labels.keys()):
-#             print(label_ts)
-#             hasFrames,image = vidcap.read()
-#             continue
-
-#         label = labels[label_ts]
-#         video_labels.append(label_map(label))
-#         video_frames.append(save_file_name)
-#         hasFrames,image = vidcap.read()
-#         ctr += 1
-        
-#     df = pd.DataFrame({'frames': video_frames, 'directions': video_labels, 'timestamp': frame_ts})
-
-#     # save this data frame as a csv into the 
-#     df.to_csv(osp.join(config_dict['data']['processed_csvs'],video_filename+".csv"), index=None)
-
-#     print("After processing:")
-#     print("Number of frames labelled: ", ctr)
-    
-# # Main entry point for processing raw video file and the npz file labels
-# def preprocess():
-#     # load the npz label file from transformer
-#     f = np.load(LABEL_FILE, allow_pickle = True)
-#     print(f.keys())
-#     # for each single video
-#     for video_file in get_all_files_from_dir(VID_PATH):
-#         video_filename = video_file.split('/')[-1].split('.')[0]
-#         print(video_filename)
-
-#         # Check if it has already been processed, i.e. a processed csv exists in the processed folder for this video
-#         if(video_filename+".csv" not in os.listdir(DATA_SAVE_PATH)):
-#             labels = f[video_filename]['Sensor']['direction_label']['direction']
-#             process_video(video_file, labels)
-#             print("Finished processing ", video_file)
-
-# # FPS processing raw video file
-# def process_videos(vid_path = VID_PATH_OG):
-#     fp = get_all_files_from_dir(vid_path, vids=True)
-#     print(fp)
-#     # for each single video
-#     for fl in fp:
-#         video_filename = fl.split('/')[-1]
-#         # Check if it has already been processed
-#         if(video_filename not in os.listdir(VID_PATH)):
-#             # change fps
-#             ffmpeg.input(fl).filter('fps', fps=10, round='up').output(VID_PATH+video_filename).run() 
-
-# Transformer code ends here
-            
 def prep_video_test(filename):
     X = []
     y = []

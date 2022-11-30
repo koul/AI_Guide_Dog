@@ -284,7 +284,8 @@ class Bert(nn.Module):
                         )
         run_name =   "bert_atth_" + str(config.num_attention_heads) + "_hl_" + str(config.num_hidden_layers) \
          + "_hd_" + str(config.hidden_size)
-        wandb.init(project="bert-guide-dog", entity = github_id, name = run_name)
+        # wandb.init(project="bert-guide-dog", entity = github_id, name = run_name)
+        wandb.log({"num_attr": num_attr})
 
         self.seq_len = seq_len
         self.bert = BertModel(config, num_attr, seq_len, data_type)
@@ -302,6 +303,21 @@ class Bert(nn.Module):
         _, first_tk = self.bert(input_tensor, attention_mask)
         logits = self.linear(first_tk)
 
+        return logits
+
+class SimpleClassifier(nn.Module):
+    def __init__(self, device, 
+                    hidden_dim=1000, 
+                    num_attr = 3, 
+                    num_classes = 3):
+        super(SimpleClassifier, self).__init__()
+        wandb.log({"num_attr": num_attr})
+        self.linear = nn.Linear(hidden_dim, num_classes)
+
+    def forward(self, input_tensor):
+        device = input_tensor.device
+        out = input_tensor.mean(axis=1)
+        logits = self.linear(out)
         return logits
 
 

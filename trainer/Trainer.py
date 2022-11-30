@@ -1,17 +1,18 @@
 import torch
-from trainer.dataset import SensorDataset, SensorVideoDataset
-from trainer.dataset import VideoDataset,IntentVideoDataset
+from trainer.dataset import *
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
 import wandb
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class Trainer:
     # initialize a new trainer
     def __init__(self, config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor,
-                 test_videos = None, test_sensor = None):
+                 test_videos = None, test_sensor = None, wandb = None):
+        self.wandb = wandb
         self.cuda = torch.cuda.is_available()
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         print("\nCurrent device is: ", self.device, " \n")
@@ -24,54 +25,10 @@ class Trainer:
         self.model_name = config_dict['trainer']['model']['name']
         self.data_type = config_dict['trainer']['data_type']
         model_config = config_dict['trainer']['model']
-        
-        if(config_dict['global']['enable_intent']):
-            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
-        else:
-            if self.data_type == "multimodal": #If multi_modal training
-                sensor_attr_list = model_config['sensor_attr_list']
-                dense_frame_len = model_config['dense_frame_input_dim']
-                self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name, transforms=train_transforms,
-                                                            seq_len = self.seq_len, dense_frame_len = dense_frame_len,
-                                                            sensor_attr_list = sensor_attr_list, config_dict=self.config)
-                self.val_dataset = SensorVideoDataset(df_videos, df_sensor, val_files, self.model_name, transforms=val_transforms,
-                                                            seq_len = self.seq_len, dense_frame_len = dense_frame_len,
-                                                            sensor_attr_list = sensor_attr_list, config_dict=self.config)
-            elif self.data_type == 'sensor':
-                sensor_attr_list = model_config['sensor_attr_list']
-                self.train_dataset = SensorDataset(df_videos, df_sensor, train_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
-                self.val_dataset = SensorDataset(df_videos, df_sensor, val_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
-            else:
-                self.train_dataset = VideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms,
-                                                seq_len=self.seq_len, config_dict=self.config)
-                self.val_dataset = VideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms,
-                                                seq_len=self.seq_len, config_dict=self.config) 
-
-                        # TODO: Add test loader with sampler - try with replacement to True and False
-                if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
-                    self.test_dataset = VideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms,
-                                                    seq_len=self.seq_len, config_dict=self.config)
-                    test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
-                                    drop_last=False) if self.cuda else dict(shuffle=False,
-                                                                            batch_size=config_dict['trainer']['BATCH'],
-                                                                            drop_last=False)
-                    self.test_loader = DataLoader(self.test_dataset, **test_args)
-
-        print('len train set: ', len(self.train_dataset))
-        print('len val set: ',len(self.val_dataset))
-        
-        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
-        train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
-        self.train_loader = DataLoader(self.train_dataset, **train_args)
-
-        val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
-        self.val_loader = DataLoader(self.val_dataset, **val_args)
-       
-        self.epochs = config_dict['trainer']['epochs']   
         self.hidden_dim =  model_config['sensor_hidden_dim']   
         self.layer_num =  model_config['layer_num']   
 
+        # model setup
         if self.model_name == "ConvLSTM":
             hidden_dim = [int(k.strip()) for k in model_config['convlstm_hidden'].split(',')]
             channels = config_dict['data']['CHANNELS']
@@ -94,14 +51,80 @@ class Trainer:
                                 data_type = self.data_type,
                                 layer_num = self.layer_num
                                 )
+            
         else:
-            print("Error parsing model name, please reverify model details in config.yaml")
+            self.model = SimpleClassifier(self.device,                                 
+                                            num_attr = len(model_config['sensor_attr_list'])
+)
 
         if(model_config['pretrained_path'] != ""):
-            self.model.load_state_dict(torch.load(model_config['pretained_path']))
+            self.model.load_state_dict(torch.load(model_config['pretrained_path']))
         
         self.model = self.model.to(self.device)
+        pytorch_total_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        print("Number of trainable params of "+ self.model_name + ": ", pytorch_total_params)
+        self.wandb.log({"num_param": pytorch_total_params})
 
+        # Data preparation
+        if(config_dict['global']['enable_intent']):
+            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= True)
+        
+        else:
+            # load train and val sets
+            if self.data_type == "multimodal": #If multi_modal training
+
+                sensor_attr_list = model_config['sensor_attr_list']
+                dense_frame_len = model_config['dense_frame_input_dim']
+                self.train_dataset = SensorVideoDataset(df_videos, df_sensor, train_files, self.model_name, transforms=train_transforms,
+                                                            seq_len = self.seq_len, dense_frame_len = dense_frame_len,
+                                                            sensor_attr_list = sensor_attr_list, config_dict=self.config)
+                self.val_dataset = SensorVideoDataset(df_videos, df_sensor, val_files, self.model_name, transforms=val_transforms,
+                                                            seq_len = self.seq_len, dense_frame_len = dense_frame_len,
+                                                            sensor_attr_list = sensor_attr_list, config_dict=self.config)
+
+                # TODO: Add test loader with sampler - try with replacement to True and False
+                if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None and test_sensor is not None:
+                    self.test_dataset = SensorVideoDataset(test_videos, test_sensor, list(test_videos.keys()), self.model_name, transforms=val_transforms,
+                                            seq_len = self.seq_len, dense_frame_len = dense_frame_len,
+                                            sensor_attr_list = sensor_attr_list, config_dict=self.config)
+
+            elif self.data_type == 'sensor':
+
+                sensor_attr_list = model_config['sensor_attr_list']
+                self.train_dataset = SensorDataset(df_sensor, train_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
+                self.val_dataset = SensorDataset(df_sensor, val_files, self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
+
+                if config_dict['transformer']['enable_benchmark_test'] and test_sensor is not None:
+                    self.test_dataset = SensorDataset(test_sensor, list(test_sensor.keys()), self.seq_len, sensor_attr_list=sensor_attr_list, config_dict=self.config)
+
+            else:
+                dense_frame_len = model_config['dense_frame_input_dim']
+                self.train_dataset = DenseVideoDataset(df_videos, df_sensor, train_files, transforms=train_transforms, 
+                                                seq_len=self.seq_len, dense_frame_len=dense_frame_len, config_dict=self.config)
+                self.val_dataset = DenseVideoDataset(df_videos, df_sensor, val_files, transforms=val_transforms, 
+                                                seq_len=self.seq_len, dense_frame_len=dense_frame_len, config_dict=self.config)
+                if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
+                    self.test_dataset = DenseVideoDataset(test_videos, test_sensor, list(test_videos.keys()), transforms=val_transforms, 
+                                                seq_len=self.seq_len, dense_frame_len=dense_frame_len, config_dict=self.config)
+            print('len train set: ', len(self.train_dataset))
+            print('len val set: ',len(self.val_dataset))
+            if config_dict['transformer']['enable_benchmark_test']:
+                print('len test set: ',len(self.test_dataset))
+                test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
+                                        drop_last=False) if self.cuda else dict(shuffle=False,
+                                                                                batch_size=config_dict['trainer']['BATCH'],
+                                                                                drop_last=False)
+                self.test_loader = DataLoader(self.test_dataset, **test_args)
+
+        
+        sampler = sampler_(self.train_dataset.y, config_dict['trainer']['num_classes'])     
+        train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+        self.train_loader = DataLoader(self.train_dataset, **train_args)
+        val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
+        self.val_loader = DataLoader(self.val_dataset, **val_args)
+       
+        # training setups
         #Assigning more weight to left and right turns in loss calculation
         weights = [2.0,2.0,1.0]
         class_weights = torch.FloatTensor(weights).to(self.device)
@@ -121,14 +144,17 @@ class Trainer:
         self.scaler = torch.cuda.amp.GradScaler()
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
 
-        # print(self.model)
+        if(wandb is not None):
+            self.wandb = wandb
+            self.wandb.watch(self.model)
 
 
     def train(self, epoch):
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
 
-        num_correct = 0
-        total_loss = 0
+        num_correct = 0.0
+        total_loss = 0.0
+        y_cnt = 0.0
         actual = []
         predictions = []
         
@@ -178,7 +204,8 @@ class Trainer:
             float(loss),
             float(self.optimizer.param_groups[0]['lr'])))
         
-        wandb.log({"loss": loss, "train_acc": acc, "lr": self.optimizer.param_groups[0]['lr'] })
+        if(self.wandb is not None):
+            self.wandb.log({"Train Loss": total_loss, "Train Accuracy": acc, "Learning Rate": float(self.optimizer.param_groups[0]['lr'])})
 
         return actual, predictions
 
@@ -190,7 +217,6 @@ class Trainer:
         actual = []
         predictions = []
 
-        
         for i, (vx, vy) in tqdm(enumerate(self.val_loader)):
         
             vx = vx.to(self.device)
@@ -211,14 +237,18 @@ class Trainer:
             
         acc = 100 * val_num_correct / (len(self.val_dataset))
         print("Validation: {:.04f}%".format(acc))
-        wandb.log({"val_acc": acc})
+        # wandb.log({"val_acc": acc})
+
+        if(self.wandb is not None):
+            self.wandb.log({"Validation Accuracy": acc})
+
         return acc, actual, predictions
 
 
     # runs benchmark test at the end (after train and validation)
     def test(self):
         self.model.eval()
-        val_num_correct = 0
+        test_num_correct = 0
 
         actual = []
         predictions = []
@@ -233,14 +263,16 @@ class Trainer:
 
             pred_class = torch.argmax(outputs, axis=1)
 
-            actual.extend(vy)
-            predictions.extend(pred_class)
+            actual.extend(vy.detach().cpu())
+            predictions.extend(pred_class.detach().cpu())
 
-            val_num_correct += int((pred_class == vy).sum())
+            test_num_correct += int((pred_class == vy).sum())
             del outputs
 
-        acc = 100 * val_num_correct / (len(self.val_dataset))
+        acc = 100 * test_num_correct / (len(self.test_dataset))
         print("Benchmark test: {:.04f}%".format(acc))
+        if(self.wandb is not None):
+            self.wandb.log({"Test Accuracy": acc})
 
         return acc, actual, predictions
 

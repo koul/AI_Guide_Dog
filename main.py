@@ -10,6 +10,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import torch
 import wandb
+from pytorch_lightning.loggers import WandbLogger
+
 
 '''
 Input: a path to folder of subfolders. Each subfolder will have a CSV and MP4 file
@@ -21,8 +23,7 @@ https://www.dropbox.com/sh/fbo4dr3wlpob3px/AADKhrnCyaGWCSDb6XoVOBMna?dl=0
 '''
 
 def save_data(video_data, sensor_data, filename):
-    # np.savez(filename, **data)
-    # np.savez(filename+'_sensor', **sensor_data)
+
     save_dir = filename.split('/')
     save_dir = "/".join(save_dir[:-1])
     if os.path.exists(save_dir) == False:
@@ -30,7 +31,6 @@ def save_data(video_data, sensor_data, filename):
     np.savez(filename+'_video', **video_data)
     with open(filename+'_sensor.pickle', 'wb') as handle:
         pickle.dump(sensor_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
         
 def load_data(filename):
     return np.load(filename, allow_pickle=True)
@@ -38,8 +38,6 @@ def load_data(filename):
 def transform(data_file_path, fps, data_save_file, resolution, channels):
     dataTransformer = DataTransformer.DataTransformer(fps, resolution, channels)
     video_data, sensor_data = dataTransformer.scrape_all_data(data_file_path)
-    # print(video_data.keys())
-    # exit()
     save_data(video_data, sensor_data, data_save_file)
 
 def train(config_dict, 
@@ -68,8 +66,26 @@ def train(config_dict,
     for epoch in range(epochs):
         train_actual, train_predictions = trainer.train(epoch)
         acc, val_actual, val_predictions = trainer.validate()
-        display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
+        val_precision, val_recall, val_f1, _ = display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
+        
+        if(config_dict['global']['enable_wandb']):
+            wandb.log({"Val Precision 0": val_precision[0], "Val Precision 1": val_precision[1], "Val Precision 2": val_precision[2]})
+            wandb.log({"Val Recall 0": val_recall[0], "Val Recall 1": val_recall[1], "Val Recall 2": val_recall[2]})
+            wandb.log({"Val F1 0": val_f1[0], "Val F1 1": val_f1[1], "Val F1 2": val_f1[2]})
+
         trainer.save(acc, epoch)
+
+    if (config_dict['transformer']['enable_benchmark_test'] == True):
+        print("Starting benchmark testing!!")
+        acc, test_actual, test_predictions = trainer.test()
+        test_precision, test_recall, test_f1, _ = display_test_classification_report(test_actual, test_predictions)
+        if(config_dict['global']['enable_wandb']):
+            wandb.log({"Test acc": acc})
+            wandb.log({"Test Precision 0": test_precision[0], "Test Precision 1": test_precision[1], "Test Precision 2": test_precision[2]})
+            wandb.log({"Test Recall 0": test_recall[0], "Test Recall 1": test_recall[1], "Test Recall 2": test_recall[2]})
+            wandb.log({"Test F1 0": test_f1[0], "Test F1 1": test_f1[1], "Test F1 2": test_f1[2]})
+            wandb.notes.update("dfddsfd")
+    print("Done!")
     return trainer
 
 '''
@@ -88,10 +104,20 @@ if __name__ == "__main__":
 
     torch.multiprocessing.set_start_method('spawn')
 
-    config_dict = load_config()
+    config_dict = load_config()    
     transformer_config = config_dict['transformer']
-    data_config = config_dict['data']
+    data_config = config_dict['data']    
     benchmark_enabled = transformer_config['enable_benchmark_test']
+
+    if(config_dict['global']['enable_wandb']):
+        wandb.init(name=config_dict['global']['iteration'], 
+          project="AIGD", 
+          notes=config_dict['global']['description'],
+          tags = str(benchmark_enabled)[0]) 
+        wandb_logger = WandbLogger(project="AIGD")
+    else:
+        wandb = None
+
 
     # avoid running transform if .nz has already been generated
     if (config_dict['global']['enable_preprocessing'] == True):
@@ -99,32 +125,30 @@ if __name__ == "__main__":
                   transformer_config['data_save_file'],
                   [data_config['HEIGHT'], data_config['WIDTH']],
                   data_config['CHANNELS'])
-        if (benchmark_enabled == True): transform(
-            transformer_config['test_path'], transformer_config['fps'],
+        if (benchmark_enabled == True): 
+            transform(transformer_config['test_path'], transformer_config['fps'],
             transformer_config['test_save_file'], [data_config['HEIGHT'], data_config['WIDTH']],
             data_config['CHANNELS'])
 
     df_videos = dict(np.load(transformer_config['data_save_file'] + '_video.npz', allow_pickle=True))
-    # print(df_videos.keys())
-
     # need video and sensor data separately
     with open(transformer_config['data_save_file'] + '_sensor.pickle', 'rb') as handle:
         df_sensor = pickle.load(handle)
-        # tmp = df_sensor['2022-07-12T16-34-07']
-        # for key, dic in tmp.items():
-        #     for k, v in dic.items():
-        #         print("- \"" + ":".join([key,k]) + '\"')
+    
+    if config_dict['global']['enable_sample']:
+        data_size = len(list(df_videos.keys()))
+        sample_ratio = 0.5
+        sample_size = int(sample_ratio * data_size)
+        df_videos = dict(list(df_videos.items())[: sample_size])
+        df_sensor = dict(list(df_sensor.items())[: sample_size])
+
 
     # Data transformations
-    # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
-    # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((data_config['HEIGHT'], data_config['WIDTH']))])
     train_transforms = transforms.Compose([transforms.ToTensor()])
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
     # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
     train_files, val_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
-    print("Train Files:", train_files)
-    print("Val Files:", val_files)
 
     test_videos = None
     test_sensor = None
@@ -133,23 +157,45 @@ if __name__ == "__main__":
         with open(transformer_config['test_save_file'] + '_sensor.pickle', 'rb') as handle:
             test_sensor = pickle.load(handle)
 
-    num_hid_layer_l = [2, 3]
-    num_att_head_l = [2, 3, 6]
+        if config_dict['global']['enable_sample']:
+            sample_id = list(test_videos.keys())[0]
+            test_videos = {sample_id: test_videos[sample_id]}
+            test_sensor = {sample_id: test_sensor[sample_id]}
 
-    for num_hid_layer in num_hid_layer_l:
-        config_dict['trainer']['model']['layer_num'] = num_hid_layer
-        trainer = train(config_dict, 
-                train_transforms, 
-                val_transforms, 
-                train_files, 
-                val_files, 
-                df_videos, 
-                df_sensor, 
-                test_videos,
-                test_sensor)
-        wandb.finish()
+    # Start training
+    trainer = Trainer(config_dict, 
+                    train_transforms, 
+                    val_transforms, 
+                    train_files, 
+                    val_files, 
+                    df_videos, 
+                    df_sensor, 
+                    test_videos,
+                    test_sensor,
+                    wandb = wandb)
+    
+    trainer.save(0, -1)
+    epochs = config_dict['trainer']['epochs']
+    for epoch in range(epochs):
+        train_actual, train_predictions = trainer.train(epoch)
+        acc, val_actual, val_predictions = trainer.validate()
+        val_precision, val_recall, val_f1, _ = display_classification_report(train_actual, train_predictions, val_actual, val_predictions)
+        
+        if(config_dict['global']['enable_wandb']):
+            wandb.log({"Val Precision 0": val_precision[0], "Val Precision 1": val_precision[1], "Val Precision 2": val_precision[2]})
+            wandb.log({"Val Recall 0": val_recall[0], "Val Recall 1": val_recall[1], "Val Recall 2": val_recall[2]})
+            wandb.log({"Val F1 0": val_f1[0], "Val F1 1": val_f1[1], "Val F1 2": val_f1[2]})
 
-    # performs final benchmarking after training
-    if (benchmark_enabled == True):
+        trainer.save(acc, epoch)
+
+    if (config_dict['transformer']['enable_benchmark_test'] == True):
+        print("Starting benchmark testing!!")
         acc, test_actual, test_predictions = trainer.test()
-        display_test_classification_report(test_actual, test_predictions)
+        cm, test_precision, test_recall, test_f1 = display_test_classification_report(test_actual, test_predictions)
+        if(config_dict['global']['enable_wandb']):
+            wandb.log({"Test Precision 0": test_precision[0], "Test Precision 1": test_precision[1], "Test Precision 2": test_precision[2]})
+            wandb.log({"Test Recall 0": test_recall[0], "Test Recall 1": test_recall[1], "Test Recall 2": test_recall[2]})
+            wandb.log({"Test F1 0": test_f1[0], "Test F1 1": test_f1[1], "Test F1 2": test_f1[2]})
+            wandb.run.summary["cm"] = np.array_str(cm)
+
+    print("Done!")
