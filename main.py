@@ -1,6 +1,7 @@
 
 from distutils.command import config
 import transformer.DataTransformer as DataTransformer
+from vidaug import augmentors as va
 import yaml
 import numpy as np
 from utils import *
@@ -53,7 +54,7 @@ in the folders
 
 
 def load_config():
-    with open("config.yaml", "r") as configfile:
+    with open("AI_Guide_Dog/config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict)
     return config_dict
@@ -65,6 +66,13 @@ TODO: full pipeline
 if __name__ == "__main__":
     config_dict = load_config()
 
+    if(config_dict['global']['enable_wandb']):
+        import wandb
+        wandb.init(name=config_dict['global']['iteration'],
+          project="gd",
+          notes=config_dict['global']['description'])
+    else:
+        wandb = None
 
     # avoid running transform if .nz has already been generated
     if (config_dict['global']['enable_preprocessing'] == True):
@@ -99,20 +107,26 @@ if __name__ == "__main__":
     # train_transforms = [ttf.ToTensor(), transforms.Resize((HEIGHT, WIDTH)), transforms.ColorJitter(), transforms.RandomRotation(10), transforms.GaussianBlur(3)]
     # train_transforms = transforms.Compose([transforms.ToTensor(), transforms.Resize((config_dict['data']['HEIGHT'], config_dict['data']['WIDTH']))])
 
-    train_transforms = transforms.Compose([transforms.ToTensor()])
+    # https://github.com/okankop/vidaug
+    # train_transforms = transforms.Compose([transforms.ToTensor()])
+    transformations = [va.Multiply(1.2), # Makes video less bright
+                va.Multiply(1.4), # Makes video brighter
+                va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
+                # va.Pepper(95), # Makes 5% of video black pixels in each frame
+                # va.Salt(95), # Makes 5% of video white pixels in each frame
+                # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
+    ]
+    # transformations = [va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
+    # transformations = [va.Multiply(0.6), # Makes video less bright
+                # va.Multiply(1.4), # Makes video brighter
+                # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
+    # ]
+    sometimes = lambda aug: va.Sometimes(0.3, aug) # Used to apply augmentor with 30% probability
+    train_transforms = sometimes(va.SomeOf(transformations, 2, True)) # Picks 3 transformations 30% of the time)
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
-    # following functions returns a list of file paths (relative paths to video csvs) for train and test sets
-
-    # if(config_dict['data']['TEST_FILES'] is not None):
-    #     test_files = config_dict['data']['TEST_FILES']
-    #     test_files = [t.strip() for t in test_files.split(',')]
-    #     train_files = []
-    #     for f in list(df_videos.keys()):
-    #         if (f not in test_files):
-    #             train_files.append(f)
-    # else:
+    # following functions returns a list of file paths (relative paths to video csvs) for train and val sets
     train_files, val_files = make_tt_split(list(df_videos.keys()),config_dict['global']['seed'])
 
     print("Train Files:", train_files)
@@ -126,7 +140,7 @@ if __name__ == "__main__":
 
     trainer.save(0, -1)
 
-    max_val_acc = None
+    max_acc = None
 
     epochs = config_dict['trainer']['epochs']
 
@@ -138,10 +152,6 @@ if __name__ == "__main__":
 
         train_report = get_classification_report(train_actual, train_predictions)
         val_report = get_classification_report(val_actual, val_predictions)
-
-        if max_val_acc is None or val_acc > max_val_acc:
-            trainer.save(val_acc, epoch)
-            max_val_acc = val_acc
 
         wandb.log({
             'train_acc': train_acc,
@@ -193,3 +203,11 @@ if __name__ == "__main__":
                 "test_front_recall": test_report['front']['recall'],
                 "test_front_f1": test_report['front']['f1-score'],
             })
+
+            if max_acc is None or test_acc > max_acc:
+                trainer.save(test_acc, epoch)
+                max_acc = test_acc
+        else:
+            if max_acc is None or val_acc > max_acc:
+                trainer.save(val_acc, epoch)
+                max_acc = val_acc

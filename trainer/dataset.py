@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import transforms
 import numpy as np
 # from config import *
 # import ffmpeg
@@ -11,6 +12,7 @@ import os.path as osp
 from utils import *
 import pdb
 import scipy.stats as ss
+import cv2
 
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of sensor data as a single training example).
@@ -69,13 +71,14 @@ class SensorDataset(Dataset):
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example).
 class VideoDataset(Dataset):
-    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, train=False):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len
         self.df_videos = df_videos
         self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
+        self.train = train
         # self.frame_path = frame_path
         self.X_vid = []
         self.X_index = []
@@ -103,26 +106,65 @@ class VideoDataset(Dataset):
 
     def __getitem__(self, idx):
         # vid = self.df_videos['sample'][idx:idx+self.seq_len]
-        # print(vid.shape)
         # seq_filename = self.X[idx]
         vid_file = self.X_vid[idx]
         vid_idx = self.X_index[idx]
 
         video = torch.FloatTensor(self.seq_len, self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH'])
 
+        tensor_transform = transforms.ToTensor()
         # for e,filename in enumerate(seq_filename):
         for i in range(vid_idx, vid_idx+self.seq_len):
             try:
-                # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
-                # frame = (frame - frame.min())/(frame.max() - frame.min())
-                frame = self.transforms(frame)
+                frame = tensor_transform(frame)
 
             except Exception as ex:
                 print(ex)
                 frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
 
             video[i-vid_idx,:,:,:] = frame
+
+        if self.train == True:
+            np_video = video.numpy()
+            np_video = np_video * 255
+
+            # out = cv2.VideoWriter('before_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            # for i in range(np_video.shape[0]): # Saves video before augmentation
+            #     data = np.squeeze(np_video[i])
+            #     data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+            #     out.write(data)
+            # out.release()
+
+
+            np_video = np.transpose(np_video, (0, 2, 3, 1))
+            np_video = self.transforms(np_video)
+            np_video = np.array(np_video)
+            if len(np_video.shape) == 3:
+                np_video = np.expand_dims(np_video, axis=1) # adds dim because of BW, output doesn't have the 1 channel
+            if np_video.shape[1] != 1:
+                np_video = np.transpose(np_video, (0, 3, 1, 2))
+            np_video = np.uint8(np_video)
+
+            # out = cv2.VideoWriter('after_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            # for i in range(np_video.shape[0]): # Saves video after augmentation
+            #     data = np.squeeze(np_video[i])
+            #     data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+            #     out.write(data)
+            # out.release()
+
+            for i in range(vid_idx, vid_idx+self.seq_len): # convert it back
+                try:
+                    frame = np_video[i-vid_idx]
+                    frame = np.transpose(frame, (1, 2, 0))
+                    frame = tensor_transform(frame)
+                    # print(frame)
+
+                except Exception as ex:
+                    print(ex)
+                    frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
+
+                video[i-vid_idx,:,:,:] = frame
 
         # return video
         # return video, torch.LongTensor(self.y[idx])
@@ -156,13 +198,14 @@ class FrameDataset(Dataset):
 
 # For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example) along with high-level GPS information.
 class IntentVideoDataset(Dataset):
-    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test='train'):
+    def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None, test='train', train=False):
         self.transforms = transforms
         self.files = files
         self.seq_len = seq_len
         self.df_videos = df_videos
         self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
         self.config = config_dict
+        self.train = train
         # self.frame_path = frame_path
         self.X_vid = []
         self.X_index = []
@@ -245,18 +288,16 @@ class IntentVideoDataset(Dataset):
             else:
                 intent = -1 # none (2) intent
 
-
-
+        tensor_transform = transforms.ToTensor()
         # for e,filename in enumerate(seq_filename):
         for i in range(vid_idx, vid_idx+self.seq_len):
             if i >= len(self.df_videos[vid_file]):
                 print(f'IntentVideoDataset i:{i} is out of range len(self.df_videos[vid_file]): {len(self.df_videos[vid_file])}')
                 # break
             try:
-                # frame = np.load(osp.join(self.frame_path,filename), allow_pickle=True)
                 frame = self.df_videos[vid_file][i]
-                # frame = (frame - frame.min())/(frame.max() - frame.min())
-                frame = self.transforms(frame)
+                frame = tensor_transform(frame)
+
                 if(intent!=-1 and i>=intent and i<intent+self.config['transformer']['fps']):  #pass intent vector for just 1 second
                     intent_tensor = torch.full((1, self.config['data']['HEIGHT'], self.config['data']['WIDTH']), self.y[idx])
                 else:
@@ -271,6 +312,45 @@ class IntentVideoDataset(Dataset):
             context_frame = torch.cat((frame, intent_tensor), dim = 0) #attach intent as last channel
             video[i-vid_idx,:,:,:] = frame
 
-        # return video
-        # return video, torch.LongTensor(self.y[idx])
+        if self.train == True:
+            np_video = video.numpy()
+            np_video = np_video * 255
+
+            out = cv2.VideoWriter('before_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            for i in range(np_video.shape[0]):
+                data = np.squeeze(np_video[i])
+                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+                out.write(data)
+            out.release()
+
+
+            np_video = np.transpose(np_video, (0, 2, 3, 1))
+            np_video = self.transforms(np_video)
+            np_video = np.array(np_video)
+            if len(np_video.shape) == 3:
+                np_video = np.expand_dims(np_video, axis=1) # adds dim because of BW, output doesn't have the 1 channel
+            if np_video.shape[1] != 1:
+                np_video = np.transpose(np_video, (0, 3, 1, 2))
+            np_video = np.uint8(np_video)
+
+            out = cv2.VideoWriter('after_output' + '.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 2, (64, 64), False)
+            for i in range(np_video.shape[0]):
+                data = np.squeeze(np_video[i])
+                data = np.uint8(data) # multiply because initialized to 0 to 1 from tensors
+                out.write(data)
+            out.release()
+
+            for i in range(vid_idx, vid_idx+self.seq_len): # convert it back
+                try:
+                    frame = np_video[i-vid_idx]
+                    frame = np.transpose(frame, (1, 2, 0))
+                    frame = tensor_transform(frame)
+                    # print(frame)
+
+                except Exception as ex:
+                    print(ex)
+                    frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
+
+                video[i-vid_idx,:,:,:] = frame
+
         return video, self.y[idx]
