@@ -1,11 +1,11 @@
 global: 
     root_dir: ""
-    iteration: "indoor_undersamp_no_grad_clip_no_intent"
-    description: "indoor_baseline full run undersampling(x1), no grad clipping, NO INTENT"
+    iteration: "indoor_intent_new_test"
+    description: "indoor_baseline full run INTENT CORRECTED"
     enable_preprocessing: False
     seed: 8
-    enable_intent: False
-    enable_wandb: True
+    enable_intent: True
+    enable_wandb: False
 transformer:
     fps: 2
     path: "data/"

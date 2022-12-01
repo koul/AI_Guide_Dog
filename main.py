@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="5"
+# os.environ["CUDA_VISIBLE_DEVICES"]="5"
 import transformer.DataTransformer as DataTransformer
 import yaml
 import numpy as np

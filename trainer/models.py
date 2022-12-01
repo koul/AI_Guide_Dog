@@ -207,3 +207,25 @@ class ConvLSTMModel(nn.Module):
       # x = self.linear2(x)
       # print(x.shape)  
       return x
+
+
+
+class ConvLSTMModelIntent(nn.Module):
+
+    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers, height, width,
+                 batch_first=False, bias=True, return_all_layers=False, num_classes = 3):
+        super(ConvLSTMModelIntent, self).__init__()
+        self.convlstm = ConvLSTM(input_dim, hidden_dim, kernel_size, num_layers,batch_first, bias, return_all_layers)
+        self.linear = nn.Linear(hidden_dim[-1] * height * width, num_classes)
+        # self.linear2 = nn.Linear(512, num_classes)
+
+    def forward(self, input_tensor, hidden_state=None):
+      # print(input_tensor.shape)
+      x, _ = self.convlstm(input_tensor)
+    #   print(x[0].shape)  # torch.Size([2, 8, 128, 256, 256])
+      x = torch.flatten(x[0], start_dim=2)
+    #   print(x.shape)  	# torch.Size([2, 8, 8388608])
+      x = self.linear(x) #op: [batch, 8,  num_classes]
+      # x = self.linear2(x)
+    #   print(x.shape)  
+      return x
