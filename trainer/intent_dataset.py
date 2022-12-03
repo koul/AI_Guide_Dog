@@ -15,8 +15,7 @@ from collections import Counter
 import scipy.stats as ss
 import random
 
-        
-# For ConvLSTM model (or other sequence-based models requiring a sequences of frames as a single training example) along with high-level GPS information.
+
 class NewIntentVideoDataset(Dataset):
     def __init__(self, df_videos, df_sensor, files, transforms, seq_len, config_dict=None):
         self.transforms = transforms
@@ -31,12 +30,11 @@ class NewIntentVideoDataset(Dataset):
 
         same_count = 0
         diff_count = 0
+        turn_diff_count = 0
         for f in files:
             df_processed = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction']) # assign 1 sec forward labels
             # pdb.set_trace()
             df_processed['labels'] = df_processed['labels'].apply(label_map)
-            print(df_processed)
-
             # Generate training sequences
             for i in range(len(df_processed)-self.seq_len):
                 index_item = df_processed['frame_index'][i]
@@ -44,18 +42,23 @@ class NewIntentVideoDataset(Dataset):
                 
                 if(not NewIntentVideoDataset.checkAllSame(y_list)):
                     for x in range(3, 10):
-                        intent_list = [-1 for _ in self.seq_len]
+                        intent_list = [-1 for _ in range(self.seq_len)]
                         for inx in range(0, self.seq_len - x):
-                            if(y_list[inx + x]!=2 and y_list[inx + x]!=y_list[inx] and ((inx+x+1)>= len(df_processed) or y_list[inx + x]==df_processed['labels'][i + inx + x + 1] or y_list[inx + x] == y_list[inx + x-1])):
-                                intent_list[inx] = y_list[inx + x]
+                            if(y_list[inx + x]!=2 and y_list[inx + x]!=y_list[inx] and ((inx+x+1)>= len(df_processed) or y_list[inx + x]==df_processed['labels'][i + inx + x + 1])):
+                                if(y_list[inx + x] != y_list[inx + x-1]):
+                                    intent_list[inx] = y_list[inx + x]
+                                    turn_diff_count +=1 
                         self.items.append((y_list, f, index_item, intent_list))   
-                        diff_count +=1  
+                        diff_count += 1
                 else:
-                    self.items.append((y_list, f, index_item, [-1 for _ in self.seq_len]))
+                    self.items.append((y_list, f, index_item, [-1 for _ in range(self.seq_len)]))
                     same_count += 1
 
+        # print(self.items)
         print("Same Count", same_count)
         print("Diff Count", diff_count)
+        print("Turn Diff Count", turn_diff_count)
+        
         
    
     def checkAllSame(lst):
@@ -98,4 +101,4 @@ class NewIntentVideoDataset(Dataset):
         
         # return video
         # return video, torch.LongTensor(self.y[idx])
-        return video, labels
+        return video, torch.LongTensor(labels)

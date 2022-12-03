@@ -210,31 +210,22 @@ class ConvLSTMModel(nn.Module):
 
 
 
+class ConvLSTMModelIntent(nn.Module):
 
-class ResModel(nn.Module):
-    """
-    Container for ResNet50 s.t. it can be used for metric learning.
-    The Network has been broken down to allow for higher modularity, if one wishes
-    to target specific layers/blocks directly.
-    """
+    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers, height, width,
+                 batch_first=False, bias=True, return_all_layers=False, num_classes = 3):
+        super(ConvLSTMModelIntent, self).__init__()
+        self.convlstm = ConvLSTM(input_dim, hidden_dim, kernel_size, num_layers,batch_first, bias, return_all_layers)
+        self.linear = nn.Linear(hidden_dim[-1] * height * width, num_classes)
+        # self.linear2 = nn.Linear(512, num_classes)
 
-    def __init__(self, fixconvs=False, pretrained=True):
-        super(ResModel, self).__init__()
-        print("Local Resnet Lol")
-        self.model = models.resnet34(pretrained=pretrained)
-        if fixconvs:
-            for param in self.model.parameters():
-                param.requires_grad = False
-
-        self.regressor = nn.Linear(self.model.fc.in_features, 3)
-        self.dropout = torch.nn.Dropout(p=0.05)
-        self.model = torch.nn.Sequential(*(list(self.model.children())[:-1]))
-        # model.fc.weight.requires_grad = True
-        # model.fc.bias.requires_grad = True
-
-    def forward(self, x):
-        x = self.model(x)
-        x = torch.squeeze(x)
-        x = self.dropout(x)
-        x = self.regressor(x)
-        return x
+    def forward(self, input_tensor, hidden_state=None):
+      # print(input_tensor.shape)
+      x, _ = self.convlstm(input_tensor)
+    #   print(x[0].shape)  # torch.Size([2, 8, 128, 256, 256])
+      x = torch.flatten(x[0], start_dim=2)
+    #   print(x.shape)  	# torch.Size([2, 8, 8388608])
+      x = self.linear(x) #op: [batch, 8,  num_classes]
+      # x = self.linear2(x)
+    #   print(x.shape)  
+      return x

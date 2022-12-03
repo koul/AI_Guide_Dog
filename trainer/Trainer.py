@@ -1,9 +1,11 @@
 import torch
-from trainer.dataset import VideoDataset,IntentVideoDataset, CustomSampler
+# from trainer.dataset import VideoDataset,IntentVideoDataset, CustomSampler
+from trainer.intent_dataset import NewIntentVideoDataset
 from torch.utils.data import DataLoader
 from trainer.models import *
 from tqdm import tqdm
 from utils import *
+from trainer.loss import GDLoss
 
 class Trainer:
     # initialize a new trainer
@@ -11,23 +13,22 @@ class Trainer:
                  test_videos = None, test_sensor = None, wandb = None):
                  
         self.cuda = torch.cuda.is_available()
-        print(self.cuda)
+        print("Cuda: ", self.cuda)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         self.config = config_dict
         self.seq_len = config_dict['data']['SEQUENCE_LENGTH']
         self.epochs = config_dict['trainer']['epochs']
         
-        if(config_dict['global']['enable_intent']):
-            self.train_dataset = IntentVideoDataset(df_videos, df_sensor, sorted(train_files), transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = IntentVideoDataset(df_videos, df_sensor, sorted(val_files), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'validation')
-        else:
-            self.train_dataset = VideoDataset(df_videos, df_sensor, sorted(train_files), transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
-            self.val_dataset = VideoDataset(df_videos, df_sensor, sorted(val_files), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
+        self.train_dataset = NewIntentVideoDataset(df_videos, df_sensor, sorted(train_files), transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
+        self.val_dataset = NewIntentVideoDataset(df_videos, df_sensor, sorted(val_files), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
         
-        sampler = CustomSampler(self.train_dataset, majority_percent=1)
+#         sampler = CustomSampler(self.train_dataset, majority_percent=1)
        
-        train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+#         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+
+        #no balancing done yet for the new dataset
+        train_args = dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
         self.train_loader = DataLoader(self.train_dataset, **train_args)
 
         val_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
@@ -38,16 +39,10 @@ class Trainer:
 
         # TODO: Add test loader with sampler - try with replacement to True and False
         if config_dict['transformer']['enable_benchmark_test'] and test_videos is not None:
-            if(config_dict['global']['enable_intent']):
-                self.test_dataset = IntentVideoDataset(test_videos, test_sensor, sorted(list(test_videos.keys())), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config, test= 'benchmark_test')
-            else:
-                self.test_dataset = VideoDataset(test_videos, test_sensor, sorted(list(test_videos.keys())), transforms=val_transforms,
-                                            seq_len=self.seq_len, config_dict=self.config)
-
-            test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True,
-                            drop_last=False) if self.cuda else dict(shuffle=False,
-                                                                    batch_size=config_dict['trainer']['BATCH'],
-                                                                    drop_last=False)
+            self.test_dataset = NewIntentVideoDataset(test_videos, test_sensor, sorted(list(test_videos.keys())), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
+            
+            test_args = dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=False, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
+            
             self.test_loader = DataLoader(self.test_dataset, **test_args)
             print("Length of test set: ", len(self.test_dataset))
 
@@ -60,17 +55,15 @@ class Trainer:
         if(config_dict['global']['enable_intent']):
             channels = channels + 1
             
-        self.model = ConvLSTMModel(channels, hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
+        self.model = ConvLSTMModelIntent(channels, hidden_dim,(3,3),config_dict['trainer']['model']['num_conv_lstm_layers'], config_dict['data']['HEIGHT'],config_dict['data']['WIDTH'],True)
 
         if(config_dict['trainer']['model']['pretrained_path'] != ""):
             self.model.load_state_dict(torch.load(config_dict['trainer']['model']['pretained_path']))
         
         self.model = self.model.to(self.device)
 
-        #Assigning more weight to left and right turns in loss calculation
-        weights = [2.0,2.0,1.0]
-        class_weights = torch.FloatTensor(weights).to(self.device)
-        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+        # Custom Loss for Sequential output model
+        self.criterion = GDLoss(num_classes = 3, start_with = 3).to(self.device)
         
         # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=lamda, momentum=0.9)
         
@@ -99,7 +92,6 @@ class Trainer:
         
         batch_bar = tqdm(total=len(self.train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
        
-        num_correct = 0.0
         total_loss = 0.0
         y_cnt = 0.0
         actual = []
@@ -114,27 +106,22 @@ class Trainer:
             x = x.float().to(self.device)
             y = y.to(self.device)
             
-            
             with torch.cuda.amp.autocast():
                 outputs = self.model(x)
                 del x
                 loss = self.criterion(outputs, y.long())
 
-            pred_class = torch.argmax(outputs, axis=1)
+            pred_class = torch.argmax(outputs, axis=2)
 
-            actual.extend(y.detach().cpu())
-            predictions.extend(pred_class.detach().cpu())
+            actual.extend(torch.flatten(y[:, 3:].detach().cpu()))  # only consider the accuracy of labels 3rd position onwards. i.e. the timestamp should have a context of atleast 3
+            predictions.extend(torch.flatten(pred_class[:, 3:].detach().cpu()))
 
-            num_correct += int((pred_class == y).sum())
             del outputs
             total_loss += (float(loss)*len(y))
             y_cnt += len(y)
 
             batch_bar.set_postfix(
-                acc="{:.04f}%".format(100 * float(num_correct) / y_cnt),
-                loss="{:.04f}".format(float(total_loss) / y_cnt),
-                num_correct=num_correct,
-                lr="{:.04f}".format(float(self.optimizer.param_groups[0]['lr'])))
+                loss="{:.04f}".format(float(total_loss) / y_cnt))
             
             # self.scaler.scale(loss).backward()
             # self.scaler.step(self.optimizer) 
@@ -145,11 +132,12 @@ class Trainer:
 
             self.scheduler.step()
             batch_bar.update() # Update tqdm bar  
+
             
     
         batch_bar.close()
-        total_loss = float(total_loss) / len(self.train_dataset)
-        acc = 100 * float(num_correct) / (len(self.train_dataset))
+        total_loss = float(total_loss) / y_cnt
+        acc = 100 * np.mean(np.array(actual) == np.array(predictions))
         print("Epoch {}/{}: Train Acc {:.04f}%, Train Loss {:.04f}, Learning Rate {:.04f}".format(
             epoch + 1,
             self.epochs,
@@ -166,8 +154,7 @@ class Trainer:
     
     def validate(self):
         self.model.eval()
-        val_num_correct = 0
-
+       
         actual = []
         predictions = []
 
@@ -181,17 +168,15 @@ class Trainer:
                 outputs = self.model(vx)
                 del vx
 
-            pred_class = torch.argmax(outputs, axis=1)
+            pred_class = torch.argmax(outputs, axis=2)
 
-            actual.extend(vy.detach().cpu())
-            predictions.extend(pred_class.detach().cpu())
-
-            val_num_correct += int((pred_class == vy).sum())
+            actual.extend(torch.flatten(vy[:, 3:].detach().cpu()))  # only consider the accuracy of labels 3rd position onwards. i.e. the timestamp should have a context of atleast 3
+            predictions.extend(torch.flatten(pred_class[:, 3:].detach().cpu()))
          
             del outputs
             
 
-        acc = 100 * float(val_num_correct) / (len(self.val_dataset))
+        acc = 100 * np.mean(np.array(actual) == np.array(predictions))
         print("Validation: {:.04f}%".format(acc))
 
         if(self.wandb is not None):
@@ -203,8 +188,7 @@ class Trainer:
     # runs benchmark test at the end (after train and validation)
     def test(self):
         self.model.eval()
-        val_num_correct = 0
-
+    
         actual = []
         predictions = []
 
@@ -216,16 +200,18 @@ class Trainer:
                 outputs = self.model(vx)
                 del vx
 
-            pred_class = torch.argmax(outputs, axis=1)
+            pred_class = torch.argmax(outputs, axis=2)
 
-            actual.extend(vy.detach().cpu())
-            predictions.extend(pred_class.detach().cpu())
-
-            val_num_correct += int((pred_class == vy).sum())
+            actual.extend(torch.flatten(vy[:, 3:].detach().cpu()))  # only consider the accuracy of labels 3rd position onwards. i.e. the timestamp should have a context of atleast 3
+            predictions.extend(torch.flatten(pred_class[:, 3:].detach().cpu()))
+         
             del outputs
            
-        acc = 100 * float(val_num_correct) / (len(self.test_dataset))
+        acc = 100 * np.mean(np.array(actual) == np.array(predictions))
         print("Benchmark test: {:.04f}%".format(acc))
+
+        if(self.wandb is not None):
+            self.wandb.log({"Test Accuracy": acc})
 
         return acc, actual, predictions
 
