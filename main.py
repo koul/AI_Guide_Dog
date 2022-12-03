@@ -54,7 +54,7 @@ in the folders
 
 
 def load_config():
-    with open("AI_Guide_Dog/config.yaml", "r") as configfile:
+    with open("config.yaml", "r") as configfile:
         config_dict = yaml.load(configfile, Loader=yaml.FullLoader)
     # print(config_dict)
     return config_dict
@@ -66,13 +66,13 @@ TODO: full pipeline
 if __name__ == "__main__":
     config_dict = load_config()
 
-    if(config_dict['global']['enable_wandb']):
-        import wandb
-        wandb.init(name=config_dict['global']['iteration'],
-          project="gd",
-          notes=config_dict['global']['description'])
-    else:
-        wandb = None
+    # if(config_dict['global']['enable_wandb']):
+    #     import wandb
+    #     wandb.init(name=config_dict['global']['iteration'],
+    #       project="gd",
+    #       notes=config_dict['global']['description'])
+    # else:
+    #     wandb = None
 
     # avoid running transform if .nz has already been generated
     if (config_dict['global']['enable_preprocessing'] == True):
@@ -109,20 +109,22 @@ if __name__ == "__main__":
 
     # https://github.com/okankop/vidaug
     # train_transforms = transforms.Compose([transforms.ToTensor()])
-    transformations = [va.Multiply(1.2), # Makes video less bright
-                va.Multiply(1.4), # Makes video brighter
-                va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
+    # sometimes_20 = lambda aug: va.Sometimes(0.2, aug) # Used to apply augmentor with 20% probability
+    sometimes_30 = lambda aug: va.Sometimes(0.2, aug) # Used to apply augmentor with 20% probability
+    sometimes_50 = lambda aug: va.Sometimes(0.5, aug) # Used to apply augmentor with 50% probability
+    transformations = [
+                # va.Multiply(1.2), # Makes video less bright
+                # va.Multiply(1.4), # Makes video brighter
+                # sometimes_20(va.Multiply(0.8)), # Makes video less bright
+                # sometimes_20(va.Multiply(1.2)), # Makes video brighter
+                sometimes_30(va.RandomTranslate(x=5, y=5)), # Translates by 5 pixels
                 # va.Pepper(95), # Makes 5% of video black pixels in each frame
                 # va.Salt(95), # Makes 5% of video white pixels in each frame
                 # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
     ]
-    # transformations = [va.RandomTranslate(x=5, y=5), # Translates by 5 pixels
-    # transformations = [va.Multiply(0.6), # Makes video less bright
-                # va.Multiply(1.4), # Makes video brighter
-                # va.Superpixel(p_replace=0.1, n_segments=50), # Make group of pixel become superpixel
-    # ]
-    sometimes = lambda aug: va.Sometimes(0.3, aug) # Used to apply augmentor with 30% probability
-    train_transforms = sometimes(va.SomeOf(transformations, 2, True)) # Picks 3 transformations 30% of the time)
+    # sometimes = lambda aug: va.Sometimes(0.3, aug) # Used to apply augmentor with 30% probability
+    # train_transforms = sometimes(va.SomeOf(transformations, 2, True)) # Picks 3 transformations 30% of the time)
+    train_transforms = transformations # Picks 3 transformations 30% of the time)
 
     val_transforms = transforms.Compose([transforms.ToTensor()])
 
@@ -134,7 +136,8 @@ if __name__ == "__main__":
 
     # trainer = Trainer(config_dict, train_transforms, val_transforms, train_files, test_files, df_videos, df_sensor)
     # if config_dict['trainer']['wandb']:
-    wandb.init(project='AI_Guide_Dog')
+    # wandb.init(project='AI_Guide_Dog')
+    wandb.init(project="AI_Guide_Dog", notes=config_dict['global']['description'])
 
     trainer = TrainerPredRNN(config_dict, train_transforms, val_transforms, train_files, val_files, df_videos, df_sensor, test_videos=test_videos, test_sensor=test_sensor)
 

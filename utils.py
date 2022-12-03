@@ -69,6 +69,8 @@ def save(config, model, index, acc, save_type):
     save_path = os.path.join(config['global']['root_dir'],config['trainer']['model_save_path'], str(config['global']['iteration']))
     if not os.path.exists(save_path):
         os.mkdir(save_path)
+        print('made new dir', save_path)
+    print('exists', save_path)
     if (save_type == 'optim'):
         torch.save(model.state_dict(), save_path+'/{}_optimizer_params_epoch_{:08d}_acc_{}.pth'.format(config['trainer']['model']['name'], index, acc))
     elif (save_type == 'model'):

@@ -302,7 +302,7 @@ class TrainerPredRNN():
         # self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=(len(self.train_loader) * self.epochs))
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
                                                                     mode='min',
-                                                                    factor=0.75,
+                                                                    factor=0.5,
                                                                     patience=1)
 
         if(config_dict['trainer']['model']['scheduler_path'] != ""):

@@ -5,11 +5,12 @@ global:
     seed: 8
     enable_intent: true
     enable_wandb: true
+    description: "predrnn-focal-dropout0.2 multiply-0.8-1.2 translate-5"
 transformer:
     fps: 2
     path: "data/Indoor - Seattle Library"
     data_save_file: "/content/data/Indoor - train" #file path without .npz
-    enable_benchmark_test: false
+    enable_benchmark_test: true
     test_path: "data/test/Mixed"
     test_save_file: "/content/data/Indoor - test" #file path without .npz
 data:
@@ -29,7 +30,7 @@ trainer:
     visual: 0
     BATCH: 8
     max_lr: 0.01
-    lr: 0.00005
+    lr: 0.00002
     epochs: 25
     lambda: 0.001  #L2 regularization #changed from 1e-4
     num_classes: 3
@@ -40,7 +41,7 @@ trainer:
         focal_loss_gamma: 1
         convlstm_hidden: 128
         num_conv_lstm_layers: 1
-        conv_dropout: 0.2
+        conv_dropout: 0
         decouple_beta: 0.1
         pretrained_path: ""
         optimizer_path: ""
