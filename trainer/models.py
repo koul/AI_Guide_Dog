@@ -230,6 +230,7 @@ class ConvLSTMModelIntent(nn.Module):
     #   print(x.shape)  
       return x
 
+
 class ResModel(nn.Module):
     """
     Container for ResNet50 s.t. it can be used for metric learning.
@@ -242,8 +243,11 @@ class ResModel(nn.Module):
         print("Local Resnet Lol")
         self.model = models.resnet34(pretrained=pretrained)
         if fixconvs:
+            print("Freezing params of ResNet")
             for param in self.model.parameters():
                 param.requires_grad = False
+        else:
+            print("Not freezing params of ResNet")
 
         self.regressor = nn.Linear(self.model.fc.in_features, 3)
         self.dropout = torch.nn.Dropout(p=0.05)

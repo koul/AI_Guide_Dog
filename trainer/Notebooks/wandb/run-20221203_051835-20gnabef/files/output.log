@@ -1,0 +1,516 @@
+{'global': {'root_dir': '', 'iteration': 'library_cnn_resnet_undersampling_finetune_hyp', 'description': 'indoor_baseline full run NO intent, custom undersampling, finetuning resnet, changing hyperparams', 'enable_preprocessing': False, 'seed': 8, 'enable_intent': False, 'enable_wandb': True}, 'transformer': {'fps': 2, 'path': '../../data/train_rgb/', 'data_save_file': '../../data/train_rgb', 'enable_benchmark_test': True, 'test_path': '../../data/train_rgb/', 'test_save_file': '../../data/test_rgb'}, 'data': {'HEIGHT': 64, 'WIDTH': 64, 'CHANNELS': 3, 'SEQUENCE_LENGTH': 10, 'BENCHMARK_TEST_INTENT': ''}, 'trainer': {'BATCH': 32, 'lr': 1e-05, 'epochs': 10, 'lambda': 0.001, 'num_classes': 3, 'model_save_path': '../../models/', 'model': {'name': 'resnet', 'fixconvs': False, 'pretrained_path': '', 'optimizer_path': ''}}}
+True
+Videos in the training file:  dict_keys(['2022-09-25T16:16:15', '2022-07-12T17-54-18', '2022-09-25T15:35:09', '2022-07-12T16-52-14', '2022-09-25T16:25:49', '2022-09-24T16:34:16', '2022-07-12T17-38-36', '2022-09-25T15:30:45', '2022-09-24T16:29:46', '2022-09-24T15:12:51', '2022-09-25T15:52:44', '2022-09-24T15:59:46', '2022-07-12T17-08-12', '2022-09-24T15:32:17', '2022-07-12T16-44-21', '2022-07-12T17-12-05', '2022-09-25T15:43:59', '2022-09-24T15:37:31', '2022-09-25T15:39:29', '2022-07-12T17-02-16', '2022-09-24T16:25:22', '2022-09-24T16:08:54', '2022-09-24T15:23:37', '2022-09-25T15:48:21', '2022-09-24T15:41:55', '2022-07-12T17-15-22', '2022-07-12T17-52-00', '2022-09-24T15:27:58', '2022-09-24T16:13:32', '2022-09-24T15:51:04', '2022-09-24T16:42:30', '2022-09-25T16:21:25', '2022-07-12T17-32-15', '2022-09-24T15:46:25', '2022-09-24T16:04:23', '2022-09-25T15:57:42', '2022-09-24T15:18:08', '2022-07-12T17-25-48', '2022-09-24T16:20:46', '2022-07-12T17-46-01'])
+Test Files:  dict_keys(['2022-09-24T15:55:29', '2022-07-12T16-34-07', '2022-09-24T16:46:51', '2022-09-24T15:08:27', '2022-07-12T17-42-18'])
+Left count:  2169
+Right count:  2485
+Count of max class:  2485
+Examples to yield per epoch:  7139
+Length of val set:  4861
+Length of train set:  13643
+Length of test set:  2308
+Local Resnet Lol
+Not freezing params of ResNet
+ResModel(
+  (model): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+    (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+    (4): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (5): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (3): BasicBlock(
+        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (6): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (3): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (4): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (5): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (7): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): BasicBlock(
+        (conv1): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (8): AdaptiveAvgPool2d(output_size=(1, 1))
+  )
+  (regressor): Linear(in_features=512, out_features=3, bias=True)
+  (dropout): Dropout(p=0.05, inplace=False)
+)
+
+
+
+
+
+
+18it [00:00, 86.53it/s]
+Epoch 1/10: Train Acc 25.7128%, Train Loss 0.5182, Learning Rate 0.0000
+Validation: 48.6525%
+
+152it [00:01, 92.84it/s]
+[[1072  794  303]
+ [ 634 1577  274]
+ [ 701  925  859]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.45      0.49      0.47      2169
+           1       0.48      0.63      0.55      2485
+           2       0.60      0.35      0.44      2485
+    accuracy                           0.49      7139
+   macro avg       0.51      0.49      0.48      7139
+weighted avg       0.51      0.49      0.48      7139
+Validation set stats
+[[ 495  245   47]
+ [ 256  700   44]
+ [ 843 1061 1170]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.31      0.63      0.42       787
+           1       0.35      0.70      0.47      1000
+           2       0.93      0.38      0.54      3074
+    accuracy                           0.49      4861
+   macro avg       0.53      0.57      0.47      4861
+weighted avg       0.71      0.49      0.50      4861
+
+
+
+
+
+
+0it [00:00, ?it/s]
+
+152it [00:01, 87.99it/s]
+Validation: 48.1794%
+Taining set stats
+[[1582  479  108]
+ [ 365 2002  118]
+ [ 697  821  967]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.60      0.73      0.66      2169
+           1       0.61      0.81      0.69      2485
+           2       0.81      0.39      0.53      2485
+    accuracy                           0.64      7139
+   macro avg       0.67      0.64      0.63      7139
+weighted avg       0.67      0.64      0.62      7139
+Validation set stats
+[[ 533  219   35]
+ [ 240  726   34]
+ [ 869 1122 1083]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.32      0.68      0.44       787
+           1       0.35      0.73      0.47      1000
+           2       0.94      0.35      0.51      3074
+    accuracy                           0.48      4861
+   macro avg       0.54      0.59      0.47      4861
+weighted avg       0.72      0.48      0.49      4861
+
+
+
+
+
+
+Train:  97%|█████████▋| 217/224 [00:13<00:00, 20.55it/s, acc=70.2408%, loss=0.6157, lr=0.0000, num_correct=4900.0]
+
+139it [00:01, 99.28it/s]
+Validation: 55.2561%
+Taining set stats
+[[1738  333   98]
+ [ 235 2161   89]
+ [ 639  725 1121]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.67      0.80      0.73      2169
+           1       0.67      0.87      0.76      2485
+           2       0.86      0.45      0.59      2485
+    accuracy                           0.70      7139
+   macro avg       0.73      0.71      0.69      7139
+weighted avg       0.73      0.70      0.69      7139
+Validation set stats
+[[ 500  214   73]
+ [ 184  752   64]
+ [ 688  952 1434]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.36      0.64      0.46       787
+           1       0.39      0.75      0.52      1000
+           2       0.91      0.47      0.62      3074
+    accuracy                           0.55      4861
+   macro avg       0.56      0.62      0.53      4861
+
+152it [00:01, 91.14it/s]
+
+
+
+
+
+Train:  97%|█████████▋| 217/224 [00:11<00:00, 16.95it/s, acc=74.3376%, loss=0.5382, lr=0.0000, num_correct=5162.0]
+
+134it [00:01, 102.88it/s]
+Validation: 55.9144%
+Taining set stats
+[[1855  222   92]
+ [ 188 2198   99]
+ [ 605  628 1252]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.70      0.86      0.77      2169
+           1       0.72      0.88      0.79      2485
+           2       0.87      0.50      0.64      2485
+    accuracy                           0.74      7139
+   macro avg       0.76      0.75      0.73      7139
+weighted avg       0.77      0.74      0.73      7139
+Validation set stats
+[[ 502  201   84]
+ [ 164  774   62]
+ [ 653  979 1442]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.38      0.64      0.48       787
+           1       0.40      0.77      0.52      1000
+           2       0.91      0.47      0.62      3074
+    accuracy                           0.56      4861
+   macro avg       0.56      0.63      0.54      4861
+
+152it [00:01, 93.57it/s]
+
+
+
+
+
+
+7it [00:00, 65.16it/s]
+
+152it [00:01, 93.82it/s]
+Validation: 56.4493%
+Taining set stats
+[[1921  174   74]
+ [ 128 2282   75]
+ [ 563  575 1347]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.74      0.89      0.80      2169
+           1       0.75      0.92      0.83      2485
+           2       0.90      0.54      0.68      2485
+    accuracy                           0.78      7139
+   macro avg       0.80      0.78      0.77      7139
+weighted avg       0.80      0.78      0.77      7139
+Validation set stats
+[[ 560  153   74]
+ [ 234  690   76]
+ [ 768  812 1494]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.36      0.71      0.48       787
+           1       0.42      0.69      0.52      1000
+           2       0.91      0.49      0.63      3074
+    accuracy                           0.56      4861
+   macro avg       0.56      0.63      0.54      4861
+weighted avg       0.72      0.56      0.58      4861
+
+
+
+
+
+
+
+43it [00:00, 87.21it/s]
+
+152it [00:01, 90.43it/s]
+Validation: 56.6550%
+Taining set stats
+[[1948  143   78]
+ [ 111 2305   69]
+ [ 535  564 1386]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.75      0.90      0.82      2169
+           1       0.77      0.93      0.84      2485
+           2       0.90      0.56      0.69      2485
+    accuracy                           0.79      7139
+   macro avg       0.81      0.79      0.78      7139
+weighted avg       0.81      0.79      0.78      7139
+Validation set stats
+[[ 491  209   87]
+ [ 162  769   69]
+ [ 645  935 1494]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.38      0.62      0.47       787
+           1       0.40      0.77      0.53      1000
+           2       0.91      0.49      0.63      3074
+    accuracy                           0.57      4861
+   macro avg       0.56      0.63      0.54      4861
+weighted avg       0.72      0.57      0.58      4861
+
+
+
+
+
+
+
+28it [00:00, 93.17it/s]
+Epoch 7/10: Train Acc 42.4980%, Train Loss 0.2096, Learning Rate 0.0000
+Validation: 58.8356%
+
+152it [00:01, 94.12it/s]
+[[1990  113   66]
+ [  85 2334   66]
+ [ 510  501 1474]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.77      0.92      0.84      2169
+           1       0.79      0.94      0.86      2485
+           2       0.92      0.59      0.72      2485
+    accuracy                           0.81      7139
+   macro avg       0.83      0.82      0.81      7139
+weighted avg       0.83      0.81      0.80      7139
+Validation set stats
+[[ 478  213   96]
+ [ 140  775   85]
+ [ 585  882 1607]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.40      0.61      0.48       787
+           1       0.41      0.78      0.54      1000
+           2       0.90      0.52      0.66      3074
+    accuracy                           0.59      4861
+   macro avg       0.57      0.64      0.56      4861
+weighted avg       0.72      0.59      0.61      4861
+
+
+
+
+
+Train:  90%|████████▉ | 201/224 [00:10<00:01, 20.81it/s, acc=82.1318%, loss=0.3757, lr=0.0000, num_correct=5309.0]
+
+68it [00:00, 97.49it/s]
+Validation: 59.6997%
+Taining set stats
+[[2016   96   57]
+ [  67 2343   75]
+ [ 484  508 1493]]
+
+152it [00:01, 92.77it/s]
+              precision    recall  f1-score   support
+           0       0.79      0.93      0.85      2169
+           1       0.80      0.94      0.86      2485
+           2       0.92      0.60      0.73      2485
+    accuracy                           0.82      7139
+   macro avg       0.83      0.82      0.81      7139
+weighted avg       0.84      0.82      0.81      7139
+Validation set stats
+[[ 525  161  101]
+ [ 193  704  103]
+ [ 664  737 1673]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.38      0.67      0.48       787
+           1       0.44      0.70      0.54      1000
+           2       0.89      0.54      0.68      3074
+    accuracy                           0.60      4861
+   macro avg       0.57      0.64      0.57      4861
+weighted avg       0.72      0.60      0.62      4861
+
+
+
+
+
+
+Train:  88%|████████▊ | 197/224 [00:12<00:01, 20.61it/s, acc=83.0650%, loss=0.3658, lr=0.0000, num_correct=5263.0]
+
+58it [00:00, 97.89it/s]
+Validation: 57.5602%
+Taining set stats
+[[2048   75   46]
+ [  56 2364   65]
+ [ 484  478 1523]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.79      0.94      0.86      2169
+           1       0.81      0.95      0.88      2485
+           2       0.93      0.61      0.74      2485
+    accuracy                           0.83      7139
+   macro avg       0.84      0.84      0.83      7139
+weighted avg       0.85      0.83      0.82      7139
+
+152it [00:01, 95.09it/s]
+[[ 493  185  109]
+ [ 170  730  100]
+ [ 662  837 1575]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.37      0.63      0.47       787
+           1       0.42      0.73      0.53      1000
+           2       0.88      0.51      0.65      3074
+    accuracy                           0.58      4861
+   macro avg       0.56      0.62      0.55      4861
+weighted avg       0.70      0.58      0.59      4861
+
+
+
+
+
+
+Train:  97%|█████████▋| 218/224 [00:12<00:00, 21.04it/s, acc=82.5628%, loss=0.3637, lr=0.0000, num_correct=5786.0]
+
+144it [00:01, 93.64it/s]
+Validation: 57.2927%
+Taining set stats
+[[2037   75   57]
+ [  69 2346   70]
+ [ 482  495 1508]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.79      0.94      0.86      2169
+           1       0.80      0.94      0.87      2485
+           2       0.92      0.61      0.73      2485
+    accuracy                           0.83      7139
+   macro avg       0.84      0.83      0.82      7139
+weighted avg       0.84      0.83      0.82      7139
+Validation set stats
+[[ 503  190   94]
+ [ 186  734   80]
+ [ 675  851 1548]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.37      0.64      0.47       787
+           1       0.41      0.73      0.53      1000
+           2       0.90      0.50      0.65      3074
+    accuracy                           0.57      4861
+   macro avg       0.56      0.63      0.55      4861
+
+152it [00:01, 91.96it/s]
+Completed Training!!
+Starting benchmark testing!!
+73it [00:00, 79.19it/s]
+Benchmark test: 56.2825%
+Test set stats
+[[267 105  48]
+ [ 82 331  65]
+ [338 371 701]]
+Classification Report
+              precision    recall  f1-score   support
+           0       0.39      0.64      0.48       420
+           1       0.41      0.69      0.52       478
+           2       0.86      0.50      0.63      1410
+    accuracy                           0.56      2308
+   macro avg       0.55      0.61      0.54      2308

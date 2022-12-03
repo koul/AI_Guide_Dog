@@ -1,17 +1,17 @@
 global: 
     root_dir: ""
-    iteration: "library_cnn_resnet"
-    description: "indoor_baseline full run NO intent, no sampling"
+    iteration: "library_cnn_resnet_undersampling_finetune"
+    description: "indoor_baseline full run NO intent, custom undersampling, finetuning resnet"
     enable_preprocessing: False
     seed: 8
     enable_intent: False
-    enable_wandb: False
+    enable_wandb: True
 transformer:
     fps: 2
-    path: "../../data/"
+    path: "../../data/train_rgb/"
     data_save_file: "../../data/train_rgb" #file path without .npz
     enable_benchmark_test: True
-    test_path: "../../data/"
+    test_path: "../../data/train_rgb/"
     test_save_file: "../../data/test_rgb" #file path without .npz
 data:
     HEIGHT: 64
@@ -28,6 +28,6 @@ trainer:
     model_save_path: "../../models/"
     model:
         name: "resnet"
-        fixconvs: True
+        fixconvs: False
         pretrained_path: ""
         optimizer_path: ""

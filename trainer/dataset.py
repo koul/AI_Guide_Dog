@@ -17,15 +17,19 @@ import random
 
 class CustomSampler(Sampler):
     def __init__(self, dataset, majority_percent = 1.5):  
-        self.imp_cnt = dataset.lefts + dataset.rights   
+        lefts = list(np.where(dataset.y == 0)[0])
+        rights = list(np.where(dataset.y == 1)[0])
+        self.indices_front  = list(np.where(dataset.y == 2)[0]) 
+        self.indices = lefts + rights
         
-        self.indices = list(range(self.imp_cnt))
-        self.indices_front = list(range(self.imp_cnt, len(dataset.items)))
-        
-        self.pick_majority = int(max(dataset.lefts, dataset.rights) * majority_percent)
+        print("Left count: ", len(lefts))
+        print("Right count: ", len(rights))
+
+        self.pick_majority = int(max(len(lefts), len(rights)) * majority_percent)
+
         print("Count of max class: ", self.pick_majority)
 
-        self.num_samples = self.imp_cnt + self.pick_majority
+        self.num_samples = len(self.indices) + self.pick_majority
         print("Examples to yield per epoch: ", self.num_samples)
         
     def __iter__(self):
@@ -198,8 +202,7 @@ class FrameDataset(Dataset):
             self.X_vid.extend([f for _ in range(l)])
             self.X_index.extend(list(df_processed['frame_index']))
             y.extend(list(df_processed['labels']))
-              
-
+    
         self.y = np.array(y)
         
     def __len__(self):

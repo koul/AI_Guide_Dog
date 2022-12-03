@@ -1,0 +1,75 @@
+2022-12-03 04:49:41,864 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Configure stats pid to 8618
+2022-12-03 04:49:41,865 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Loading settings from /home/anjadhav/.config/wandb/settings
+2022-12-03 04:49:41,865 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Loading settings from /home/anjadhav/AIGD/AI_Guide_Dog/trainer/Notebooks/wandb/settings
+2022-12-03 04:49:41,865 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Loading settings from environment variables: {'_require_service': 'True'}
+2022-12-03 04:49:41,865 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Inferring run settings from compute environment: {'program': '<python with no main file>'}
+2022-12-03 04:49:41,865 INFO    MainThread:8618 [wandb_init.py:_log_setup():476] Logging user logs to /home/anjadhav/AIGD/AI_Guide_Dog/trainer/Notebooks/wandb/run-20221203_044941-7ne9e46i/logs/debug.log
+2022-12-03 04:49:41,866 INFO    MainThread:8618 [wandb_init.py:_log_setup():477] Logging internal logs to /home/anjadhav/AIGD/AI_Guide_Dog/trainer/Notebooks/wandb/run-20221203_044941-7ne9e46i/logs/debug-internal.log
+2022-12-03 04:49:41,866 INFO    MainThread:8618 [wandb_init.py:_jupyter_setup():426] configuring jupyter hooks <wandb.sdk.wandb_init._WandbInit object at 0x7fef07277150>
+2022-12-03 04:49:41,867 INFO    MainThread:8618 [wandb_init.py:init():516] calling init triggers
+2022-12-03 04:49:41,867 INFO    MainThread:8618 [wandb_init.py:init():520] wandb.init called with sweep_config: {}
+config: {}
+2022-12-03 04:49:41,867 INFO    MainThread:8618 [wandb_init.py:init():569] starting backend
+2022-12-03 04:49:41,867 INFO    MainThread:8618 [wandb_init.py:init():573] setting up manager
+2022-12-03 04:49:41,872 INFO    MainThread:8618 [backend.py:_multiprocessing_setup():104] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-12-03 04:49:41,876 INFO    MainThread:8618 [wandb_init.py:init():580] backend started and connected
+2022-12-03 04:49:41,882 INFO    MainThread:8618 [wandb_run.py:_label_probe_notebook():1113] probe notebook
+2022-12-03 04:49:41,883 INFO    MainThread:8618 [wandb_run.py:_label_probe_notebook():1123] Unable to probe notebook: 'NoneType' object has no attribute 'get'
+2022-12-03 04:49:41,883 INFO    MainThread:8618 [wandb_init.py:init():658] updated telemetry
+2022-12-03 04:49:41,947 INFO    MainThread:8618 [wandb_init.py:init():694] communicating run to backend with 60 second timeout
+2022-12-03 04:49:42,189 INFO    MainThread:8618 [wandb_run.py:_on_init():2000] communicating current version
+2022-12-03 04:49:42,282 INFO    MainThread:8618 [wandb_run.py:_on_init():2004] got version response 
+2022-12-03 04:49:42,283 INFO    MainThread:8618 [wandb_init.py:init():728] starting run threads in backend
+2022-12-03 04:49:47,499 INFO    MainThread:8618 [wandb_run.py:_console_start():1980] atexit reg
+2022-12-03 04:49:47,500 INFO    MainThread:8618 [wandb_run.py:_redirect():1838] redirect: SettingsConsole.WRAP_RAW
+2022-12-03 04:49:47,500 INFO    MainThread:8618 [wandb_run.py:_redirect():1903] Wrapping output streams.
+2022-12-03 04:49:47,501 INFO    MainThread:8618 [wandb_run.py:_redirect():1925] Redirects installed.
+2022-12-03 04:49:47,502 INFO    MainThread:8618 [wandb_init.py:init():765] run started, returning control to user process
+2022-12-03 04:49:47,580 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:49:47,580 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 04:49:47,650 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 04:49:48,153 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:49:48,153 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 04:49:48,228 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 04:49:48,478 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:49:48,478 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 04:49:48,525 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 04:49:50,916 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:49:50,916 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 04:49:51,003 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 04:49:51,006 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:49:51,007 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 04:51:12,438 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 04:51:12,443 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:51:12,443 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 04:51:12,663 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 04:51:13,231 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:51:13,231 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 04:51:13,289 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 04:53:40,665 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 04:53:40,665 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 05:03:53,167 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 05:03:53,170 INFO    MainThread:8618 [wandb_init.py:_pause_backend():389] pausing backend
+2022-12-03 05:03:53,170 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 05:03:53,405 INFO    MainThread:8618 [wandb_init.py:_resume_backend():398] resuming backend
+2022-12-03 05:03:53,434 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Configure stats pid to 8618
+2022-12-03 05:03:53,435 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Loading settings from /home/anjadhav/.config/wandb/settings
+2022-12-03 05:03:53,435 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Loading settings from /home/anjadhav/AIGD/AI_Guide_Dog/trainer/Notebooks/wandb/settings
+2022-12-03 05:03:53,435 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Loading settings from environment variables: {'_require_service': 'True'}
+2022-12-03 05:03:53,435 INFO    MainThread:8618 [wandb_setup.py:_flush():68] Inferring run settings from compute environment: {'program': '<python with no main file>'}
+2022-12-03 05:03:53,435 INFO    MainThread:8618 [wandb_init.py:_log_setup():476] Logging user logs to /home/anjadhav/AIGD/AI_Guide_Dog/trainer/Notebooks/wandb/run-20221203_050353-29z9w6t2/logs/debug.log
+2022-12-03 05:03:53,436 INFO    MainThread:8618 [wandb_init.py:_log_setup():477] Logging internal logs to /home/anjadhav/AIGD/AI_Guide_Dog/trainer/Notebooks/wandb/run-20221203_050353-29z9w6t2/logs/debug-internal.log
+2022-12-03 05:03:53,436 INFO    MainThread:8618 [wandb_init.py:init():516] calling init triggers
+2022-12-03 05:03:53,436 INFO    MainThread:8618 [wandb_init.py:init():520] wandb.init called with sweep_config: {}
+config: {}
+2022-12-03 05:03:53,436 INFO    MainThread:8618 [wandb_init.py:init():536] re-initializing run, found existing run on stack: 7ne9e46i
+2022-12-03 05:03:53,452 INFO    MainThread:8618 [wandb_run.py:_finish():1746] finishing run anjadhav_cmu/AIGD/7ne9e46i
+2022-12-03 05:03:53,453 INFO    MainThread:8618 [jupyter.py:save_history():448] not saving jupyter history
+2022-12-03 05:03:53,453 INFO    MainThread:8618 [jupyter.py:save_ipynb():378] not saving jupyter notebook
+2022-12-03 05:03:53,453 INFO    MainThread:8618 [wandb_init.py:_jupyter_teardown():408] cleaning up jupyter logic
+2022-12-03 05:03:53,454 INFO    MainThread:8618 [wandb_run.py:_atexit_cleanup():1949] got exitcode: 0
+2022-12-03 05:03:53,454 INFO    MainThread:8618 [wandb_run.py:_restore():1932] restore
+2022-12-03 05:03:53,455 INFO    MainThread:8618 [wandb_run.py:_restore():1938] restore done
+2022-12-03 05:03:59,246 INFO    MainThread:8618 [wandb_run.py:_footer_history_summary_info():3377] rendering history
+2022-12-03 05:03:59,248 INFO    MainThread:8618 [wandb_run.py:_footer_history_summary_info():3409] rendering summary
+2022-12-03 05:03:59,258 INFO    MainThread:8618 [wandb_run.py:_footer_sync_info():3333] logging synced files

@@ -23,9 +23,9 @@ class Trainer:
         self.train_dataset = NewIntentVideoDataset(df_videos, df_sensor, sorted(train_files), transforms=train_transforms, seq_len = self.seq_len, config_dict=self.config)
         self.val_dataset = NewIntentVideoDataset(df_videos, df_sensor, sorted(val_files), transforms=val_transforms, seq_len = self.seq_len, config_dict=self.config)
         
-#         sampler = CustomSampler(self.train_dataset, majority_percent=1)
+        # sampler = CustomSampler(self.train_dataset, majority_percent=1)
        
-#         train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
+        # train_args = dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, pin_memory=True, drop_last=False) if self.cuda else dict(batch_size=config_dict['trainer']['BATCH'], sampler = sampler, drop_last=False)
 
         #no balancing done yet for the new dataset
         train_args = dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], num_workers=2, pin_memory=True, drop_last=False) if self.cuda else dict(shuffle=True, batch_size=config_dict['trainer']['BATCH'], drop_last=False)
