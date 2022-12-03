@@ -1,0 +1,33 @@
+global: 
+    root_dir: ""
+    iteration: "library_cnn_resnet"
+    description: "indoor_baseline full run NO intent, no sampling"
+    enable_preprocessing: False
+    seed: 8
+    enable_intent: False
+    enable_wandb: False
+transformer:
+    fps: 2
+    path: "../../data/"
+    data_save_file: "../../data/train_rgb" #file path without .npz
+    enable_benchmark_test: True
+    test_path: "../../data/"
+    test_save_file: "../../data/test_rgb" #file path without .npz
+data:
+    HEIGHT: 64
+    WIDTH: 64
+    CHANNELS: 3
+    SEQUENCE_LENGTH: 10
+    BENCHMARK_TEST_INTENT: ""
+trainer:
+    BATCH: 32
+    lr: 0.0001
+    epochs: 20
+    lambda: 0.001  #L2 regularization #changed from 1e-4
+    num_classes: 3
+    model_save_path: "../../models/"
+    model:
+        name: "resnet"
+        fixconvs: True
+        pretrained_path: ""
+        optimizer_path: ""

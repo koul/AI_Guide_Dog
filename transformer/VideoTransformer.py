@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from multiprocessing import Pool
-import ffmpeg
+import  ffmpeg
 
 class VideoTransformer(object):
     def __init__(self, fps = 10, resolution = [512,512], channels = 3):

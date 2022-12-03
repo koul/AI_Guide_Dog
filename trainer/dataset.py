@@ -179,27 +179,42 @@ class VideoDataset(Dataset):
         
 # For CNN model
 class FrameDataset(Dataset):
-    def __init__(self, x, y, transforms, frame_path):
+    def __init__(self, df_videos, df_sensor, files, transforms, config_dict=None):
         self.transforms = transforms
-        self.X = x
-        self.y = y
-        # self.seq_len = seq_len
-        self.frame_path = frame_path
+        self.files = files
+        self.df_videos = df_videos
+        self.df_sensor = df_sensor #df_sensor['sample']['direction_label']['direction']
+        self.config = config_dict
+        self.X_vid = []
+        self.X_index = []
+        y = []
+
+        for f in files:
+            df_processed = convert_to_dataframe(self.df_sensor[f]['direction_label']['direction']) # assign 1 sec forward labels
+            df_processed['labels'] = df_processed['labels'].apply(label_map)
+            
+            # Generate training sequences
+            l = len(df_processed)
+            self.X_vid.extend([f for _ in range(l)])
+            self.X_index.extend(list(df_processed['frame_index']))
+            y.extend(list(df_processed['labels']))
+              
+
+        self.y = np.array(y)
         
     def __len__(self):
-        return len(self.X)
+        return len(self.y)
     
     def __getitem__(self, idx):
-        seq_filename = self.X[idx]
         try:
-            frame = np.load(osp.join(self.frame_path,seq_filename), allow_pickle=True)
-            frame = (frame - frame.min())/(frame.max() - frame.min())
-            frame = self.transforms(frame)
+            vid_file = self.X_vid[idx]
+            vid_idx = self.X_index[idx]
+            frame = self.transforms(self.df_videos[vid_file][vid_idx])
             
         except Exception as ex:
-            print("Error occured while loading frame: ", ex)
-            frame = torch.zeros((CHANNELS, HEIGHT, WIDTH))
-        
+            print(ex)
+            frame = torch.zeros((self.config['data']['CHANNELS'], self.config['data']['HEIGHT'], self.config['data']['WIDTH']))
+                
         return frame, self.y[idx]
 
         
